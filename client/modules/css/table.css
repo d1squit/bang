@@ -1,0 +1,72 @@
+.table {
+	grid-column-start: 5;
+	grid-row-start: 7;
+	grid-column-end: 9;
+	grid-row-end: 11;
+	height: 100%;
+}
+
+.table-ctn {
+	width: 242.5px;
+	height: 184px;
+	display: flex;
+	font-size: 30px;
+	text-shadow: 1px 1px 1px #fff, -1px -1px 1px #fff, -1px 1px 1px #fff, 1px -1px 1px #fff;
+	margin: 0 auto;
+	gap: 6px;
+	justify-content: center;
+	position: relative;
+}
+
+.table .table-card-count {
+	height: 180px;
+	width: 106.25px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-image: url('../../assets/img/game/cardback.webp');
+}
+
+.table .table-card-last {
+	height: 170px;
+	width: 106.25px;
+}
+
+.table .table-arrow {
+	width: 32px;
+	height: 32px;
+	background-image: url('../../assets/img/game/arrow_icon.png');
+	background-size: cover;
+	position: absolute;
+	top: -40px;
+	left: 20%;
+}
+
+.table .table-arrow.checked {
+	left: 70%;
+}
+
+.table .table-arrow-players {
+	width: 32px;
+	height: 32px;
+	background-size: cover;
+	position: absolute;
+	top: -40px;
+	left: 20%;
+	font-size: 24px;
+	text-align: center;
+	display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.table .table-arrow-players[data-turn="-1"] {
+	background-image: url('../../assets/img/game/arrow_icon.png');
+}
+
+.table .table-arrow-players[data-turn="0"]:after { content: '1' }
+.table .table-arrow-players[data-turn="1"]:after { content: '2' }
+.table .table-arrow-players[data-turn="2"]:after { content: '3' }
+.table .table-arrow-players[data-turn="3"]:after { content: '4' }
+.table .table-arrow-players[data-turn="4"]:after { content: '5' }
+.table .table-arrow-players[data-turn="5"]:after { content: '6' }

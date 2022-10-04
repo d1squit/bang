@@ -1,0 +1,86 @@
+.player-info {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	width: 230px;
+	border: 1px solid black;
+	border-radius: 5px;
+	padding: 5px;
+	background-color: #ebd5bd;
+}
+
+.player-info.dead {
+	background-color: #bbb;
+}
+
+.player-info .player-info-top {
+	height: 42px;
+}
+
+.player-info .player-info-top, .player-info .player-info-bottom {
+	display: flex;
+	gap: 5px;
+}
+
+.player-info .player-info-top .player-info-userrating {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	background-color: #84B8DE;
+	border-radius: 5px;
+	padding: 2px 6px;
+}
+
+.player-info .player-info-top .player-info-userrating h4 {
+	margin-top: 2px;
+}
+
+.player-info .player-info-top .player-info-userrating-icon {
+	width: 18px;
+}
+
+.player-info .player-info-top .player-info-userphoto {
+	width: 42px;
+}
+
+.player-info .player-info-bottom .player-info-cards {
+	justify-content: flex-end;
+	margin-right: 100px;
+}
+
+.player-info .player-info-bottom .player-info-health {
+	display: flex;
+	gap: 3px;
+}
+
+.player-info .player-info-bottom .player-info-health-point img {
+	height: 35px;
+}
+
+
+.player-info.dead .player-info-role {
+	background-image: url('../../assets/img/game/role-icons.webp');
+}
+
+.player-info-role {
+	background-size: cover;
+	width: 34px;
+	height: 34px;
+}
+
+.player-info-role[data-role='0'] {
+	background-image: url('../../assets/img/game/role-icons.webp');
+	background-position: 66% 0;
+}
+
+.player-info-role[data-role='1'] {
+	background-position: 100% 0;
+}
+
+.player-info-role[data-role='2'] {
+	background-position: 0% 0;
+}
+
+.player-info-role[data-role='3'] {
+	background-position: 33% 0;
+}

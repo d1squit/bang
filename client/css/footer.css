@@ -1,0 +1,63 @@
+footer {
+	background-image: url('../../src/assets/img/home/footer-background.png');
+	background-size: cover;
+	background-position: bottom;
+	height: 540px;
+}
+
+.footer__container {
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	padding: 100px 0px 20px 0px;
+}
+
+.footer__partners {
+	margin-top: 30px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	column-gap: 50px;
+	mix-blend-mode: screen;
+	flex-wrap: wrap;
+}
+
+.footer__ornament {
+	max-width: 338px;
+	margin-top: 80px;
+	flex: 1 1 auto;
+}
+
+.footer__copyright {
+	font-family: 'Bookman Old Style';
+	font-size: 14px;
+	line-height: 28px;
+	text-align: center;
+	letter-spacing: 0.875px;
+	color: #E3D9CC;
+}
+
+@media screen and (max-width: 832.98px) {
+	footer .title-block__title {
+		font-size: 36px;
+	}
+}
+
+@media screen and (max-width: 699.98px) {
+	footer .title-block__title {
+		font-size: 32px;
+		line-height: 40px;
+	}
+
+	.footer__partner {
+		width: 25%;
+	}
+
+	.footer__partners {
+		mix-blend-mode: unset;
+	}
+	
+	.footer__ornament {
+		width: 90%;
+	}
+}

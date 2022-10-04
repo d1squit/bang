@@ -1,0 +1,93 @@
+body {
+	background-color: #F1E5D6;
+}
+
+.login {
+	height: 950px;
+}
+
+.login__container {
+	justify-content: center;
+}
+
+.login-form {
+	width: 567px;
+	height: 600px;
+	background-image: url('../../src/assets/img/login/form-back.svg');
+	margin-top: 105px;
+	padding: 0px 97px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.login__header {
+	display: flex;
+	gap: 42px;
+	align-items: center;
+	justify-content: center;
+	margin-top: 100px;
+}
+
+.login__title {
+	font-weight: 700;
+	font-size: 60px;
+	line-height: 70px;
+	
+	text-align: center;
+	letter-spacing: 3.75px;
+	text-transform: uppercase;
+	
+	color: #FFFFFF;
+}
+
+.login__label {
+	font-family: 'Bookman Old Style';
+	font-size: 18px;
+	line-height: 36px;
+	letter-spacing: 1.125px;
+	color: #FFFFFF;
+	margin-bottom: 32px;
+	align-self: flex-start;
+}
+
+.login-form > input:not(:last-of-type) {
+	margin-bottom: 32px;
+}
+
+.login-form > input {
+	font-size: 32px;
+	line-height: 37px;
+	letter-spacing: 2px;
+	color: #FFF4E5;
+	width: 370px;
+	background-color: transparent;
+	border: none;
+	align-self: flex-start;
+}
+
+.login__submit {
+	font-size: 32px;
+	line-height: 37px;
+	text-align: center;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+	margin-top: 35px;
+	background-color: transparent;
+	border: none;
+	width: 120px;
+	height: 80px;
+	z-index: 6;
+}
+
+.login__under {
+	color: #000;
+	font-size: 32px;
+	line-height: 37px;
+	text-align: center;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	margin-top: -55px;
+	z-index: 5;
+}

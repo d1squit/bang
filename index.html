@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="./client/css/style.css">
+	<link rel="stylesheet" href="./client/css/reset.css">
+	<link rel="stylesheet" href="./client/modules/css/info.css">
+	<link rel="stylesheet" href="./client/modules/css/player.css">
+	<link rel="stylesheet" href="./client/modules/css/card.css">
+	<link rel="stylesheet" href="./client/modules/css/role.css">
+	<link rel="stylesheet" href="./client/modules/css/table.css">
+	<link rel="stylesheet" href="./client/modules/css/distance.css">
+	<link href="https://fonts.googleapis.com/css?family=Roboto:100,100italic,300,300italic,regular,italic,500,500italic,700,700italic,900,900italic&display=swap" rel="stylesheet" />
+	<script src="/socket.io/socket.io.js"></script>
+	<title>Start Page</title>
+</head>
+<body>
+	<section id="lobby">
+		<input type="text" class="lobby-name">
+		<input type="text" class="lobby-rating">
+		<button class="lobby-send">НАЧАТЬ ИГРУ</button>
+		<h3 class="lobby-time"></h3>
+
+		<button class="lobby-ready" style="display: none;">ПРИНЯТЬ</button>
+		<button class="learn-game">ОБУЧЕНИЕ</button>
+
+		<script>
+			document.querySelector('.lobby-name').value = `bot${Math.floor(Math.random() * 1000)}`;
+			// document.querySelector('.lobby-rating').value = Math.floor(Math.random() * 1500);
+			document.querySelector('.lobby-rating').value = 1000;
+		</script>
+	</section>
+
+	<main style="display: none;">
+		<div class="main-block">
+			<div id="cards">
+				<div class="common">
+					<div class="common_ctn"></div>
+				</div>
+				<div class="game-controls">
+					<div class="time">
+						<div class="time-header"></div>
+						<div class="time-seconds"></div>
+					</div>
+					<div class="wait">
+						<div class="wait-header"></div>
+						<div class="wait-seconds"></div>
+					</div>
+					<div class="game-buttons">
+						<div class="red-button end-turn inactive">Завершить ход</div>
+						<div class="red-button leave">Покинуть игру</div>
+						<div class="red-button give-up inactive">Сдаться</div>
+					</div>
+				</div>
+			</div>
+			<div id="board" player-count="6">
+				
+			</div>
+
+			<div id="shop">
+				<div class="shop-title">Магазин</div>
+				<div class="shop-cards"></div>
+			</div>
+
+			<div id="card-chooser">
+				<div class="card-chooser-title">Магазин</div>
+				<div class="card-chooser-cards"></div>
+			</div>
+		</div>
+		
+		<div class="side-block">
+			<div id="info" player-count="6">
+			
+			</div>
+		</div>
+	</main>
+
+	<div class="mask"></div>
+
+	<div class="game-result">
+		<h1>Вы победили!</h1>
+		<button class="red-button leave-after-result">Покинуть игру</button>
+	</div>
+	
+	<script src="./client/modules/html/player.html"></script>
+	<script src="./client/modules/html/info.html"></script>
+	<script src="./client/modules/html/card.html"></script>
+	<script src="./client/modules/html/role.html"></script>
+	<script src="./client/modules/html/table.html"></script>
+	<script src="./client/modules/html/distance.html"></script>
+
+	<script src="./client/js/learn-text.js"></script>
+	<script src="./client/js/client.js"></script>
+</body>
+</html>

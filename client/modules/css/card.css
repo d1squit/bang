@@ -1,0 +1,119 @@
+.card {
+	height: 170px;
+	width: 106.25px;
+	margin: 5px;
+	flex-shrink: 0;
+	font-size: 17px;
+	background-image: url('../../assets/img/game/card_borders.webp');
+	background-size: cover;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 12px 0px;
+	position: relative;
+	background-position: calc(100% / 3);
+	cursor: pointer;
+}
+
+.card.modifier {
+	background-position: calc(100% / 3 * 2);
+}
+
+.card .card-title {
+	font-size: 15px;
+	letter-spacing: -1px;
+	text-transform: uppercase;
+}
+
+.card .card-background {
+	background-image: url('../../assets/img/game/card_backgrounds.webp');
+	background-size: 600% 400%;
+	width: 89.25px;
+	height: 126.65px;
+}
+
+.card .card-bottom {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	left: 4px;
+	bottom: 1px;
+	font-size: 17px;
+	position: absolute;
+	text-shadow: 1px 1px 1px #fff, -1px -1px 1px #fff, -1px 1px 1px #fff, 1px -1px 1px #fff;
+}
+
+.card .card-suit {
+	margin-top: -2px;
+}
+
+.card .card-suit[data-suit='D']::before {
+	color:red;
+	font-size: 24px;
+	content: '♦';
+}
+
+.card .card-suit[data-suit='H']::before {
+	color:red;
+	font-size: 24px;
+	content: '♥';
+}
+
+.card .card-suit[data-suit='C']::before {
+	color:black;
+	font-size: 24px;
+	content: '♣';
+}
+
+.card .card-suit[data-suit='S']::before {
+	color:black;
+	font-size: 24px;
+	content: '♠';
+}
+
+.card .card-delete {
+	background-image: url('../../assets/img/game/delete_icon.png');
+	width: 32px;
+	height: 32px;
+	background-size: cover;
+	position: absolute;
+	top: 140px;
+	right: 0px;
+}
+
+.card .card-change {
+	background-image: url('../../assets/img/game/exchange_icon.png');
+	width: 26px;
+    height: 26px;
+    background-size: cover;
+    position: absolute;
+    top: 143px;
+    right: 30px;
+}
+
+
+/* -------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
+
+.card[data-card='0'] .card-background { background-position: calc(100% / 5 * 0) calc(100% / 3 * 0) }
+.card[data-card='1'] .card-background { background-position: calc(100% / 5 * 1) calc(100% / 3 * 0) }
+.card[data-card='2'] .card-background { background-position: calc(100% / 5 * 2) calc(100% / 3 * 0) }
+.card[data-card='3'] .card-background { background-position: calc(100% / 5 * 3) calc(100% / 3 * 0) }
+.card[data-card='4'] .card-background { background-position: calc(100% / 5 * 4) calc(100% / 3 * 0) }
+.card[data-card='5'] .card-background { background-position: calc(100% / 5 * 5) calc(100% / 3 * 0) }
+.card[data-card='6'] .card-background { background-position: calc(100% / 5 * 6) calc(100% / 3 * 1) }
+.card[data-card='7'] .card-background { background-position: calc(100% / 5 * 7) calc(100% / 3 * 1) }
+.card[data-card='8'] .card-background { background-position: calc(100% / 5 * 8) calc(100% / 3 * 1) }
+.card[data-card='9'] .card-background { background-position: calc(100% / 5 * 9) calc(100% / 3 * 1) }
+.card[data-card='10'] .card-background { background-position: calc(100% / 5 * 10) calc(100% / 3 * 1) }
+.card[data-card='11'] .card-background { background-position: calc(100% / 5 * 11) calc(100% / 3 * 1) }
+.card[data-card='12'] .card-background { background-position: calc(100% / 5 * 12) calc(100% / 3 * 2) }
+.card[data-card='13'] .card-background { background-position: calc(100% / 5 * 13) calc(100% / 3 * 2) }
+.card[data-card='14'] .card-background { background-position: calc(100% / 5 * 14) calc(100% / 3 * 2) }
+.card[data-card='15'] .card-background { background-position: calc(100% / 5 * 15) calc(100% / 3 * 2) }
+.card[data-card='16'] .card-background { background-position: calc(100% / 5 * 16) calc(100% / 3 * 2) }
+.card[data-card='17'] .card-background { background-position: calc(100% / 5 * 17) calc(100% / 3 * 2) }
+.card[data-card='18'] .card-background { background-position: calc(100% / 5 * 18) calc(100% / 3 * 3) }
+.card[data-card='19'] .card-background { background-position: calc(100% / 5 * 19) calc(100% / 3 * 3) }
+.card[data-card='20'] .card-background { background-position: calc(100% / 5 * 20) calc(100% / 3 * 3) }
+.card[data-card='21'] .card-background { background-position: calc(100% / 5 * 21) calc(100% / 3 * 3) }

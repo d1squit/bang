@@ -1,0 +1,11 @@
+.role-background {
+	background-image: url('../../assets/img/game/role_cards.png');
+	background-size: cover;
+	width: 90px;
+    height: 150px;
+}
+
+.role[data-role='0'] .role-background { background-position: calc(100% / 3 * 0); }
+.role[data-role='1'] .role-background { background-position: calc(100% / 3 * 2); }
+.role[data-role='2'] .role-background { background-position: calc(101% / 3 * 3); }
+.role[data-role='3'] .role-background { background-position: calc(100% / 3 * 1); }
