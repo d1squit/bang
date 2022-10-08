@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="./assets/img/logo-image.svg">
+	<link rel="stylesheet" href="./css/reset.css">
+	<link rel="stylesheet" href="./css/header.css">
+	<link rel="stylesheet" href="./css/footer.css">
+	<link rel="stylesheet" href="./css/common.css">
+	<link rel="stylesheet" href="./css/lobby.css">
+	<title>Lobby</title>
+</head>
+<body>
+	<div class="wrapper">
+		<header class="header-game">
+			<div class="header__container __container header-game">
+				<img src="./assets/img/header/logo-white.png" alt="" class="header__logo">
+				<div class="header__links">
+					<nav class="header__nav">
+						<a href="" class="header__nav__link">ABOUT</a>
+						<a href="" class="header__nav__link">CONTACTS</a>
+						<a href="" class="header__nav__link">SUPPORT</a>
+					</nav>
+					<ul class="header__socials">
+						<li class="header__social"><a href=""><img src="./assets/img/header/geeko-button.svg" alt="" class="header__social__image"></a></li>
+						<li class="header__social"><a href=""><img src="./assets/img/header/discord-button.svg" alt="" class="header__social__image"></a></li>
+						<li class="header__social"><a href=""><img src="./assets/img/header/twitter-button.svg" alt="" class="header__social__image"></a></li>
+						<li class="header__social"><a href=""><img src="./assets/img/header/empty-button.svg" alt="" class="header__social__image"></a></li>
+						<li class="header__social"><a href=""><img src="./assets/img/header/wallet-button.svg" alt="" class="header__social__image"></a></li>
+					</ul>
+					<div class="header__profile profile">
+						<div class="header__profile__image profile__image"><img src="./assets/img/profile-edit.png" alt="" class="header__profile__edit"></div>
+						<h2 class="header__profile__name profile__name">Richardson</h2>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		<main>
+			<section class="lobby">
+				<div class="lobby__container __container">
+					<div class="lobby__invite">
+						<div class="lobby__invite__message lobby__inner__block">
+							<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
+							<h2 class="lobby__invite__name">NikName</h2>
+							<h2 class="lobby__invite__text">отправил Вам приглашение</h2>
+						</div>
+						<div class="lobby__invite__buttons lobby__inner__block">
+							<div class="lobby__invite__accept lobby__button text-shadow">Принять</div>
+							<div class="lobby__invite__decline lobby__button text-shadow">Отклонить</div>
+							<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
+						</div>
+					</div>
+					<div class="lobby__bottom">
+						<div class="lobby__main">
+							<div class="lobby__profile lobby__block">
+								<div class="lobby__profile__person lobby__inner__block profile">
+									<div class="lobby__profile__image profile__image"><img src="./assets/img/profile-edit.png" alt="" class="lobby___profile__edit"></div>
+									<h2 class="lobby__profile__name profile__name">Richardson</h2>
+								</div>
+								<div class="lobby__profile__rating lobby__inner__block">
+									<h2 class="lobby__profile__rating__title">Regular / Tournamen Rank</h2>
+									<div class="lobby__profile__rating__number"><img src="./assets/img/trophy-icon.svg" alt=""><h2>245</h2></div>
+								</div>
+							</div>
+							<div class="lobby__match lobby__block">
+								<div class="lobby__match__top">
+									<div class="lobby__match__character">
+										<h2 class="lobby__match__title">Выбор персонажа<div class="lobby__match__character__update"></div></h2>
+										<div class="lobby__match__characters">
+											<div class="lobby__match__character__field outlined" data-character="none"></div>
+											<div class="lobby__match__character__field" data-character="none"></div>
+											<div class="lobby__match__character__field" data-character="none"></div>
+											<div class="lobby__match__character__field" data-character="none"></div>
+											<div class="lobby__match__character__field" data-character="none"></div>
+											<div class="lobby__match__character__field" data-character="none"></div>
+											<div class="lobby__match__character__arrows">
+												<div class="lobby__match__character__arrow"></div>
+												<div class="lobby__match__character__arrow flip disabled"></div>
+											</div>
+										</div>
+									</div>
+									<div class="lobby__match__tournament">
+										<h2 class="lobby__match__title">Награды турнира</h2>
+										<img src="./assets/img/lobby/tournament-cards.png" alt="" class="lobby__match__tournament__cards">
+									</div>
+								</div>
+								<div class="lobby__match__start">
+									<div class="lobby__match__start__top">
+										<h2 class="lobby__match__title">Игроки за этим столом</h2>
+										<div class="lobby__match__start__modes">
+											<div class="lobby__match__start__mode">
+												<div class="lobby__match__start__mode__button button-competitive lobby__button text-shadow disabled">Соревновательный</div>
+												<div class="lobby__match__start__mode__tip"></div>
+											</div>
+											<div class="lobby__match__start__mode">
+												<div class="lobby__match__start__mode__button button-private lobby__button text-shadow">Приватное пати</div>
+												<div class="lobby__match__start__mode__tip"></div>
+											</div>
+										</div>
+									</div>
+									<div class="lobby__match__start__players">
+										<div class="lobby__player"></div>
+										<div class="lobby__player"></div>
+										<div class="lobby__player"></div>
+										<div class="lobby__player"></div>
+										<div class="lobby__player"></div>
+										<div class="lobby__player"></div>
+										<div class="lobby__player"></div>
+										<div class="lobby__player"></div>
+									</div>
+									<div class="lobby__match__start__search">
+										<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
+										<div class="lobby__search__button lobby__button text-shadow">Начать поиск</div>
+										<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="lobby__friends lobby__block">
+							<div class="lobby__friends__top">
+								<h2 class="lobby__friends__title">Друзья</h2>
+								<h2 class="lobby__friends__count">4 <span class="disabled">/ 16</span></h2>
+							</div>
+							<div class="lobby__friends__search">
+								<input type="text" class="lobby__friends__search__input" placeholder="Поиск">
+								<div type="text" class="lobby__friends__search__icon"></div>
+							</div>
+							<div class="lobby__friends__invites lobby__button text-shadow">Заявка в друзья  99+</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="./js/lobby.js"></script>
+</body>
+</html>

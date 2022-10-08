@@ -4,7 +4,7 @@
 	width: 100%;
 	min-height: 100%;
 	flex: 1 1 auto;
-	background-image: url('../../src/assets/img/home/background.png');
+	background-image: url('.././assets/img/home/background.png');
 	background-size: cover;
 }
 
@@ -55,7 +55,7 @@
 }
 
 .main-screen__mint__button {
-	background-image: url('../../src/assets/img/home/mint-button.svg');
+	background-image: url('.././assets/img/home/mint-button.svg');
 	background-size: cover;
 	width: 280px;
 	height: 80px;
@@ -196,7 +196,7 @@
 	justify-content: center;
 	align-items: center;
 	position: absolute;
-	background-image: url('../../src/assets/img/home/shape.svg');
+	background-image: url('.././assets/img/home/shape.svg');
 	background-size: 100%;
 	background-repeat: no-repeat;
 	width: 90%;
@@ -296,11 +296,6 @@
 .bracket__arrows {
 	display: flex;
 	gap: 24px;
-}
-
-.flip {
-	-webkit-transform: scaleX(-1);
-	transform: scaleX(-1);
 }
 
 .bracket__arrow.other {

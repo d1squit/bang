@@ -1,0 +1,364 @@
+body {
+	background-image: url('../../client/assets/img/game-background.png');
+	background-size: cover;
+}
+
+header {
+	background-image: none;
+}
+
+.header__container {
+	padding-top: 22px !important;
+	padding-bottom: 22px !important;
+}
+
+.header__social__image, .header__links {
+	height: 40px;
+}
+
+.header__nav {
+	margin-right: 40px;
+}
+
+main {
+	display: flex;
+}
+
+.lobby {
+	flex: 1 1 auto;
+	padding-bottom: 10px;
+}
+
+.lobby__container {
+	max-width: 1440px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.lobby__invite {
+	width: 100%;
+	max-height: 68px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background-image: url('../assets/img/lobby/invite-back.svg');
+	padding: 17px 20px;
+	border-radius: 10px;
+
+	height: 0px;
+    padding: 0px 20px;
+    overflow: hidden;
+}
+
+.lobby h2:not(.lobby__match__title):not(.lobby__friends__title), .lobby span {
+	color: #FFF4E5;;
+	font-family: 'Bookman Old Style';
+}
+
+.lobby__inner__block {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+}
+
+.lobby__star:first-child {
+	margin-right: 20px;
+}
+
+.lobby__star:last-child {
+	margin-left: 20px;
+}
+
+.lobby__button {
+	width: 140px;
+	height: 40px;
+	background-image: url('../assets/img/button-back.png');
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: #FFF4E5;
+	font-weight: 700;
+	font-size: 20px;
+	line-height: 23px;
+	text-align: center;
+	letter-spacing: 1.25px;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.lobby__bottom {
+	display: flex;
+	gap: 24px;
+	flex: 1 1 auto;
+}
+
+.lobby__main {
+	width: 100%;
+	max-width: 1146px;
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.lobby__block {
+	width: 100%;
+	background: rgba(40, 17, 7, 0.8);
+	border-radius: 10px;
+	padding: 38px 52px 38px 24px;
+}
+
+.lobby__profile {
+	width: 1146px;
+	height: 100px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background-image: url('../assets/img/lobby/profile-icon.png');
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.lobby__profile__rating__number {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-left: 50px;
+	height: 24px;
+}
+
+.lobby__profile__image {
+	width: 60px;
+	height: 60px;
+}
+
+.lobby__match {
+	flex: 1 1 auto;
+	padding: 24px 24px 38px 24px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 16px;
+	background-image: url('../assets/img/lobby/match-back.svg');
+	background-repeat: no-repeat;
+	background-position: bottom;
+}
+
+.lobby__match * {
+	transition: none;
+}
+
+.lobby__match__top {
+	display: flex;
+	justify-content: space-between;
+}
+
+.lobby__match__title, .lobby__friends__title {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	font-size: 30px;
+	line-height: 35px;
+	letter-spacing: 1.875px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+}
+
+.lobby__match__character, .lobby__match__tournament {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.lobby__match__character__update {
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+	background-image: url('../assets/img/lobby/update-icon.png');
+}
+
+.lobby__match__characters {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.lobby__match__character__field {
+	background-size: contain;
+	width: 120px;
+	height: 187px;
+	background-size: 100% 100%, 94% 95%;
+	background-position: center, center;
+	background-repeat: no-repeat, no-repeat;
+	cursor: pointer;
+}
+
+.lobby__match__character__field[data-character="none"] {
+	background-image: url(), url('../assets/img/lobby/empty-character-field.png');
+}
+
+.lobby__match__character__field[data-character="0"] { background-image: url(), url('../assets/img/game/characters/1.png') }
+.lobby__match__character__field[data-character="1"] { background-image: url(), url('../assets/img/game/characters/2.png') }
+.lobby__match__character__field[data-character="2"] { background-image: url(), url('../assets/img/game/characters/3.png') }
+.lobby__match__character__field[data-character="3"] { background-image: url(), url('../assets/img/game/characters/4.png') }
+.lobby__match__character__field[data-character="4"] { background-image: url(), url('../assets/img/game/characters/5.png') }
+.lobby__match__character__field[data-character="5"] { background-image: url(), url('../assets/img/game/characters/6.png') }
+.lobby__match__character__field[data-character="6"] { background-image: url(), url('../assets/img/game/characters/7.png') }
+.lobby__match__character__field[data-character="7"] { background-image: url(), url('../assets/img/game/characters/8.png') }
+.lobby__match__character__field[data-character="8"] { background-image: url(), url('../assets/img/game/characters/9.png') }
+.lobby__match__character__field[data-character="9"] { background-image: url(), url('../assets/img/game/characters/10.png') }
+
+.lobby__match__character__field[data-character="0"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/1.png') }
+.lobby__match__character__field[data-character="1"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/2.png') }
+.lobby__match__character__field[data-character="2"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/3.png') }
+.lobby__match__character__field[data-character="3"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/4.png') }
+.lobby__match__character__field[data-character="4"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/5.png') }
+.lobby__match__character__field[data-character="5"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/6.png') }
+.lobby__match__character__field[data-character="6"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/7.png') }
+.lobby__match__character__field[data-character="7"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/8.png') }
+.lobby__match__character__field[data-character="8"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/9.png') }
+.lobby__match__character__field[data-character="9"].outlined { background-image: url('../assets/img/lobby/card-outline.png'), url('../assets/img/game/characters/10.png') }
+
+
+
+.lobby__match__character__arrows {
+	display: flex;
+	flex-direction: column;
+	width: 20px;
+	gap: 16px;
+	margin-left: 8px;
+}
+
+.lobby__match__character__arrow {
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+}
+
+.lobby__match__character__arrow {
+	background-image: url('../assets/img/lobby/active-arrow.png');
+}
+
+.lobby__match__tournament {
+	align-items: center;
+	padding: 0px 25px;
+}
+
+.lobby__match__tournament__cards {
+	width: 165px;
+}
+
+.lobby__match__start {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.lobby__match__start__top, .lobby__match__start__modes {
+	display: flex;
+	justify-content: space-between;
+	gap: 24px;
+}
+
+.lobby__match__start__mode {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.lobby__match__start__mode__button {
+	background-size: 100% 100%;
+}
+
+.lobby__match__start__mode__tip {
+	background-image: url('../assets/img/lobby/tip-icon.png');
+	width: 24px;
+	height: 24px;
+}
+
+.lobby__match__start__mode__button.button-competitive {
+	width: 196px;
+}
+
+.lobby__match__start__mode__button.button-private {
+	width: 176px;
+}
+
+.lobby__match__start__players {
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: 18px;
+	row-gap: 16px;
+}
+
+.lobby__player {
+	background-image: url('../assets/img/lobby/empty-player-field.png');
+	width: 260px;
+	height: 93px;
+}
+
+.lobby__match__start__search {
+	align-self: center;
+	padding-top: 16px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.lobby__friends {
+	padding: 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.lobby__friends__top {
+	display: flex;
+	justify-content: space-between;
+}
+
+.lobby__friends__search {
+	background-color: #FFF;
+	width: 222px;
+	height: 42px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 6px;
+	padding: 12px 18px;
+	border-radius: 8px;
+}
+
+.lobby__friends__search__input {
+	border: none;
+	font-family: 'Bookman Old Style';
+	font-size: 14px;
+	line-height: 18px;
+	letter-spacing: 0.875px;
+	color: #2D1509;
+	max-width: 160px;
+}
+
+.lobby__friends__search__input:focus {
+	border: none;
+}
+
+.lobby__friends__search__input::placeholder {
+	font-family: 'Bookman Old Style';
+	font-size: 14px;
+	line-height: 18px;
+	letter-spacing: 0.875px;
+	color: #2D1509;
+}
+
+.lobby__friends__search__icon {
+	background-image: url('../assets/img/lobby/search-icon.svg');
+	width: 18px;
+	height: 18px;
+	cursor: pointer;
+}
+
+.lobby__friends__invites {
+	width: 222px;
+	background-size: 100% 100%;
+}

@@ -1,5 +1,5 @@
 header {
-	background-image: url('../../src/assets/img/header/back.png');
+	background-image: url('../assets/img/header/back.png');
 	background-size: cover;
 	background-position: bottom;
 }

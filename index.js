@@ -30,8 +30,7 @@ app.use(cors());
 
 
 app.get('/', (request, response) => {
-	// res.send({ response: "Server is up and running." }).status(200);
-	response.sendFile(path.join(__dirname, 'client/index.html'));
+	response.sendFile(path.join(__dirname, 'client/login.html'));
 });
 
 let userStack = [];
