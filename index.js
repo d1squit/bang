@@ -5,15 +5,39 @@ import http from 'http';
 import path from 'path';
 
 import { startGame, initGame } from './modules/game.js';
+import { Lobby } from './modules/lobby.js';
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 
 import crypto from 'crypto';
+import fs from 'fs';
+import nodemailer from 'nodemailer';
+
+
+
+
+const sendMail = async (mail) => {
+	const transporter = nodemailer.createTransport({
+		service: 'gmail',
+		auth: {
+			user: 'anat.yudin06@gmail.com',
+			pass: 'ajranbgtiukrikxs'
+		}
+	});
+
+	await transporter.sendMail(mail);
+}
 
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+let users = [];
+let lobbies = [];
+
+
+fs.readFile('./users.json', (err, data) => users = JSON.parse(data.toString()));
+fs.readFile('./lobbies.json', (err, data) => lobbies = JSON.parse(data.toString()));
 
 
 // ----------------------------------------------------------------------------------------- //
@@ -30,13 +54,13 @@ app.use(cors());
 
 
 app.get('/', (request, response) => {
-	response.sendFile(path.join(__dirname, 'client/login.html'));
+	response.sendFile(path.join(__dirname, '/index.html'));
 });
 
 let userStack = [];
 
 const createRoom = async (sockets, botFlag = false) => {
-	return new Promise ((resolve, reject) => {
+	return new Promise((resolve, reject) => {
 		const room = {};
 
 		room.id = crypto.randomBytes(16).toString("hex");
@@ -54,127 +78,187 @@ const createRoom = async (sockets, botFlag = false) => {
 		room.players = [];
 		room.turn = 0;
 		room.wait = 0;
-		
+
 		room.cancel_cards = 0;
 		room.health_cards = 0;
 		room.turn_cards = [];
-	
+
 		room.timeout = { interval: null, time: 10 };
 		room.shop = { cards: [], wait: 0, interval: null };
 		room.indians = { len: 0, wait: 0, interval: null };
 		room.duel = { players: [], wait: 0, interval: null };
 		room.choose_three_cards = [];
-		
+
 		room.destroyed_choosed = false;
 		room.player_choosed = -1;
 		room.destroyed = [];
-	
+
 		resolve(room);
 	});
 }
 
-class Lobby {
-	constructor (players, rating) {
-		this.players = players;
-		this.average = { min: rating - 50, max: rating + 50 };
-		this.id = crypto.randomBytes(16).toString("hex");
-		this.accepted = [];
-		this.interval = setInterval(() => {
-			const lobby = this.searchLobby();
-
-			if (lobby !== false) {
-				let unionBreak = false;
-				
-				for (let i = 0; i < this.players.length; i++) {
-					if (Lobby.lobbies[lobby].players.length < 6) {
-						Lobby.lobbies[lobby].addPlayer(this.players[i], true);
-						this.players.splice(i, 1); i--;
-					} else { unionBreak = true; break; }
-				}
-				
-				if (!unionBreak) {
-					Lobby.#lobbies.splice(Lobby.#lobbies.findIndex(item => item.id === this.id), 1);
-					clearInterval(this.interval);
-				}
-			}
-
-			this.players.forEach(player => {
-				player.wait++;
-				io.to(player.id).emit('search-time', player.wait);
-			});
-			this.average.min -= 5;
-			this.average.max += 5;
-		}, 1000);
-	}
-
-	static createLobby = (socket) => {
-		const lobby = new Lobby([socket], socket.user.rating);
-		const userIndex = userStack.findIndex(player => player.id == socket.id);
-		if (~userIndex) {
-			clearInterval(userStack[userIndex].interval);
-			userStack.splice(userIndex, 1);
-			this.#lobbies.push(lobby);
-		}
-	}
-
-	static searchLobby = (socket) => {
-		for (let index = 0; index < this.#lobbies.length; index++) {
-			if (((socket.average.min > this.#lobbies[index].average.min && socket.average.min < this.#lobbies[index].average.max) ||
-				(socket.average.max > this.#lobbies[index].average.min && socket.average.max < this.#lobbies[index].average.max) ||
-				(socket.average.min > this.#lobbies[index].average.min && socket.average.max < this.#lobbies[index].average.max) ||
-				(socket.average.min < this.#lobbies[index].average.min && socket.average.max > this.#lobbies[index].average.max))
-				&& this.#lobbies[index].players.length < 6) return index;
-		}; return false;
-	}
-
-	static get lobbies () { return this.#lobbies }
-	static #lobbies = [];
-
-	searchLobby = () => {
-		for (let index = 0; index < Lobby.#lobbies.length; index++) {
-			if (((this.average.min > Lobby.#lobbies[index].average.min && this.average.min < Lobby.#lobbies[index].average.max) ||
-				(this.average.max > Lobby.#lobbies[index].average.min && this.average.max < Lobby.#lobbies[index].average.max) ||
-				(this.average.min > Lobby.#lobbies[index].average.min && this.average.max < Lobby.#lobbies[index].average.max) ||
-				(this.average.min < Lobby.#lobbies[index].average.min && this.average.max > Lobby.#lobbies[index].average.max))
-				&& Lobby.#lobbies[index].players.length < 6 && this.players.length < 6) return index;
-		}; return false;
-	}
-
-	addPlayer = (socket, lobbyUnion=false) => {
-		if (this.players.length < 6) {
-			this.players.push(socket);
-
-			if (!lobbyUnion) {
-				const userIndex = userStack.findIndex(player => player.id == socket.id);
-				if (~userIndex) {
-					clearInterval(userStack[userIndex].interval);
-					userStack.splice(userIndex, 1);
-				}
-			}
-	
-			let allAverage = Math.round(this.players.map(item => item.user.rating).reduce((prev, current) => prev + current) / this.players.length);
-			this.average = { min: allAverage - 50, max: allAverage + 50 };
-		}
-	}
-
-	removePlayer = (socket) => this.players.splice(this.players.findIndex(player => player.id == socket.id), 1);
-}
-
-
 io.on('connection', (socket) => {
+	if (socket.handshake.query.session) {
+		const userIndex = users.findIndex(item => item.session == socket.handshake.query.session);
+		if (~userIndex) users[userIndex].socketId = socket.id;
+		fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+	}
+
+	const checkSocket = (user, ip) => {
+		if (ip != user.headers['ip']) return 1;
+		if (socket.request.headers['sec-ch-ua'] != user.headers['sec-ch-ua']) return 2;
+		if (socket.request.headers['user-agent'] != user.headers['user-agent']) return 3;
+		if (socket.request.headers['sec-ch-ua-platform'] != user.headers['sec-ch-ua-platform']) return 4;
+		return true;
+	}
+
+	const decline = (error, userIndex = null) => {
+		console.log(error)
+		if (!users[userIndex]) socket.emit('decline', error);
+		else {
+			socket.emit('decline', error, users[userIndex].tempSession = crypto.randomBytes(16).toString("hex"));
+			if (~error) sendMail({ from: 'BANG', to: 'anat.yudin06@gmail.com', subject: 'Login attempted from new device', html: `To verify your identity, follow the link: <a href="http://localhost:3000/client/verification.html?code=${users[userIndex].tempCode = crypto.randomBytes(16).toString("hex")}">VERIFICATION</a>` });
+		}
+	}
+
+	socket.on('disconnect', () => {
+		const userIndex = users.findIndex(item => item.socketId == socket.id);
+		if (~userIndex) {
+			users[userIndex].friends.forEach(friendId => {
+				const friendIndex = users.findIndex(item => item.gameId == friendId);
+				if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[userIndex].gameId, false);
+			});
+
+			users[userIndex].socketId = null;
+		}
+		fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+	});
+
+	socket.on('login', (login, password) => {
+		const userIndex = users.findIndex(item => item.login == login && item.password == password);
+		if (~userIndex) {
+			users[userIndex].socketId = socket.id;
+			socket.emit('lobby-redirect', users[userIndex].session = crypto.randomBytes(16).toString("hex"));
+			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+		} else decline(userIndex);
+	});
+
+	socket.on('logout', (session, ip) => {
+		const userIndex = users.findIndex(item => item.session == session && session);
+		if (~userIndex) {
+			const verification = checkSocket(users[userIndex], ip);
+			if (verification !== true) { decline(verification, userIndex); return false; }
+			socket.emit('login-redirect', users[userIndex].session = null);
+			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+		} else decline(userIndex);
+	});
+
+	socket.on('verification', (session, code, ip) => {
+		const userIndex = users.findIndex(item => item.tempSession == session && session);
+		if (~userIndex) {
+			if (code == users[userIndex].tempCode) {
+				users[userIndex].socketId = socket.id;
+				users[userIndex].headers['ip'] = ip;
+				users[userIndex].headers['sec-ch-ua'] = socket.request.headers['sec-ch-ua'];
+				users[userIndex].headers['user-agent'] = socket.request.headers['user-agent'];
+				users[userIndex].headers['sec-ch-ua-platform'] = socket.request.headers['sec-ch-ua-platform'];
+				socket.emit('login-redirect');
+				fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+			}
+		} else decline(userIndex);
+	});
+
+	socket.on('get-profile', (session, ip) => {
+		const userIndex = users.findIndex(item => item.session == session && session);
+		if (~userIndex) {
+			const verification = checkSocket(users[userIndex], ip);
+			if (verification !== true) { decline(verification, userIndex); return false; }
+			users[userIndex].socketId = socket.id;
+
+			let friends = [];
+			users[userIndex].friends.forEach(friendId => {
+				const friendIndex = users.findIndex(item => item.gameId == friendId);
+				if (~friendIndex) friends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
+			});
+
+			users[userIndex].friends.forEach(friendId => {
+				const friendIndex = users.findIndex(item => item.gameId == friendId);
+				if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[userIndex].gameId, true);
+			});
+
+			socket.emit('profile', { username: users[userIndex].username, photo: users[userIndex].photo, rating: users[userIndex].rating, characters: users[userIndex].characters, friends: friends, gameId: users[userIndex].gameId });
+			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+
+			lobbies.push(new Lobby(users[userIndex], users[userIndex].rating));
+			fs.writeFile('./lobbies.json', JSON.stringify(users, null, '\t'), () => {});
+		} else decline(userIndex);
+	});
+
+	socket.on('invite', (sender, target) => {
+		const senderIndex = users.findIndex(item => item.gameId == sender);
+		const targetIndex = users.findIndex(item => item.gameId == target);
+
+		if (~senderIndex && ~targetIndex) {
+			const inviteId = crypto.randomBytes(30).toString("hex");
+			users[senderIndex].invites.push(inviteId);
+			io.to(users[targetIndex].socketId).emit('invite', {	username: users[senderIndex].username, id: users[senderIndex].gameId }, inviteId);
+			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+
+			setTimeout(() => {
+				const inviteIndex = users[senderIndex].invites.findIndex(item => item == inviteId);
+				if (~inviteIndex) {
+					users[senderIndex].invites.splice(inviteIndex, 1);
+					fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+				}
+			}, 10000);
+		}
+	});
+
+	socket.on('invite-decline', (sender, inviteId) => {
+		const senderIndex = users.findIndex(item => item.gameId == sender);
+		const targetIndex = users.findIndex(item => item.socketId == socket.id);
+
+		if (~senderIndex && ~targetIndex) {
+			const inviteIndex = users[senderIndex].invites.findIndex(item => item == inviteId);
+			if (~inviteIndex) {
+				io.to(users[targetIndex].socketId).emit('invite-next');
+				users[senderIndex].invites.splice(inviteIndex, 1);
+				fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+			}
+		}
+	});
+
+	socket.on('invite-accept', (sender, inviteId) => {
+		const senderIndex = users.findIndex(item => item.gameId == sender);
+		const targetIndex = users.findIndex(item => item.socketId == socket.id);
+		
+		if (~senderIndex && ~targetIndex) {
+			const inviteIndex = users[senderIndex].invites.findIndex(item => item == inviteId);
+			if (~inviteIndex) {
+				io.to(users[targetIndex].socketId).emit('invite-next');
+				users[senderIndex].invites.splice(inviteIndex, 1);
+				fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+
+				// lobbies.push(new Lobby);
+			}
+		}
+	});
+
+
+
 	socket.on('start-game', (name, rating) => {
 		userStack.push(socket);
 		const lastUser = userStack[userStack.length - 1];
 		lastUser.user = { name: name, rating: rating };
-	
+
 		lastUser.wait = 0;
 		lastUser.average = { min: lastUser.user.rating - 50, max: lastUser.user.rating + 50 };
 		lastUser.interval = setInterval(() => {
 			const lobby = Lobby.searchLobby(lastUser);
-	
+
 			if (lobby !== false) Lobby.lobbies[lobby].addPlayer(lastUser);
 			else Lobby.createLobby(lastUser);
-	
+
 			lastUser.wait++;
 			lastUser.average.min -= 5;
 			lastUser.average.max += 5;
@@ -228,7 +312,7 @@ setInterval(() => {
 					if (Lobby.lobbies[i].players.length == 0) return;
 					clearTimeout(Lobby.lobbies[i].accept_timeout);
 					Lobby.lobbies[i].accept_timeout = null;
-	
+
 					for (let j = 0; j < Lobby.lobbies[i].players.length; j++) {
 						if (!~Lobby.lobbies[i].accepted.findIndex(item => item == Lobby.lobbies[i].players[j].id)) {
 							Lobby.lobbies[i].players.splice(j, 1); j--;

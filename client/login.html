@@ -10,6 +10,9 @@
 	<link rel="stylesheet" href="./css/footer.css">
 	<link rel="stylesheet" href="./css/common.css">
 	<link rel="stylesheet" href="./css/login.css">
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="./js/cookie.js"></script>
 	<title>Log In</title>
 </head>
 <body>
@@ -38,7 +41,7 @@
 			<div class="path">Main / Log In</div>
 			<section class="login">
 				<div class="login__container __container">
-					<form action="" class="login-form">
+					<div class="login-form">
 						<div class="login__header">
 							<img src="./assets/img/home/star.svg" class="login__star">
 							<h2 class="login__title">LOGIN</h2>
@@ -48,21 +51,20 @@
 						<input type="text" class="login__input">
 						<h3 class="login__password__label login__label">Password</h3>
 						<input type="text" class="password__input">
-						<button type="button" class="login__submit">OK</button>
+						<div class="login__submit text-shadow">OK</div>
 						<script>
-							document.querySelector('button').addEventListener('click', () => {
-								if (typeof ethereum !== 'undefined') {
-									ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
-										let account = accounts[0];
-										ethereum.request({ method: 'eth_getBalance', params: [account, 'latest'] }).then(result => {
-											console.log(result)
-										});
-									});
-								}
-							});
+							// document.querySelector('button').addEventListener('click', () => {
+							// 	if (typeof ethereum !== 'undefined') {
+							// 		ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
+							// 			let account = accounts[0];
+							// 			ethereum.request({ method: 'eth_getBalance', params: [account, 'latest'] }).then(result => {
+							// 				console.log(result)
+							// 			});
+							// 		});
+							// 	}
+							// });
 						</script>
-						<h3 class="login__under">OK</h3>
-					</form>
+					</div>
 				</div>
 			</section>
 		</main>
@@ -89,5 +91,7 @@
 			</div>
 		</footer>
 	</div>
+
+	<script src="./js/login.js"></script>
 </body>
 </html>

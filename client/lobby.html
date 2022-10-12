@@ -10,9 +10,13 @@
 	<link rel="stylesheet" href="./css/footer.css">
 	<link rel="stylesheet" href="./css/common.css">
 	<link rel="stylesheet" href="./css/lobby.css">
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="./js/cookie.js"></script>
 	<title>Lobby</title>
 </head>
 <body>
+	<div class="error lobby__button"></div>
 	<div class="wrapper">
 		<header class="header-game">
 			<div class="header__container __container header-game">
@@ -31,8 +35,9 @@
 						<li class="header__social"><a href=""><img src="./assets/img/header/wallet-button.svg" alt="" class="header__social__image"></a></li>
 					</ul>
 					<div class="header__profile profile">
-						<div class="header__profile__image profile__image"><img src="./assets/img/profile-edit.png" alt="" class="header__profile__edit"></div>
-						<h2 class="header__profile__name profile__name">Richardson</h2>
+						<div class="header__profile__image profile__image"><div class="header__profile__edit profile__edit"></div></div>
+						<h2 class="header__profile__name profile__name"></h2>
+						<div class="header__profile__logout"></div>
 					</div>
 				</div>
 			</div>
@@ -44,7 +49,7 @@
 					<div class="lobby__invite">
 						<div class="lobby__invite__message lobby__inner__block">
 							<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
-							<h2 class="lobby__invite__name">NikName</h2>
+							<h2 class="lobby__invite__name"></h2>
 							<h2 class="lobby__invite__text">отправил Вам приглашение</h2>
 						</div>
 						<div class="lobby__invite__buttons lobby__inner__block">
@@ -57,12 +62,12 @@
 						<div class="lobby__main">
 							<div class="lobby__profile lobby__block">
 								<div class="lobby__profile__person lobby__inner__block profile">
-									<div class="lobby__profile__image profile__image"><img src="./assets/img/profile-edit.png" alt="" class="lobby___profile__edit"></div>
-									<h2 class="lobby__profile__name profile__name">Richardson</h2>
+									<div class="lobby__profile__image profile__image"><div class="lobby__profile__edit profile__edit"></div></div>
+									<h2 class="lobby__profile__name profile__name"></h2>
 								</div>
 								<div class="lobby__profile__rating lobby__inner__block">
-									<h2 class="lobby__profile__rating__title">Regular / Tournamen Rank</h2>
-									<div class="lobby__profile__rating__number"><img src="./assets/img/trophy-icon.svg" alt=""><h2>245</h2></div>
+									<h2 class="lobby__profile__rating__title">Regular / Tournament Rank</h2>
+									<div class="lobby__profile__rating__number"><img src="./assets/img/trophy-icon.svg" alt=""><h2></h2></div>
 								</div>
 							</div>
 							<div class="lobby__match lobby__block">
@@ -102,14 +107,22 @@
 										</div>
 									</div>
 									<div class="lobby__match__start__players">
-										<div class="lobby__player"></div>
-										<div class="lobby__player"></div>
-										<div class="lobby__player"></div>
-										<div class="lobby__player"></div>
-										<div class="lobby__player"></div>
-										<div class="lobby__player"></div>
-										<div class="lobby__player"></div>
-										<div class="lobby__player"></div>
+										<div class="lobby__player player my-player">
+											<img src="" alt="" class="player__photo">
+											<div class="player__state"><div></div></div>
+											<div class="player__info">
+												<h2 class="player__name"></h2>
+												<div class="player__rating"><img src="./assets/img/trophy-icon.svg" alt=""><h2></h2></div>
+											</div>
+											<div class="player__kick"></div>
+										</div>
+										<div class="lobby__player player inactive"></div>
+										<div class="lobby__player player inactive"></div>
+										<div class="lobby__player player inactive"></div>
+										<div class="lobby__player player inactive"></div>
+										<div class="lobby__player player inactive"></div>
+										<div class="lobby__player player inactive"></div>
+										<div class="lobby__player player inactive"></div>
 									</div>
 									<div class="lobby__match__start__search">
 										<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
@@ -122,13 +135,18 @@
 						<div class="lobby__friends lobby__block">
 							<div class="lobby__friends__top">
 								<h2 class="lobby__friends__title">Друзья</h2>
-								<h2 class="lobby__friends__count">4 <span class="disabled">/ 16</span></h2>
+								<div class="lobby__friends__count"><h2 class="lobby__friends__count__online">4</h2><span class="disabled">/ 16</span></div>
 							</div>
 							<div class="lobby__friends__search">
 								<input type="text" class="lobby__friends__search__input" placeholder="Поиск">
 								<div type="text" class="lobby__friends__search__icon"></div>
 							</div>
 							<div class="lobby__friends__invites lobby__button text-shadow">Заявка в друзья  99+</div>
+							<div class="lobby__friends__list"></div>
+							<div class="lobby__friends__arrows">
+								<div class="lobby__friends__arrow"></div>
+								<div class="lobby__friends__arrow flip disabled"></div>
+							</div>
 						</div>
 					</div>
 				</div>

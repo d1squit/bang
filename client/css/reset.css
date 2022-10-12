@@ -153,6 +153,7 @@ html, body {
 }
 
 .wrapper {
+	width: 100%;
 	min-height: 100%;
 	display: -webkit-box;
 	display: -ms-flexbox;

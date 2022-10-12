@@ -50,7 +50,6 @@
 }
 
 .profile__image {
-	background-image: url('../assets/img/user1.png');
 	background-size: cover;
 	width: 40px;
 	height: 40px;

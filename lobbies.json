@@ -1,0 +1,134 @@
+[
+	{
+		"login": "1",
+		"password": "1",
+		"username": "bot1",
+		"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d651",
+		"rating": 1000,
+		"socketId": null,
+		"session": null,
+		"tempSession": null,
+		"tempCode": null,
+		"gameId": "a7ae81befeaad14cfb5875c4a4627399",
+		"characters": [
+			0,
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"friends": [],
+		"invites": [],
+		"headers": {
+			"sec-ch-ua": "\"Chromium\";v=\"106\", \"Google Chrome\";v=\"106\", \"Not;A=Brand\";v=\"99\"",
+			"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
+			"sec-ch-ua-platform": "\"Windows\""
+		}
+	},
+	{
+		"login": "2",
+		"password": "2",
+		"username": "bot2",
+		"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d651",
+		"rating": 1000,
+		"socketId": "L6MZ3avrMvg1vcb5AAAD",
+		"session": "db6bd8cdeb2a66e3bd209b252c062d17",
+		"tempSession": "93d872332c8e459118737ceaa9a3c8cf",
+		"tempCode": "9691a307ecf60a33b83b3ae89efab6f5",
+		"gameId": "35c268d320309cd9845f76183da3ff01",
+		"characters": [
+			0,
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"friends": [
+			"28333140afc5381857313446a0e70cf2",
+			"2b4b5ecf4e7b43333c5d7cc4791ac390"
+		],
+		"invites": [],
+		"headers": {
+			"sec-ch-ua": "\"Chromium\";v=\"106\", \"Google Chrome\";v=\"106\", \"Not;A=Brand\";v=\"99\"",
+			"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
+			"sec-ch-ua-platform": "\"Windows\"",
+			"ip": "46.33.33.41"
+		}
+	},
+	{
+		"login": "3",
+		"password": "3",
+		"username": "bot3",
+		"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d651",
+		"rating": 1000,
+		"socketId": "PevO5zw-8ZKGOcaGAAAf",
+		"session": "fe841e23e2721b852e6a1526d0ade6df",
+		"tempSession": "c71f1f1f4d258f40a2a618ce3dc1b9f8",
+		"tempCode": "4b1fdb20dff612432da41384186275c9",
+		"gameId": "28333140afc5381857313446a0e70cf2",
+		"characters": [
+			0,
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"friends": [
+			"35c268d320309cd9845f76183da3ff01"
+		],
+		"invites": [],
+		"headers": {
+			"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:105.0) Gecko/20100101 Firefox/105.0",
+			"ip": "46.33.33.41"
+		}
+	},
+	{
+		"login": "4",
+		"password": "4",
+		"username": "bot4",
+		"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d651",
+		"rating": 1000,
+		"socketId": "hXa0Eubuv3OkKtu3AAAR",
+		"session": "4f175565777d0fbe1816e7a22bf415ab",
+		"tempSession": "dd94c67f7110e62b26885474f2e82c1d",
+		"tempCode": "512b465ea5d3d3f60159449b5ee33594",
+		"gameId": "2b4b5ecf4e7b43333c5d7cc4791ac390",
+		"characters": [
+			0,
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"friends": [
+			"35c268d320309cd9845f76183da3ff01"
+		],
+		"invites": [],
+		"headers": {
+			"sec-ch-ua": "\"Chromium\";v=\"106\", \"Microsoft Edge\";v=\"106\", \";Not A Brand\";v=\"99\"",
+			"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 Edg/106.0.1370.37",
+			"sec-ch-ua-platform": "\"Windows\"",
+			"ip": "46.33.33.41"
+		}
+	}
+]
