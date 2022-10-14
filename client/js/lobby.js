@@ -37,12 +37,12 @@ charactersArrowPrevious.addEventListener('click', () => {
 
 friendsArrowNext.addEventListener('click', () => {
 	if (friendsArrowNext.classList.contains('disabled')) return; window.user.navigation.friends.currentPage++;
-	displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6);
+	displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6, window.searchActive ? window.search : null);
 });
 
 friendsArrowPrevious.addEventListener('click', () => {
 	if (friendsArrowPrevious.classList.contains('disabled')) return; window.user.navigation.friends.currentPage--;
-	displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6);
+	displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6, window.searchActive ? window.search : null);
 });
 
 // ------------------------------------------- LOBBY ------------------------------------------- //
@@ -57,11 +57,29 @@ document.querySelector('.error').addEventListener('click', () => {
 });
 
 document.querySelector('.header__profile__logout').addEventListener('click', () => logOut(socket));
+document.querySelectorAll('.player__kick').forEach((element, index) => element.addEventListener('click', () => socket.emit('kick', window.user.gameId, window.lobby.players[index].gameId, session)));
+
+document.querySelector('.lobby__friends__search__input').addEventListener('input', () => {
+	if (document.querySelector('.lobby__friends__search__input').value != '') socket.emit('get-users', document.querySelector('.lobby__friends__search__input').value, session);
+	else {
+		displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6);
+		window.searchActive = false;
+	}
+});
+
+document.querySelectorAll('.lobby__match__start__mode__tip')[1].addEventListener('click', () => document.querySelector('.lobby__match__start__mode__text').style.display = 'block');
+document.querySelectorAll('*:not(.lobby__match__start__mode__tip)').forEach(element => element.addEventListener('click', () => document.querySelector('.lobby__match__start__mode__text').style.display = 'none'));
 
 
 $.getJSON("https://api.ipify.org?format=json", (data) => {
 	if (session) socket.emit('get-profile', session, data.ip);
 	else window.location.href = './login.html';
+});
+
+socket.on('users', users => {
+	window.search = users;
+	window.searchActive = true;
+	displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6, users, true);
 });
 
 socket.on('decline', (error, tempSession) => {
@@ -73,19 +91,24 @@ socket.on('decline', (error, tempSession) => {
 	}
 });
 
-const displayFriends = (start, end) => {
+const displayFriends = (start, end, friends=null, mode=false) => {
+	if (!friends) friends = window.user.friends;
+
 	document.querySelector('.lobby__friends__list').innerHTML = '';
-	user.friends.slice(start, end).forEach((friend, index) => {
+	friends.slice(start, end).forEach((friend, index) => {
 		document.querySelector('.lobby__friends__list').innerHTML += `<div class="lobby__friend player"><img src="" alt="" class="player__photo"><div class="player__state"><div></div></div><div class="player__info"><h2 class="player__name"></h2><div class="player__rating"><img src="./assets/img/trophy-icon.svg" alt=""><h2></h2></div></div><div class="player__invite"></div></div>`;
+		document.querySelectorAll('.player__invite')[index].style.display = 'block';
 		document.querySelectorAll('.lobby__friend .player__name')[index].textContent = friend.name;
 		document.querySelectorAll('.lobby__friend .player__rating > h2')[index].textContent = friend.rating;
 		document.querySelectorAll('.lobby__friend .player__photo')[index].src = `./assets/photos/${friend.photo}.png`;
-		if (!friend.online) {
+		if (window.lobby && ~window.lobby.players.findIndex(item => item.gameId == friend.gameId) && document.querySelectorAll('.player__invite').length > 0) document.querySelectorAll('.player__invite')[index].style.display = 'none';
+		if (!friend.online && !mode) {
 			document.querySelectorAll('.lobby__friend')[index].classList.add('disabled');
-			document.querySelectorAll('.lobby__friend')[index].removeChild(document.querySelector(`.lobby__friend:nth-child(${index + 1}) .player__invite`));
+			document.querySelector(`.lobby__friend:nth-child(${index + 1}) .player__invite`).style.display = 'none';
 		}
 	});
-	if (window.user.navigation.friends.currentPage * 6 > window.user.friends.length) friendsArrowNext.classList.add('disabled');
+
+	if (window.user.navigation.friends.currentPage * 6 > friends.length) friendsArrowNext.classList.add('disabled');
 	else friendsArrowNext.classList.remove('disabled');
 
 	if ((window.user.navigation.friends.currentPage - 1) * 6 == 0) friendsArrowPrevious.classList.add('disabled');
@@ -93,7 +116,8 @@ const displayFriends = (start, end) => {
 
 	document.querySelectorAll('.player__invite').forEach((element, index) => {
 		element.addEventListener('click', () => {
-			socket.emit('invite', window.user.gameId, window.user.friends[index].gameId);
+			if (mode) socket.emit('add-friend', window.user.gameId, window.search[index].gameId, session);
+			else socket.emit('invite', window.user.gameId, friends[index].gameId, session);
 		});
 	});
 }
@@ -106,11 +130,7 @@ socket.on('profile', user => {
 		document.querySelectorAll('.profile__name').forEach(element => element.textContent = user.username);
 		document.querySelector('.lobby__profile__rating__number > h2').textContent = user.rating;
 
-		document.querySelector('.player.my-player .player__name').textContent = user.username;
-		document.querySelector('.player.my-player .player__rating > h2').textContent = user.rating;
-
 		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('./assets/photos/${user.photo}.png')`);
-		document.querySelectorAll('.lobby__player .player__photo').forEach(element => element.src = `./assets/photos/${user.photo}.png`);
 
 		if (user.characters.length <= 6) {
 			document.querySelector('.lobby__match__character__arrow:first-child').classList.add('disabled');
@@ -153,6 +173,43 @@ socket.on('friend-state', (friendId, state) => {
 	}
 });
 
+socket.on('lobby-state', (playerId, state) => {
+	if (!window.user) return;
+	const playerIndex = window.lobby.players.findIndex(item => item.gameId == playerId);
+	if (~playerIndex) {
+		window.lobby.players[playerIndex].online = state;
+		if (state) document.querySelectorAll('.lobby__match .lobby__player')[playerIndex].classList.remove('disabled');
+		else document.querySelectorAll('.lobby__match .lobby__player')[playerIndex].classList.add('disabled');
+	}
+});
+
+socket.on('lobby', lobby => {
+	window.lobby = lobby;
+	displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6);
+
+	document.querySelectorAll('.lobby__match .player').forEach(element => element.classList.add('inactive'));
+	lobby.players.forEach((player, index) => {
+		document.querySelector('.lobby__match .player.inactive').classList.remove('inactive');
+		document.querySelectorAll('.lobby__player .player__photo')[index].src = `./assets/photos/${player.photo}.png`;
+		document.querySelectorAll('.lobby__player .player__name')[index].textContent = player.username;
+		document.querySelectorAll('.lobby__player .player__rating h2')[index].textContent = player.rating;
+		if (player.online) document.querySelectorAll('.lobby__match .lobby__player')[index].classList.remove('disabled');
+		else document.querySelectorAll('.lobby__match .lobby__player')[index].classList.add('disabled');
+	});
+
+	document.querySelectorAll('.lobby__player .player__kick').forEach(element => element.style.display = 'none');
+
+	if (window.user.gameId != window.lobby.players[0].gameId) {
+		lobby.players.forEach((player, index) => {
+			if (player.gameId == window.user.gameId) document.querySelectorAll('.lobby__player .player__kick')[index].style.display = 'block';
+		});
+	} else {
+		lobby.players.forEach((player, index) => {
+			document.querySelectorAll('.lobby__player .player__kick')[index].style.display = 'block';
+		});
+	}
+});
+
 // ------------------------------------------- INVITES ------------------------------------------- //
 
 class Invites {
@@ -189,7 +246,7 @@ class Invites {
 					this.sendInvite();
 				}, 800);
 			}
-		}, 10000);
+		}, 30000);
 	};
 
 	stopInvite = () => {

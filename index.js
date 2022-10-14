@@ -37,7 +37,7 @@ let lobbies = [];
 
 
 fs.readFile('./users.json', (err, data) => users = JSON.parse(data.toString()));
-fs.readFile('./lobbies.json', (err, data) => lobbies = JSON.parse(data.toString()));
+// fs.readFile('./lobbies.json', (err, data) => lobbies = JSON.parse(data.toString()));
 
 
 // ----------------------------------------------------------------------------------------- //
@@ -129,9 +129,19 @@ io.on('connection', (socket) => {
 				if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[userIndex].gameId, false);
 			});
 
+			const lobbyIndex = lobbies.findIndex(item => item.id == users[userIndex].lobbyId);
+			if (~lobbyIndex) {
+				lobbies[lobbyIndex].players.forEach((player, index) => {
+					const playerIndex = users.findIndex(item => item.gameId == player.gameId);
+					if (player.gameId == users[userIndex].gameId) lobbies[lobbyIndex].players[index].online = false;
+					if (~playerIndex) io.to(users[playerIndex].socketId).emit('lobby-state', users[userIndex].gameId, false);
+				});
+			}
+
 			users[userIndex].socketId = null;
 		}
 		fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+		fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
 	});
 
 	socket.on('login', (login, password) => {
@@ -188,17 +198,34 @@ io.on('connection', (socket) => {
 
 			socket.emit('profile', { username: users[userIndex].username, photo: users[userIndex].photo, rating: users[userIndex].rating, characters: users[userIndex].characters, friends: friends, gameId: users[userIndex].gameId });
 			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-
-			lobbies.push(new Lobby(users[userIndex], users[userIndex].rating));
-			fs.writeFile('./lobbies.json', JSON.stringify(users, null, '\t'), () => {});
+			
+			let lobbyIndex = -1;
+			if (users[userIndex].lobbyId) lobbyIndex = lobbies.findIndex(item => item.id == users[userIndex].lobbyId);
+			if (~lobbyIndex) {
+				io.to(users[userIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
+				lobbies[lobbyIndex].players.forEach(player => {
+					const playerIndex = users.findIndex(item => item.gameId == player.gameId);
+					if (~playerIndex) io.to(users[playerIndex].socketId).emit('lobby-state', users[userIndex].gameId, true);
+				});
+			} else {
+				lobbies.push(new Lobby({ username: users[userIndex].username, photo: users[userIndex].photo, rating: users[userIndex].rating, gameId: users[userIndex].gameId, online: Boolean(users[userIndex].socketId) }, users[userIndex].rating));
+				users[userIndex].lobbyId = lobbies[lobbies.length - 1].id;
+				socket.emit('lobby', lobbies[lobbies.length - 1]);
+			}
+			
+			
+			fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
 		} else decline(userIndex);
 	});
 
-	socket.on('invite', (sender, target) => {
-		const senderIndex = users.findIndex(item => item.gameId == sender);
+	socket.on('invite', (sender, target, session) => {
+		const senderIndex = users.findIndex(item => item.gameId == sender && item.session == session);
 		const targetIndex = users.findIndex(item => item.gameId == target);
+		const lobbyIndex = lobbies.findIndex(item => item.id == users[senderIndex].lobbyId);
 
 		if (~senderIndex && ~targetIndex) {
+			if (~lobbyIndex && ~lobbies[lobbyIndex].players.findIndex(item => item.gameId == users[targetIndex].gameId)) return;
+
 			const inviteId = crypto.randomBytes(30).toString("hex");
 			users[senderIndex].invites.push(inviteId);
 			io.to(users[targetIndex].socketId).emit('invite', {	username: users[senderIndex].username, id: users[senderIndex].gameId }, inviteId);
@@ -210,7 +237,53 @@ io.on('connection', (socket) => {
 					users[senderIndex].invites.splice(inviteIndex, 1);
 					fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
 				}
-			}, 10000);
+			}, 30000);
+		}
+	});
+
+	socket.on('get-users', (key, session) => {
+		const userIndex = users.findIndex(item => item.session == session);
+		if (~userIndex) socket.emit('users', users.filter(item => item.username.includes(key) && item.gameId != users[userIndex].gameId).map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }));
+	});
+
+	socket.on('kick', (sender, target, session) => {
+		const senderIndex = users.findIndex(item => item.gameId == sender && item.session == session);
+		const targetIndex = users.findIndex(item => item.gameId == target);
+		const lobbyIndex = lobbies.findIndex(item => item.id == users[senderIndex].lobbyId);
+
+		if (~senderIndex && ~targetIndex && ~lobbyIndex) {
+			if (senderIndex == targetIndex) {
+				const inLobbyIndex = lobbies[lobbyIndex].players.findIndex(item => item.gameId == sender);
+				if (~inLobbyIndex) {
+					lobbies[lobbyIndex].players.splice(inLobbyIndex, 1);
+					if (lobbies[lobbyIndex].players.length == 0) lobbies.splice(lobbyIndex, 1);
+					else {
+						lobbies[lobbyIndex].players.forEach(player => {
+							const userIndex = users.findIndex(item => item.gameId == player.gameId);
+							if (~userIndex) io.to(users[userIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
+						});
+					}
+					lobbies.push(new Lobby({ username: users[senderIndex].username, photo: users[senderIndex].photo, rating: users[senderIndex].rating, gameId: users[senderIndex].gameId, online: Boolean(users[senderIndex].socketId) }, users[senderIndex].rating));
+					users[senderIndex].lobbyId = lobbies[lobbies.length - 1].id;
+					io.to(users[senderIndex].socketId).emit('lobby', lobbies[lobbies.length - 1]);
+				}
+			} else if (lobbies[lobbyIndex].players[0].gameId == sender) {
+				const inLobbyIndex = lobbies[lobbyIndex].players.findIndex(item => item.gameId == target);
+				if (~inLobbyIndex) {
+					lobbies[lobbyIndex].players.splice(inLobbyIndex, 1);
+					if (lobbies[lobbyIndex].players.length == 0) lobbies.splice(lobbyIndex, 1);
+					else {
+						lobbies[lobbyIndex].players.forEach(player => {
+							const userIndex = users.findIndex(item => item.gameId == player.gameId);
+							if (~userIndex) io.to(users[userIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
+						});
+					}
+					lobbies.push(new Lobby({ username: users[targetIndex].username, photo: users[targetIndex].photo, rating: users[targetIndex].rating, gameId: users[targetIndex].gameId, online: Boolean(users[targetIndex].socketId) }, users[targetIndex].rating));
+					users[targetIndex].lobbyId = lobbies[lobbies.length - 1].id;
+					io.to(users[targetIndex].socketId).emit('lobby', lobbies[lobbies.length - 1]);
+					io.to(users[senderIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
+				}
+			}
 		}
 	});
 
@@ -239,7 +312,30 @@ io.on('connection', (socket) => {
 				users[senderIndex].invites.splice(inviteIndex, 1);
 				fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
 
-				// lobbies.push(new Lobby);
+				const oldLobbyIndex = lobbies.findIndex(item => item.id == users[targetIndex].lobbyId);
+				if (~oldLobbyIndex) {
+					const playerIndex = lobbies[oldLobbyIndex].players.findIndex(item => item.gameId == users[targetIndex].gameId);
+					if (~playerIndex) lobbies[oldLobbyIndex].players.splice(playerIndex, 1);
+					if (lobbies[oldLobbyIndex].players.length == 0) lobbies.splice(oldLobbyIndex, 1);
+					else {
+						lobbies[oldLobbyIndex].players.forEach(player => {
+							const userIndex = users.findIndex(item => item.gameId == player.gameId);
+							if (~userIndex) io.to(users[userIndex].socketId).emit('lobby', lobbies[oldLobbyIndex]);
+						});
+					}
+				}
+
+				const lobbyIndex = lobbies.findIndex(item => item.id == users[senderIndex].lobbyId);
+				if (~lobbyIndex) {
+					users[targetIndex].lobbyId = lobbies[lobbyIndex].id;
+					const target = { username: users[targetIndex].username, photo: users[targetIndex].photo, rating: users[targetIndex].rating, gameId: users[targetIndex].gameId, online: Boolean(users[targetIndex].socketId) };
+					lobbies[lobbyIndex].addPlayer(target);
+					lobbies[lobbyIndex].players.forEach(player => {
+						const userIndex = users.findIndex(item => item.gameId == player.gameId);
+						if (~userIndex) io.to(users[userIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
+					});
+					fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
+				}
 			}
 		}
 	});
@@ -249,6 +345,7 @@ io.on('connection', (socket) => {
 	socket.on('start-game', (name, rating) => {
 		userStack.push(socket);
 		const lastUser = userStack[userStack.length - 1];
+
 		lastUser.user = { name: name, rating: rating };
 
 		lastUser.wait = 0;

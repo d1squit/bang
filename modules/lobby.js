@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 export class Lobby {
 	constructor (players, rating) {
-		this.players = players;
+		this.players = [players];
 		this.average = { min: rating - 50, max: rating + 50 };
 		this.id = crypto.randomBytes(16).toString("hex");
 		this.accepted = [];
@@ -61,22 +61,14 @@ export class Lobby {
 		}; return false;
 	}
 
-	addPlayer = (socket, lobbyUnion=false) => {
+	addPlayer = (socket) => {
 		if (this.players.length < 6) {
 			this.players.push(socket);
-
-			if (!lobbyUnion) {
-				const userIndex = userStack.findIndex(player => player.id == socket.id);
-				if (~userIndex) {
-					clearInterval(userStack[userIndex].interval);
-					userStack.splice(userIndex, 1);
-				}
-			}
 	
-			let allAverage = Math.round(this.players.map(item => item.user.rating).reduce((prev, current) => prev + current) / this.players.length);
+			let allAverage = Math.round(this.players.map(item => item.rating).reduce((prev, current) => prev + current) / this.players.length);
 			this.average = { min: allAverage - 50, max: allAverage + 50 };
 		}
 	}
 
-	removePlayer = (socket) => this.players.splice(this.players.findIndex(player => player.id == socket.id), 1);
+	removePlayer = (socket) => this.players.splice(this.players.findIndex(player => player.gameId == socket.gameId), 1);
 }

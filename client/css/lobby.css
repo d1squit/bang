@@ -299,6 +299,11 @@ main {
 	background-image: url('../assets/img/lobby/tip-icon.png');
 	width: 24px;
 	height: 24px;
+	cursor: pointer;
+}
+
+.lobby__match__start__mode__text {
+	display: none;
 }
 
 .lobby__match__start__mode__button.button-competitive {
@@ -320,6 +325,10 @@ main {
 	background-image: url('../assets/img/lobby/empty-player-field.png');
 	width: 260px;
 	height: 93px;
+}
+
+.player.inactive * {
+	display: none;
 }
 
 .lobby__friends .player, .lobby__friends .player:not(.inactive) {
@@ -393,7 +402,11 @@ main {
 	height: 8px;
 }
 
-.lobby__friend.disabled .player__state div {
+.lobby__match .lobby__player.disabled {
+	opacity: 1;
+}
+
+.lobby__friend.disabled .player__state div, .lobby__match .lobby__player.disabled .player__state div {
 	background: #E3D9CC;
 	border: 1px solid #A7A7A7;
 }
@@ -506,4 +519,21 @@ main {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+.lobby__match__start__mode__text {
+	width: 205px;
+	height: 73px;
+	background-image: url('../assets/img/lobby/tip-background.png');
+	font-family: 'Bookman Old Style';
+	font-weight: 600;
+	font-size: 12px;
+	line-height: 16px;
+	text-align: center;
+	letter-spacing: 0.75px;
+	color: #493F39;
+	padding: 16px 22px;
+	position: relative;
+	top: -65px;
+	left: 572px;
 }
