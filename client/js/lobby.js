@@ -82,6 +82,34 @@ socket.on('users', users => {
 	displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6, users, true);
 });
 
+socket.on('requests', requests => {
+	window.user.requests = requests;
+	document.querySelector('.lobby__friends__invites').textContent = 'Friend requests ' + (window.user.requests.length < 99 ? window.user.requests.length : '99+');
+});
+
+document.querySelector('.lobby__friends__invites').addEventListener('click', () => {
+	if (document.querySelector('.lobby__friends__invites').textContent.includes('request')) {
+		displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6, window.user.requests, false, true);
+		document.querySelector('.lobby__friends__invites').textContent = 'Close';
+	} else {
+		displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6);
+		document.querySelector('.lobby__friends__invites').textContent = 'Friend requests ' + (window.user.requests.length < 99 ? window.user.requests.length : '99+');
+	}
+});
+
+document.querySelector('.lobby__search__button').addEventListener('click', () => {
+	if (document.querySelector('.lobby__search__button').textContent == 'Start Search') socket.emit('ready', window.user.gameId, session);
+	else socket.emit('not-ready', window.user.gameId, session);
+});
+
+socket.on('ready', () => {
+	document.querySelector('.lobby__search__button').textContent = 'Waiting...';
+});
+
+socket.on('not-ready', () => {
+	document.querySelector('.lobby__search__button').textContent = 'Start Search';
+});
+
 socket.on('decline', (error, tempSession) => {
 	document.querySelector('.error').style.width = '300px';
 	if (error == -1) document.querySelector('.error').textContent = 'Неверные данные для входа';
@@ -91,22 +119,25 @@ socket.on('decline', (error, tempSession) => {
 	}
 });
 
-const displayFriends = (start, end, friends=null, mode=false) => {
+const displayFriends = (start, end, friends=null, mode=false, decline=false) => {
 	if (!friends) friends = window.user.friends;
 
 	document.querySelector('.lobby__friends__list').innerHTML = '';
 	friends.slice(start, end).forEach((friend, index) => {
-		document.querySelector('.lobby__friends__list').innerHTML += `<div class="lobby__friend player"><img src="" alt="" class="player__photo"><div class="player__state"><div></div></div><div class="player__info"><h2 class="player__name"></h2><div class="player__rating"><img src="./assets/img/trophy-icon.svg" alt=""><h2></h2></div></div><div class="player__invite"></div></div>`;
+		if (decline) document.querySelector('.lobby__friends__list').innerHTML += `<div class="lobby__friend player"><img src="" alt="" class="player__photo"><div class="player__state"><div></div></div><div class="player__info"><h2 class="player__name"></h2><div class="player__rating"><img src="./assets/img/trophy-icon.svg" alt=""><h2></h2></div></div><div class="player__controls"><div class="player__invite"></div><div class="player__decline"></div></div></div>`;
+		else document.querySelector('.lobby__friends__list').innerHTML += `<div class="lobby__friend player"><img src="" alt="" class="player__photo"><div class="player__state"><div></div></div><div class="player__info"><h2 class="player__name"></h2><div class="player__rating"><img src="./assets/img/trophy-icon.svg" alt=""><h2></h2></div></div><div class="player__invite"></div></div>`;
 		document.querySelectorAll('.player__invite')[index].style.display = 'block';
 		document.querySelectorAll('.lobby__friend .player__name')[index].textContent = friend.name;
 		document.querySelectorAll('.lobby__friend .player__rating > h2')[index].textContent = friend.rating;
 		document.querySelectorAll('.lobby__friend .player__photo')[index].src = `./assets/photos/${friend.photo}.png`;
 		if (window.lobby && ~window.lobby.players.findIndex(item => item.gameId == friend.gameId) && document.querySelectorAll('.player__invite').length > 0) document.querySelectorAll('.player__invite')[index].style.display = 'none';
-		if (!friend.online && !mode) {
+		if (!friend.online) {
 			document.querySelectorAll('.lobby__friend')[index].classList.add('disabled');
-			document.querySelector(`.lobby__friend:nth-child(${index + 1}) .player__invite`).style.display = 'none';
+			if (!mode) document.querySelector(`.lobby__friend:nth-child(${index + 1}) .player__invite`).style.display = 'none';
 		}
 	});
+
+	document.querySelectorAll('.player__decline').forEach((element, index) => element.addEventListener('click', () => socket.emit('request-decline', window.user.requests[index].inviteId, window.user.requests[index].gameId, session)));
 
 	if (window.user.navigation.friends.currentPage * 6 > friends.length) friendsArrowNext.classList.add('disabled');
 	else friendsArrowNext.classList.remove('disabled');
@@ -117,6 +148,7 @@ const displayFriends = (start, end, friends=null, mode=false) => {
 	document.querySelectorAll('.player__invite').forEach((element, index) => {
 		element.addEventListener('click', () => {
 			if (mode) socket.emit('add-friend', window.user.gameId, window.search[index].gameId, session);
+			else if (decline) socket.emit('request-accept', window.user.requests[index].inviteId, window.user.requests[index].gameId, session);
 			else socket.emit('invite', window.user.gameId, friends[index].gameId, session);
 		});
 	});
@@ -131,6 +163,8 @@ socket.on('profile', user => {
 		document.querySelector('.lobby__profile__rating__number > h2').textContent = user.rating;
 
 		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('./assets/photos/${user.photo}.png')`);
+		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('./assets/photos/${user.photo}.png')`);
+		document.querySelector('.lobby__friends__invites').textContent = 'Friend requests ' + (user.requests.length < 99 ? user.requests.length : '99+');
 
 		if (user.characters.length <= 6) {
 			document.querySelector('.lobby__match__character__arrow:first-child').classList.add('disabled');
@@ -181,6 +215,19 @@ socket.on('lobby-state', (playerId, state) => {
 		if (state) document.querySelectorAll('.lobby__match .lobby__player')[playerIndex].classList.remove('disabled');
 		else document.querySelectorAll('.lobby__match .lobby__player')[playerIndex].classList.add('disabled');
 	}
+});
+
+socket.on('accept-game', lobby => {
+	document.querySelector('.accept-game').style.display = 'flex';
+	document.querySelector('.accept-game__players').innerHTML = '';
+	lobby.players.forEach((player, index) => {
+		document.querySelector('.accept-game__players').innerHTML += `<div class="accept-game__player${ player.accepted ? ' accepted' : '' }"></div>`;
+		document.querySelectorAll('.accept-game__player')[index].style.backgroundImage = `url('./assets/img/lobby/accepted.svg'), url('./assets/photos/${player.photo}.png')`;
+	});
+
+	document.querySelectorAll('.accept-game__button').forEach(element => element.addEventListener('click', () => {
+		socket.emit('accept-game', window.user.gameId, session);
+	}));
 });
 
 socket.on('lobby', lobby => {

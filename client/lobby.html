@@ -18,6 +18,12 @@
 <body>
 	<div class="error lobby__button"></div>
 	<div class="wrapper">
+		<div class="accept-game">
+			<h2 class="accept-game__title">Your game has been found</h2>
+			<div class="accept-game__players"></div>
+			<div class="accept-game__button lobby__button text-shadow">Accept</div>
+		</div>
+
 		<header class="header-game">
 			<div class="header__container __container header-game">
 				<img src="./assets/img/header/logo-white.png" alt="" class="header__logo">
@@ -50,11 +56,11 @@
 						<div class="lobby__invite__message lobby__inner__block">
 							<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
 							<h2 class="lobby__invite__name"></h2>
-							<h2 class="lobby__invite__text">отправил Вам приглашение</h2>
+							<h2 class="lobby__invite__text">invite you</h2>
 						</div>
 						<div class="lobby__invite__buttons lobby__inner__block">
-							<div class="lobby__invite__accept lobby__button text-shadow">Принять</div>
-							<div class="lobby__invite__decline lobby__button text-shadow">Отклонить</div>
+							<div class="lobby__invite__accept lobby__button text-shadow">Accept</div>
+							<div class="lobby__invite__decline lobby__button text-shadow">Decline</div>
 							<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
 						</div>
 					</div>
@@ -73,7 +79,7 @@
 							<div class="lobby__match lobby__block">
 								<div class="lobby__match__top">
 									<div class="lobby__match__character">
-										<h2 class="lobby__match__title">Выбор персонажа<div class="lobby__match__character__update"></div></h2>
+										<h2 class="lobby__match__title">Choose character<div class="lobby__match__character__update"></div></h2>
 										<div class="lobby__match__characters">
 											<div class="lobby__match__character__field outlined" data-character="none"></div>
 											<div class="lobby__match__character__field" data-character="none"></div>
@@ -88,21 +94,21 @@
 										</div>
 									</div>
 									<div class="lobby__match__tournament">
-										<h2 class="lobby__match__title">Награды турнира</h2>
+										<h2 class="lobby__match__title">Tournament prize</h2>
 										<img src="./assets/img/lobby/tournament-cards.png" alt="" class="lobby__match__tournament__cards">
 									</div>
 								</div>
 								<div class="lobby__match__start">
 									<div class="lobby__match__start__top">
-										<h2 class="lobby__match__title">Игроки за этим столом</h2>
+										<h2 class="lobby__match__title">Players on board</h2>
 										<div class="lobby__match__start__modes">
-											<div class="lobby__match__start__mode__text">Приватное пати для друзей из 8 человек</div>
+											<div class="lobby__match__start__mode__text">Private party for 6 friends</div>
 											<div class="lobby__match__start__mode">
-												<div class="lobby__match__start__mode__button button-competitive lobby__button text-shadow disabled">Соревновательный</div>
+												<div class="lobby__match__start__mode__button button-competitive lobby__button text-shadow disabled">Competitive</div>
 												<div class="lobby__match__start__mode__tip"></div>
 											</div>
 											<div class="lobby__match__start__mode">
-												<div class="lobby__match__start__mode__button button-private lobby__button text-shadow">Приватное пати</div>
+												<div class="lobby__match__start__mode__button button-private lobby__button text-shadow">Private party</div>
 												<div class="lobby__match__start__mode__tip"></div>
 											</div>
 										</div>
@@ -167,7 +173,7 @@
 									</div>
 									<div class="lobby__match__start__search">
 										<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
-										<div class="lobby__search__button lobby__button text-shadow">Начать поиск</div>
+										<div class="lobby__search__button lobby__button text-shadow">Start Search</div>
 										<img src="./assets/img/lobby/star.svg" alt="" class="lobby__star">
 									</div>
 								</div>
@@ -175,14 +181,14 @@
 						</div>
 						<div class="lobby__friends lobby__block">
 							<div class="lobby__friends__top">
-								<h2 class="lobby__friends__title">Друзья</h2>
+								<h2 class="lobby__friends__title">Friends</h2>
 								<div class="lobby__friends__count"><h2 class="lobby__friends__count__online">4</h2><span class="disabled">/ 16</span></div>
 							</div>
 							<div class="lobby__friends__search">
 								<input type="text" class="lobby__friends__search__input" placeholder="Поиск">
 								<div type="text" class="lobby__friends__search__icon"></div>
 							</div>
-							<div class="lobby__friends__invites lobby__button text-shadow">Заявка в друзья  99+</div>
+							<div class="lobby__friends__invites lobby__button text-shadow">Friend Requests 0</div>
 							<div class="lobby__friends__list"></div>
 							<div class="lobby__friends__arrows">
 								<div class="lobby__friends__arrow"></div>

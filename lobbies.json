@@ -6,14 +6,31 @@
 				"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d651",
 				"rating": 1000,
 				"gameId": "35c268d320309cd9845f76183da3ff01",
-				"online": true
+				"online": true,
+				"ready": true
+			},
+			{
+				"username": "bot1bot1bot1bot1bot1",
+				"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d651",
+				"rating": 1000,
+				"gameId": "a7ae81befeaad14cfb5875c4a4627399",
+				"online": true,
+				"ready": true
+			},
+			{
+				"username": "bot3",
+				"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d651",
+				"rating": 1000,
+				"gameId": "28333140afc5381857313446a0e70cf2",
+				"online": true,
+				"ready": true
 			}
 		],
 		"average": {
 			"min": 950,
 			"max": 1050
 		},
-		"id": "9da2c5870ba2d943cd7309f3d2d05392",
+		"id": "33cb8289b0fe2a458969b6c8be7e543f",
 		"accepted": [],
 		"interval": null
 	}

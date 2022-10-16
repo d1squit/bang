@@ -62,8 +62,8 @@ main {
 	border-radius: 10px;
 
 	height: 0px;
-    padding: 0px 20px;
-    overflow: hidden;
+	padding: 0px 20px;
+	overflow: hidden;
 }
 
 .lobby h2:not(.lobby__match__title):not(.lobby__friends__title), .lobby span {
@@ -89,6 +89,7 @@ main {
 	width: 140px;
 	height: 40px;
 	background-image: url('../assets/img/button-back.png');
+	background-size: 100% 100%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -354,11 +355,36 @@ main {
 	height: 40px;
 }
 
+
+.lobby__friend:has(.player__decline) .player__invite {
+	background-size: 100% 100%;
+	width: 24px;
+	height: 24px;
+	margin-left: 0px;
+}
+
+.player__controls {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-left: auto;
+}
+
+.player__decline {
+	background-image: url('../assets/img/lobby/leave-party-button.png');
+	background-size: 100% 100%;
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+}
+
 .player__info {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
 	margin-left: 10px;
+	max-width: 58%;
+	overflow: hidden;
 }
 
 .player__info h2 {
@@ -377,7 +403,7 @@ main {
 
 .player__invite {
 	background-image: url('../assets/img/lobby/invite-button.png');
-	width: 34px;
+	width: 30px;
 	height: 30px;
 	margin-left: auto;
 	cursor: pointer;
@@ -536,4 +562,60 @@ main {
 	position: relative;
 	top: -65px;
 	left: 572px;
+}
+
+.accept-game {
+	position: fixed;
+	transform: translate(60%, 100%);
+	width: 800px;
+	height: 299px;
+
+	z-index: 100;
+
+	background: rgba(45, 21, 9, 0.9);
+	box-shadow: 0px 0px 13px #684630;
+	border-radius: 10px;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	gap: 24px;
+	padding: 24px 0px;
+	display: none;
+}
+
+.accept-game__player.accepted {
+	background-size: 100% 100%, 100% 100%;
+}
+
+.accept-game__title {
+	font-size: 30px;
+	line-height: 35px;
+	text-align: center;
+	letter-spacing: 1.875px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+}
+
+.accept-game__button {
+	width: 280px;
+	height: 80px;
+	background-size: 100% 100%;
+	font-size: 32px;
+	line-height: 37px;
+}
+
+.accept-game__players {
+	flex: 1 1 auto;
+	display: flex;
+	gap: 24px;
+}
+
+.accept-game__player {
+	width: 88px;
+	height: 88px;
+	background-size: 0% 0%, 100% 100%;
+	background-repeat: no-repeat, no-repeat;
+	background-position: center;
 }
