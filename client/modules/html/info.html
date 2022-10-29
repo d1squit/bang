@@ -1,23 +1,26 @@
 const info_html = `<div class="player-info ~{object.dead ? 'dead' : ''}">
-	<div class="player-info-top">
-		<img src="~{ object.user.avatar ? object.user.avatar : './client/assets/img/game/no_user_icon.png' }" alt="" class="player-info-userphoto">
-		<div class="player-info-user">
-			<div class="player-info-username player-username">~{object.user.name}</div>
-			<div class="player-info-userrating">
-				<img src="./client/assets/img/game/rating_icon.png" alt="" class="player-info-userrating-icon">
-				<h4>~{object.user.rating}</h4>
+	<div class="player-info__top">
+		<img src="./assets/photos/~{object.user.photo}.png" alt="" class="player-info__photo">
+		<div class="player-info__state"><div></div></div>
+		<div class="player-info__user">
+			<h2 class="player-info__username player-username">~{object.user.name}</h2>
+			<div class="player-info__user__bottom">
+				<div class="player-info__cards player-cards">
+					<img src="./assets/img/cards-icon.svg" alt="" class="player-info__cards__icon player-cards__icon">
+					<h2 class="player-info__cards__count player-cards__count"> x~{object.cards}</h2>
+				</div>
+				<div class="player-info__rating">
+					<img src="./assets/img/trophy-icon.svg" alt="" class="player-info__rating__icon">
+					<h2>~{object.user.rating}</h2>
+				</div>
 			</div>
 		</div>
-		<div class="player-info-role player-role" data-role="~{object.sheriff ? '0' : ''}"></div>
+		<!-- <div class="player-info-role player-role" data-role="~{object.sheriff ? '0' : ''}"></div> -->
 	</div>
-	<div class="player-info-bottom">
-		<ul class="player-info-health player-health">
-			~{'<li class="player-info-health-point player-health-point"><img src="./client/assets/img/game/bullet.png" alt=""></li>'.repeat(object.health)}
-			~{'<li class="player-info-health-point player-health-point"><img src="./client/assets/img/game/bullet_shot.png" alt=""></li>'.repeat(object.character.health - object.health)}
+	<div class="player-info__bottom">
+		<ul class="player-info__health player-health">
+			~{'<li class="player-info__health-point player-health-point"><img src="./assets/img/game/bullet.svg" alt=""></li>'.repeat(object.health)}
+			~{'<li class="player-info__health-point player-health-point"><img src="./assets/img/game/bullet-shot.svg" alt=""></li>'.repeat(object.character.health - object.health)}
 		</ul>
-		<div class="player-info-cards player-cards">
-			<img src="./client/assets/img/game/cards.svg" alt="" class="player-info-cards-icon player-cards-icon">
-			<h4 class="player-info-cards-count player-cards-count"> x ~{object.cards}</h4>
-		</div>
 	</div>
 </div>`

@@ -3,8 +3,8 @@
 *:after {
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
-	transition: all 0.5s ease 0s;
-	transition-property: all;
+	/* transition: all 0.5s ease 0s;
+	transition-property: all; */
 	font-family: 'agildia';
 	color: #2D1509;
 	letter-spacing: 1.75px;

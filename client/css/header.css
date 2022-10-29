@@ -19,6 +19,7 @@ header {
 }
 
 .header-game .header__nav__link {
+	text-transform: uppercase;
 	color: #F1E5D6;
 }
 

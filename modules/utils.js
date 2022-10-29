@@ -13,24 +13,45 @@ function shuffle(array_input) {
 	return array;
 }
 
+// const characters = [
+// 	{ "name": "Неуловимый Джо", "health": 3 },
+// 	// { "name": "Киллер Слэб", "health": 4},
+// 	{ "name": "Джанго", "health": 3 },
+// 	{ "name": "Хладнокровная Рози", "health": 4 },
+// 	// { "name": "Кит Карсон", "health": 4 },
+// 	// { "name": "Бедствие Жанет", "health": 4 },
+// 	// { "name": "Педро Рамирез", "health": 4 },
+// 	{ "name": "Сюзи Лафайет", "health": 4 },
+// 	// { "name": "Блэк Джек", "health": 4 },
+// 	{ "name": "Том Кетчум", "health": 4 },
+// 	{ "name": "Большой Змей", "health": 4 },
+// 	{ "name": "Бутч Кессиди", "health": 4 },
+// 	{ "name": "Джесси Джеймс", "health": 4 },
+// 	// { "name": "Джордоннас", "health": 4 },
+// 	{ "name": "Малыш Билли", "health": 4 },
+// 	{ "name": "Счатливчик Люк", "health": 4 }
+// ];
+
 const characters = [
-	{ "name": "Неуловимый Джо", "health": 3 },
+	{ "name": "Неуловимый Джо", "health": 10 },
 	// { "name": "Киллер Слэб", "health": 4},
-	{ "name": "Джанго", "health": 3 },
-	{ "name": "Хладнокровная Рози", "health": 4 },
+	{ "name": "Джанго", "health": 10 },
+	{ "name": "Хладнокровная Рози", "health": 10 },
 	// { "name": "Кит Карсон", "health": 4 },
 	// { "name": "Бедствие Жанет", "health": 4 },
 	// { "name": "Педро Рамирез", "health": 4 },
-	{ "name": "Сюзи Лафайет", "health": 4 },
+	{ "name": "Сюзи Лафайет", "health": 10 },
 	// { "name": "Блэк Джек", "health": 4 },
-	{ "name": "Том Кетчум", "health": 4 },
-	{ "name": "Большой Змей", "health": 4 },
-	{ "name": "Бутч Кессиди", "health": 4 },
-	{ "name": "Джесси Джеймс", "health": 4 },
+	{ "name": "Том Кетчум", "health": 10 },
+	{ "name": "Большой Змей", "health": 10 },
+	{ "name": "Бутч Кессиди", "health": 10 },
+	{ "name": "Джесси Джеймс", "health": 10 },
 	// { "name": "Джордоннас", "health": 4 },
-	{ "name": "Малыш Билли", "health": 4 },
-	{ "name": "Счатливчик Люк", "health": 4 }
+	{ "name": "Малыш Билли", "health": 10 },
+	{ "name": "Счатливчик Люк", "health": 10 }
 ];
+
+const bans = [2, 5, 5, 5, 15, 15, 15, 30, 30, 30, 60];
 
 const cards = [
 	new IndiansCard(0, 14),
@@ -125,4 +146,4 @@ const cards = [
 
 const roles = [0, 1, 2, 3, 3, 3];
 
-export { shuffle, characters, cards, roles }
+export { shuffle, characters, cards, roles, bans }

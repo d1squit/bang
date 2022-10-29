@@ -4,6 +4,8 @@ import { Server } from 'socket.io';
 import http from 'http';
 import path from 'path';
 
+import { bans } from './modules/utils.js';
+
 import { startGame, initGame } from './modules/game.js';
 import { Lobby, initializeLobby } from './modules/lobby.js';
 
@@ -16,6 +18,9 @@ import fs from 'fs';
 import process from 'node:process';
 
 
+import sql from 'sqlite3'
+const sqlite3 = sql.verbose();
+let db = new sqlite3.Database('./bang.db', sqlite3.OPEN_READWRITE, (err) => { if (err) console.error(err.message) });
 
 
 
@@ -25,7 +30,13 @@ let lobbies = [];
 let searchLobbies = [];
 
 
-fs.readFile('./users.json', (err, data) => users = JSON.parse(data.toString()));
+db.all(`SELECT * FROM users WHERE username='bot3'`, [], (err, rows) => {
+	console.log(rows)
+});
+
+
+// fs.readFile('./users.json', (err, data) => users = JSON.parse(data.toString()));
+// fs.readFile('./lobbies.json', (err, data) => lobbies = JSON.parse(data.toString()));
 
 
 // ----------------------------------------------------------------------------------------- //
@@ -45,25 +56,32 @@ app.get('/', (request, response) => {
 	response.sendFile(path.join(__dirname, '/index.html'));
 });
 
-let userStack = [];
+let rooms = [];
 
-const createRoom = async (sockets, botFlag = false) => {
+const createRoom = async (players, botFlag = false) => {
 	return new Promise((resolve, reject) => {
 		const room = {};
 
-		room.id = crypto.randomBytes(16).toString("hex");
+		room.id = crypto.randomBytes(8).toString("hex");
 		room.sockets = [];
 		room.users = [];
 
 		room.botFlag = botFlag;
 
-		sockets.forEach(socket => {
-			if (socket.id != 'bot') socket.join(room.id);
-			room.sockets.push(socket.id);
-			room.users.push(socket.user);
+		players.forEach(player => {
+			const userIndex = users.findIndex(item => item.gameId == player.gameId);
+			if (!~userIndex) return;
+
+			let socket = Array.from(io.sockets.sockets).find(item => item[0] == users[userIndex].socketId);
+			if (socket) socket = socket[1]; else return;
+
+			if (player.socketId != 'bot') socket.join(room.id);
+			room.sockets.push(socket);
+			room.users.push({ username: player.username, photo: player.photo, rating: player.rating, gameId: player.gameId, socketId: socket.id, session: users[userIndex].session });
 		});
 
 		room.players = [];
+		room.history = [[]];
 		room.turn = 0;
 		room.wait = 0;
 
@@ -85,20 +103,70 @@ const createRoom = async (sockets, botFlag = false) => {
 	});
 }
 
-process.on('beforeExit', () => {
+users.forEach(user => {
+	if (user.ban <= Date.now()) user.ban = null;
+	else {
+		setTimeout(() => {
+			io.to(user.socketId).emit('ban-end');
+			user.ban = null;
+			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+		}, user.ban - Date.now());
+	}
+});
+
+
+process.on("SIGINT", () => {
 	users.forEach(user => {
 		user.socketId = null;
 		user.tempSession = null;
 		user.tempCode = null;
+		user.ban = null;
 	});
 	fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+	setTimeout(() => process.exit(0), 100);
 });
 
 io.on('connection', (socket) => {
 	initializeLobby(io, socket, users, lobbies);
 
+	if (socket.handshake.query.session) {
+		const userIndex = users.findIndex(item => item.session == socket.handshake.query.session);
+		if (~userIndex) {
+			if (socket.handshake.query.extra == 'ready') socket.emit('game-id', users[userIndex].gameId);
+			
+			const roomIndex = rooms.findIndex(item => ~item.players.findIndex(player => player.user.gameId == users[userIndex].gameId));
+			if (~roomIndex) {
+				rooms[roomIndex].players[rooms[roomIndex].players.findIndex(player => player.user.gameId == users[userIndex].gameId)].user.id = socket.id;
+
+				const promises = [];
+				rooms[roomIndex].players.forEach(player => promises.push(player.createMessage()));
+
+				Promise.all(promises).then(players => {
+					rooms[roomIndex].users.find(user => user.gameId == users[userIndex].gameId).session = socket.handshake.query.session;
+					socket.join(rooms[roomIndex].id)
+					socket.emit('room-id', rooms[roomIndex].id);
+					socket.emit('board', players);
+					socket.emit('table', { card_count: rooms[roomIndex].shuffled.length, last_card: null });
+					socket.emit('player', rooms[roomIndex].players[players.findIndex(player => player.user.gameId == users[userIndex].gameId)]);
+					startGame(io, socket, rooms[roomIndex]);
+					return;
+				});
+			}
+
+
+			const lobbyIndex = searchLobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == users[userIndex].gameId));
+			if (~lobbyIndex) {
+				const playerIndex = searchLobbies[lobbyIndex].players.findIndex(item => item.gameId == users[userIndex].gameId);
+				if (~playerIndex && searchLobbies[lobbyIndex].players[playerIndex].inGame && socket.handshake.query.extra == 'start-game') {
+					searchLobbies[lobbyIndex].players[userIndex].loaded = true;
+				}
+			}
+		}
+		fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
+	}
+
 	socket.on('ready', (id, session) => {
-		const userIndex = users.findIndex(item => item.gameId == id && item.session == session);
+		const userIndex = users.findIndex(item => item.gameId == id && item.session == session && item.ban === null);
 		if (~userIndex) {
 			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
 			if (~lobbyIndex) {
@@ -108,16 +176,16 @@ io.on('connection', (socket) => {
 
 				if (lobbies[lobbyIndex].players.every(item => item.ready)) {
 					searchLobbies.push(Object.assign({}, lobbies[lobbyIndex]));
-					// searchLobbies.push(lobbies[lobbyIndex]);
 				}
 
 				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
-			}
-		}
+				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
+			} else socket.emit('ready-decline');
+		} else socket.emit('ready-decline');
 	});
 
 	socket.on('not-ready', (id, session) => {
-		const userIndex = users.findIndex(item => item.gameId == id && item.session == session);
+		const userIndex = users.findIndex(item => item.gameId == id && item.session == session && item.ban === null);
 		if (~userIndex) {
 			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
 			if (~lobbyIndex) {
@@ -129,12 +197,13 @@ io.on('connection', (socket) => {
 
 				socket.emit('not-ready');
 				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
+				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 			}
 		}
 	});
 
 	socket.on('accept-game', (id, session) => {
-		const userIndex = users.findIndex(item => item.gameId == id && item.session == session);
+		const userIndex = users.findIndex(item => item.gameId == id && item.session == session && item.ban === null);
 		if (~userIndex) {
 			const lobbyIndex = searchLobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
 			if (~lobbyIndex) {
@@ -148,54 +217,7 @@ io.on('connection', (socket) => {
 				}
 			}
 		}
-	});
-
-	socket.on('start-game', (name, rating) => {
-		userStack.push(socket);
-		const lastUser = userStack[userStack.length - 1];
-
-		lastUser.user = { name: name, rating: rating };
-
-		lastUser.wait = 0;
-		lastUser.average = { min: lastUser.user.rating - 50, max: lastUser.user.rating + 50 };
-		lastUser.interval = setInterval(() => {
-			const lobby = Lobby.searchLobby(lastUser);
-
-			if (lobby !== false) Lobby.lobbies[lobby].addPlayer(lastUser);
-			else Lobby.createLobby(lastUser);
-
-			lastUser.wait++;
-			lastUser.average.min -= 5;
-			lastUser.average.max += 5;
-			socket.emit('search-time', lastUser.wait);
-		}, 1000);
-
-		socket.emit('search-start');
-	});
-
-	socket.on('accept-game-receive', () => {
-		const currentLobby = Lobby.lobbies[Lobby.lobbies.findIndex(lobby => ~lobby.players.findIndex(player => player.id == socket.id))];
-		if (currentLobby) {
-			if (!~currentLobby.accepted.findIndex(item => item == socket.id)) currentLobby.accepted.push(socket.id);
-
-			if (currentLobby.accepted.length == 6 && currentLobby.accepted.every(item => ~currentLobby.accepted.findIndex(id => id == socket.id))) {
-				createRoom(currentLobby.players).then(room => {
-					initGame(io, currentLobby.players[0], room);
-					currentLobby.players.forEach(player => startGame(io, player, room));
-					Lobby.lobbies.splice(Lobby.lobbies.findIndex(item => item.id == currentLobby.id), 1);
-					clearTimeout(currentLobby.accept_timeout);
-				});
-			}
-		}
-	});
-
-	socket.on('search-end', () => {
-		const currentLobby = Lobby.lobbies[Lobby.lobbies.findIndex(lobby => ~lobby.players.findIndex(player => player.id == socket.id))];
-		if (currentLobby) {
-			socket.emit('search-end');
-			currentLobby.removePlayer(socket);
-			userStack.splice(userStack.findIndex(player => player.id == socket.id), 1);
-		}
+		fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 	});
 
 	socket.on('learn-game', (user) => {
@@ -208,18 +230,69 @@ io.on('connection', (socket) => {
 });
 
 setInterval(() => {
-	// console.log('+-----------------------------------------------------------------------------+');
-	// console.log(searchLobbies);
-	// console.log('+-----------------------------------------------------------------------------+');
 	for (let lobbyIndex = 0; lobbyIndex < searchLobbies.length; lobbyIndex++) {
 		if (searchLobbies[lobbyIndex].players.length == 0) { searchLobbies.splice(lobbyIndex, 1); lobbyIndex--; }
-		else if (searchLobbies[lobbyIndex].players.length == 3) {
+		else if (searchLobbies[lobbyIndex].players.length == 2) {
 			if (searchLobbies[lobbyIndex].state != 'accept') {
 				searchLobbies[lobbyIndex].state = 'accept';
 				searchLobbies[lobbyIndex].players.forEach(player => {
 					const userIndex = users.findIndex(item => item.gameId == player.gameId);
-					io.to(users[userIndex].socketId).emit('accept-game', searchLobbies[lobbyIndex]);
+					if (~userIndex) io.to(users[userIndex].socketId).emit('accept-game', searchLobbies[lobbyIndex]);
 				});
+
+				setTimeout(() => {
+					const indices = (function getAllIndices (arr, cb) {
+						let indices = [], i = -1;
+						while (~arr.slice(i + 1).findIndex(cb)) { i += arr.slice(i + 1).findIndex(cb) + 1; indices.push(i); }
+						return indices;
+					})(searchLobbies[lobbyIndex].players, item => !item.accepted);
+
+					for (let i = 0; i < indices.length; i++) {
+						const userIndex = users.findIndex(item => item.gameId == searchLobbies[lobbyIndex].players[indices[i] - i].gameId);
+						if (~userIndex) {
+							searchLobbies[lobbyIndex].players.splice(indices[i] - i, 1);
+
+							const banTime = bans[users[userIndex].banLevel <= 10 ? users[userIndex].banLevel : 10] * 60000
+							users[userIndex].ban = Date.now() + banTime;
+							users[userIndex].banLevel++;
+							io.to(users[userIndex].socketId).emit('ban-start', users[userIndex].ban);
+							setTimeout(() => {
+								io.to(users[userIndex].socketId).emit('ban-end');
+								users[userIndex].ban = null;
+								fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+							}, banTime);
+						}
+					};
+
+					searchLobbies[lobbyIndex].players.forEach(player => {
+						const userIndex = users.findIndex(item => item.gameId == player.gameId);
+						if (~userIndex) io.to(users[userIndex].socketId).emit('search-refresh');
+					});
+					fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+				}, 5000);
+
+				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
+			} else {
+				if (searchLobbies[lobbyIndex].players.every(player => player.accepted) && !searchLobbies[lobbyIndex].players.every(player => player.loaded)) {
+					searchLobbies[lobbyIndex].players.forEach((player, index) => {
+						const userIndex = users.findIndex(item => item.gameId == player.gameId);
+						if (~userIndex) {
+							searchLobbies[lobbyIndex].players[index].inGame = true;
+							io.to(users[userIndex].socketId).emit('start-game');
+							fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
+						}
+					});
+				} else if (searchLobbies[lobbyIndex].players.every(player => player.loaded)) {
+					const userIndex = users.findIndex(item => item.gameId == searchLobbies[lobbyIndex].players[0].gameId);
+					if (~userIndex) {
+						createRoom(searchLobbies[lobbyIndex].players).then(room => {
+							initGame(io, room.sockets[0], room);
+							room.sockets.forEach(socket => startGame(io, socket, room));
+							rooms.push(room);
+							searchLobbies.splice(searchLobbies.findIndex(item => item.id == searchLobbies[lobbyIndex].id), 1);
+						});
+					}
+				}
 			}
 		} else if (0 < searchLobbies[lobbyIndex].players.length < 6) {
 			searchLobbies[lobbyIndex].average = { min: searchLobbies[lobbyIndex].average.min - 10, max: searchLobbies[lobbyIndex].average.max + 10 };

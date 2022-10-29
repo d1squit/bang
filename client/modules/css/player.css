@@ -1,61 +1,76 @@
 .player {
-	border: 1px solid black;
 	border-radius: 5px;
 	display: flex;
-	max-width: 100%;
-	height: 182px;
+	width: 376px;
+	height: auto;
 
 	grid-column-end: span 4;
-	grid-row-end: span 4;
+	grid-row-end: span 3;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0px;
 
-	border: 1px solid;
+	gap: 8px;
+}
+
+.player > * {
+	margin-top: -5px;
+	margin-bottom: 5px;
+}
+
+.player.turn .player-character__image {
+	background-size: 100% 100%, 99% 99%;
 }
 
 .player.my-player {
-	background-color: rgb(235, 213, 189);
+    border: 1px solid #E7532C;
+	border-radius: 8px;
 }
 
-.player.turn {
-    border: 2px solid #0000FF;
-}
-
-.playboard {
-	box-shadow: 1px 1px 5px rgb(50 50 50 / 80%);
+.player.my-player .player-cards {
+	display: none;
 }
 
 .player-modifiers {
 	display: flex;
 	align-items: center;
 	flex-flow: row;
+	gap: 8px;
 	flex-grow: 1;
 	position: relative;
-	overflow-x: auto;
+	overflow-x: scroll;
 	overflow-y: hidden;
-	width: calc(100% - 114px);
+	max-width: 268px;
+	margin-top: 3px;
+	padding: 4px 0px;
+}
+
+.card.empty {
+	background-image: url('../../assets/img/game/modifier-slot.svg');
+	width: 84px;
+	height: 128px;
 }
 
 .player-character {
-	width: 114px;
-	height: 180px;
+	width: 84px;
+	height: 129px;
 	position: relative;
-	border-left: 1px solid black;
-	display: flex;
+	/* display: flex; */
 	flex-direction: column;
 	align-items: center;
-	padding: 12px 5px 10px 5px;
-	background-image: url('../../assets/img/game/card_borders.webp');
 	background-size: cover;
 }
 
 .player.touch {
-	border: 2px solid red;
+	border: 1px solid blue;
 }
 
 .player.touch .player-character {
 	cursor: pointer;
 }
 
-.player-character .player-character-name {
+.player-character .player-character__name {
 	position: absolute;
 	text-align: center;
 	text-transform: uppercase;
@@ -65,13 +80,11 @@
 	margin-bottom: 5px;
 }
 
-.player-character .player-character-image {
-	background-image: url('../../assets/img/game/card_characters.webp');
+.player-character .player-character__image {
 	background-size: cover;
-	width: 90px;
-	height: 90px;
-	margin-top: 15px;
-	margin-bottom: auto;
+	background-size: 0% 0%, 99% 99%;
+	width: 100%;
+	height: 100%;
 }
 
 @keyframes spin {
@@ -84,11 +97,12 @@
 	to { transform: rotate(360deg) }
 }
 
-.player.wait .player-character-wait {
+.player.wait .player-character__wait {
 	display: block;
 }
 
-.player-character-wait {
+.player-character__wait {
+	margin-left: 10%;
 	position: absolute;
 	top: 40px;
 	background-image: url('../../assets/img/game/wait_icon.png');
@@ -99,43 +113,52 @@
 	display: none;
 }
 
-.player-character-user, .player-cards {
+.player-cards {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	gap: 5px;
-	width: 100%;
+	gap: 8px;
+	margin-top: 2px;
 }
 
-.player-character-user .player-character-userphoto, .player-cards .player-cards-icon {
+.player-cards-count {
+	font-family: 'Bookman Old Style';
+	font-size: 14px;
+	line-height: 24px;
+	letter-spacing: 1px;
+	color: #FFF4E5;
+}
+
+.player-character__user .player-character__userphoto, .player-cards .player-cards-icon {
 	width: 24px;
 	height: auto;
 }
 
-.player-character-user .player-character-userphoto {
+.player-character__user .player-character__userphoto {
 	border-radius: 50%;
 }
 
-.player-character .player-character-health {
-	position: absolute;
-	right: -8px;
-	top: 40px;
+.player-character .player-character__health {
+	position: relative;
+	right: -70px;
+	top: -140px;
 	width: 30px;
 	display: flex;
-	flex-direction: column;
+	flex-direction: column-reverse;
 }
 
-.player-character .player-character-health .player-character-health-point {
+.player-character .player-character__health .player-character__health-point {
 	height: 13px;
 }
 
-.player-character .player-character-health .player-character-health-point img {
-	transform: rotate(103deg);
-	height: 35px;
+.player-character .player-character__health .player-character__health-point img {
+	transform: rotate(90deg);
+	width: 8px;
+	height: 24px;
 	margin-left: 15px;
 }
 
-.player-character-sheriff {
+.player-character__sheriff {
 	position: absolute;
 	right: -18px;
 	top: -17px;
@@ -147,10 +170,10 @@
 }
 
 .player-sheriff {
-	background-image: url('../../assets/img/game/role-icons.webp');
+	background-image: url('../../assets/img/game/sheriff-icon.png');
 	background-size: cover;
-	width: 34px;
-	height: 34px;
+	width: 32px;
+	height: 36px;
 	display: none;
 }
 
@@ -163,54 +186,69 @@
 /* -------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
 
-.player-character[data-character="0"] .player-character-image { background-position: calc(100% / 15 * 0) }
-.player-character[data-character="1"] .player-character-image { background-position: calc(100% / 15 * 1) }
-.player-character[data-character="2"] .player-character-image { background-position: calc(100% / 15 * 2) }
-.player-character[data-character="3"] .player-character-image { background-position: calc(100% / 15 * 3) }
-.player-character[data-character="4"] .player-character-image { background-position: calc(100% / 15 * 4) }
-.player-character[data-character="5"] .player-character-image { background-position: calc(100% / 15 * 5) }
-.player-character[data-character="6"] .player-character-image { background-position: calc(100% / 15 * 6) }
-.player-character[data-character="7"] .player-character-image { background-position: calc(100% / 15 * 7) }
-.player-character[data-character="8"] .player-character-image { background-position: calc(100% / 15 * 8) }
-.player-character[data-character="9"] .player-character-image { background-position: calc(100% / 15 * 9) }
-.player-character[data-character="10"] .player-character-image { background-position: calc(100% / 15 * 10) }
-.player-character[data-character="11"] .player-character-image { background-position: calc(100% / 15 * 11) }
-.player-character[data-character="12"] .player-character-image { background-position: calc(100% / 15 * 12) }
-.player-character[data-character="13"] .player-character-image { background-position: calc(100% / 15 * 13) }
-.player-character[data-character="14"] .player-character-image { background-position: calc(100% / 15 * 14) }
+.player-character[data-character="0"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/1.png') }
+.player-character[data-character="1"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/2.png') }
+.player-character[data-character="2"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/3.png') }
+.player-character[data-character="3"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/4.png') }
+.player-character[data-character="4"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/5.png') }
+.player-character[data-character="5"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/6.png') }
+.player-character[data-character="6"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/7.png') }
+.player-character[data-character="7"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/8.png') }
+.player-character[data-character="8"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/9.png') }
+.player-character[data-character="9"] .player-character__image { background-image: url('../../assets/img/game/characters/character-outline.png'), url('../../assets/img/game/characters/10.png') }
+/* .player-character[data-character="10"] .player-character__image { background-position: calc(100% / 15 * 10) }
+.player-character[data-character="11"] .player-character__image { background-position: calc(100% / 15 * 11) }
+.player-character[data-character="12"] .player-character__image { background-position: calc(100% / 15 * 12) }
+.player-character[data-character="13"] .player-character__image { background-position: calc(100% / 15 * 13) }
+.player-character[data-character="14"] .player-character__image { background-position: calc(100% / 15 * 14) } */
 
 
 /* -------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
+#board[player-count="6"] .player:nth-child(1).turn, #board[player-count="6"] .player:nth-child(4).turn { margin: -1px -12px -1px -12px }
+#board[player-count="6"] .player:nth-child(2).turn, #board[player-count="6"] .player:nth-child(3).turn { margin: -1px -20px -1px -12px }
+#board[player-count="6"] .player:nth-child(5).turn, #board[player-count="6"] .player:nth-child(6).turn { margin: -1px -12px -1px -8px }
+
+#board[player-count="6"] .player:nth-child(1).touch, #board[player-count="6"] .player:nth-child(4).touch { margin: -1px -12px -1px -12px }
+#board[player-count="6"] .player:nth-child(2).touch, #board[player-count="6"] .player:nth-child(3).touch { margin: -1px -20px -1px -12px }
+#board[player-count="6"] .player:nth-child(5).touch, #board[player-count="6"] .player:nth-child(6).touch { margin: -1px -12px -1px -8px }
+
+
 
 #board[player-count="6"] .player:nth-child(1) {
 	grid-column-start: 5;
-	grid-row-start: 2;
+	grid-row-start: 1;
+	margin: 0px -12px 0px -12px;
 }
 
 #board[player-count="6"] .player:nth-child(2) {
 	grid-column-start: 9;
-	grid-row-start: 5;
+	grid-row-start: 4;
+	margin: 0px -20px 0px -12px;
 }
 
 #board[player-count="6"] .player:nth-child(3) {
 	grid-column-start: 9;
-	grid-row-start: 9;
+	grid-row-start: 7;
+	margin: 0px -20px 0px -12px;
 }
 
 #board[player-count="6"] .player:nth-child(4) {
 	grid-column-start: 5;
-	grid-row-start: 12;
+	grid-row-start: 10;
+	margin: 0px -12px 0px -12px;
 }
 
 #board[player-count="6"] .player:nth-child(5) {
 	grid-column-start: 1;
-	grid-row-start: 9;
+	grid-row-start: 7;
+	margin: 0px -12px 0px -8px;
 }
 
 #board[player-count="6"] .player:nth-child(6) {
 	grid-column-start: 1;
-	grid-row-start: 5;
+	grid-row-start: 4;
+	margin: 0px -12px 0px -8px;
 }
 
 

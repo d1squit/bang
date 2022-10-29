@@ -1,5 +1,5 @@
 body {
-	background-image: url('../../client/assets/img/game-background.png');
+	background-image: url('../../client/assets/img/lobby/background.png');
 	background-size: cover;
 }
 
@@ -51,19 +51,63 @@ main {
 	gap: 12px;
 }
 
-.lobby__invite {
+.lobby__invite, .lobby__ban {
 	width: 100%;
 	max-height: 68px;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	background-image: url('../assets/img/lobby/invite-back.svg');
-	padding: 17px 20px;
 	border-radius: 10px;
-
-	height: 0px;
 	padding: 0px 20px;
+	height: 0px;
 	overflow: hidden;
+	position: relative;
+	transition: height 0.3s linear;
+}
+
+.lobby__invite__decline {
+	margin-right: 20px;
+}
+
+.lobby__invite__name {
+	margin-left: 20px;
+}
+
+.lobby__invite::before, .lobby__ban::before {
+	position: absolute;
+	content:'';
+	width: 1440px;
+	max-height: 68px;
+	background-image: url('../assets/img/lobby/invite-back.svg');
+	background-repeat: no-repeat;
+	height: var(--height);
+	transition: height 0.3s linear;
+}
+
+.lobby__ban::before {
+	height: var(--banheight);
+}
+
+.lobby__ban__title, .lobby__ban__time {
+	font-family: 'a_Gildia' !important;
+	margin: 0px 20px;
+	font-size: 32px;
+	line-height: 37px;
+	letter-spacing: 1.75px;
+	text-transform: uppercase;
+	color: #FFFFFF !important;
+}
+
+.lobby__ban__title {
+	margin-right: auto;
+}
+
+.lobby__ban__text {
+	font-family: 'Bookman Old Style';
+	font-size: 16px;
+	line-height: 24px;
+	letter-spacing: 0.75px;
+	color: #F9DBBA;
 }
 
 .lobby h2:not(.lobby__match__title):not(.lobby__friends__title), .lobby span {
@@ -71,10 +115,20 @@ main {
 	font-family: 'Bookman Old Style';
 }
 
+.lobby__invite__text {
+	font-family: 'Bookman Old Style' !important;
+	font-size: 16px;
+	line-height: 24px;
+	letter-spacing: 1px;
+	color: #F9DBBA !important;
+}
+
 .lobby__inner__block {
+	width: 100%;
 	display: flex;
 	align-items: center;
 	gap: 20px;
+	position: relative;
 }
 
 .lobby__star:first-child {
@@ -119,7 +173,7 @@ main {
 
 .lobby__block {
 	width: 100%;
-	background: rgba(40, 17, 7, 0.8);
+	background-image: url('../assets/img/game-background.png');
 	border-radius: 10px;
 	padding: 38px 52px 38px 24px;
 }
@@ -130,9 +184,17 @@ main {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	background-image: url('../assets/img/lobby/profile-icon.png');
-	background-position: center;
+	background-image: url('../assets/img/lobby/profile-icon.png'), url('../assets/img/game-background.png');
+	background-position: center, top;
 	background-repeat: no-repeat;
+}
+
+.lobby__profile__name {
+	font-family: 'Bookman Old Style';
+	font-size: 22px;
+	line-height: 24px;
+	letter-spacing: 1px;
+	color: #FFF4E5;
 }
 
 .lobby__profile__rating__number {
@@ -165,9 +227,10 @@ main {
 	flex-direction: column;
 	justify-content: space-between;
 	gap: 16px;
-	background-image: url('../assets/img/lobby/match-back.svg');
+	background-image: url('../assets/img/game-background.png');
 	background-repeat: no-repeat;
-	background-position: bottom;
+	background-position: top;
+	background-size: cover;
 }
 
 .lobby__match * {
@@ -455,6 +518,8 @@ main {
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+	background-size: cover;
+	background-position: center;
 }
 
 .lobby__friends__top {
@@ -562,60 +627,4 @@ main {
 	position: relative;
 	top: -65px;
 	left: 572px;
-}
-
-.accept-game {
-	position: fixed;
-	transform: translate(60%, 100%);
-	width: 800px;
-	height: 299px;
-
-	z-index: 100;
-
-	background: rgba(45, 21, 9, 0.9);
-	box-shadow: 0px 0px 13px #684630;
-	border-radius: 10px;
-
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: column;
-	gap: 24px;
-	padding: 24px 0px;
-	display: none;
-}
-
-.accept-game__player.accepted {
-	background-size: 100% 100%, 100% 100%;
-}
-
-.accept-game__title {
-	font-size: 30px;
-	line-height: 35px;
-	text-align: center;
-	letter-spacing: 1.875px;
-	text-transform: uppercase;
-	color: #FFF4E5;
-}
-
-.accept-game__button {
-	width: 280px;
-	height: 80px;
-	background-size: 100% 100%;
-	font-size: 32px;
-	line-height: 37px;
-}
-
-.accept-game__players {
-	flex: 1 1 auto;
-	display: flex;
-	gap: 24px;
-}
-
-.accept-game__player {
-	width: 88px;
-	height: 88px;
-	background-size: 0% 0%, 100% 100%;
-	background-repeat: no-repeat, no-repeat;
-	background-position: center;
 }

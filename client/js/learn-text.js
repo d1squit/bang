@@ -7,7 +7,7 @@ const learn = [
 	},
 	{
 		text: `Твоя цель - убить шерифа (он обозначен такой меткой)`,
-		element: `document.querySelector('.player-character-sheriff.player-sheriff.sheriff')`,
+		element: `document.querySelector('.player-character__sheriff.player-sheriff.sheriff')`,
 		info: true,
 		time: 0,
 	},
@@ -19,7 +19,7 @@ const learn = [
 	},
 	{
 		text: `Карта 'Бах' позволяет атаковать другого игрока на допустимой дистанции (без доп. оружия - 1). Нажми на карту, а затем на игрока, которого хочешь атаковать'`,
-		element: `document.querySelector('.common_ctn .card')`,
+		element: `document.querySelector('.common-ctn .card')`,
 		info: false,
 		time: 0,
 	},
@@ -66,7 +66,7 @@ const learn = [
 	},
 	{
 		text: `Тебя атаковали! Увернись от удара с помощью карты 'Промах'`,
-		element: `document.querySelectorAll('.common_ctn .card')[1]`,
+		element: `document.querySelectorAll('.common-ctn .card')[1]`,
 		info: false,
 		time: 2000
 	},
@@ -77,13 +77,13 @@ const learn = [
 	},
 	{
 		text: `Карт 'Промах' больше нет, но можно увернуться от выстрела другим способом. Используй карту-модификатор 'Бочка' (она даст шанс промаха)`,
-		element: `document.querySelectorAll('.common_ctn .card')[1]`,
+		element: `document.querySelectorAll('.common-ctn .card')[1]`,
 		info: false,
 		time: 2000
 	},
 	{
 		text: `Атакуй шерифа еще раз (карта 'Бах' может быть использована только один раз за ход)`,
-		element: `document.querySelectorAll('.common_ctn .card')[2]`,
+		element: `document.querySelectorAll('.common-ctn .card')[2]`,
 		info: false,
 		time: 500
 	},

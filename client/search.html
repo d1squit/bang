@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="./assets/img/logo-image.svg">
+	<link rel="stylesheet" href="./css/reset.css">
+	<link rel="stylesheet" href="./css/lobby.css">
+	<link rel="stylesheet" href="./css/search.css">
+	<script src="/socket.io/socket.io.js"></script>
+	<title>Game search...</title>
+</head>
+<body>
+	<div class="accept-game">
+		<h2 class="accept-game__title">Your game has been found</h2>
+		<div class="accept-game__players"></div>
+		<div class="accept-game__button lobby__button text-shadow">Accept</div>
+	</div>
+	
+	<img src="./assets/img/search/logo.png" alt="" class="logo">
+	<h1 class="title">Game search...</h1>
+	<div class="time-block">
+		<img src="./assets/img/search/wait-icon.svg" alt="" class="wait-icon">
+		<h2 class="time">00:00</h2>
+	</div>
+	<div class="decline">Stop search</div>
+
+	<script src="./js/search.js"></script>
+</body>
+</html>

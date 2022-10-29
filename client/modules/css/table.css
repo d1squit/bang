@@ -1,38 +1,46 @@
 .table {
-	grid-column-start: 5;
-	grid-row-start: 7;
-	grid-column-end: 9;
-	grid-row-end: 11;
-	height: 100%;
+	position: absolute;
+	justify-self: center;
+	align-self: center;
 }
 
-.table-ctn {
-	width: 242.5px;
-	height: 184px;
+.table__ctn {
+	width: 274px;
+	height: 214px;
 	display: flex;
+	justify-content: center;
+	align-items: center;
 	font-size: 30px;
 	text-shadow: 1px 1px 1px #fff, -1px -1px 1px #fff, -1px 1px 1px #fff, 1px -1px 1px #fff;
 	margin: 0 auto;
 	gap: 6px;
-	justify-content: center;
 	position: relative;
+	background-color: rgb(40, 17, 7, 0.5);
+	background-image: url('../../assets/img/game/table-stars.png');
+	background-size: 98%;
+	background-position: center;
+	background-repeat: no-repeat;
+	mix-blend-mode: normal;
+	border-radius: 10px;
 }
 
-.table .table-card-count {
+.table .table__card-count {
 	height: 180px;
-	width: 106.25px;
+	width: 110px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background-image: url('../../assets/img/game/cardback.webp');
+	background-image: url('../../assets/img/game/cardback.png');
+	background-position: center;
+	background-repeat: no-repeat;
 }
 
-.table .table-card-last {
-	height: 170px;
-	width: 106.25px;
+.table .table__card-last {
+	width: 110px;
+	height: 172px;
 }
 
-.table .table-arrow {
+.table .table__arrow {
 	width: 32px;
 	height: 32px;
 	background-image: url('../../assets/img/game/arrow_icon.png');
@@ -42,11 +50,11 @@
 	left: 20%;
 }
 
-.table .table-arrow.checked {
+.table .table__arrow.checked {
 	left: 70%;
 }
 
-.table .table-arrow-players {
+.table .table__arrow__players {
 	width: 32px;
 	height: 32px;
 	background-size: cover;
@@ -60,13 +68,13 @@
     align-items: center;
 }
 
-.table .table-arrow-players[data-turn="-1"] {
+.table .table__arrow__players[data-turn="-1"] {
 	background-image: url('../../assets/img/game/arrow_icon.png');
 }
 
-.table .table-arrow-players[data-turn="0"]:after { content: '1' }
-.table .table-arrow-players[data-turn="1"]:after { content: '2' }
-.table .table-arrow-players[data-turn="2"]:after { content: '3' }
-.table .table-arrow-players[data-turn="3"]:after { content: '4' }
-.table .table-arrow-players[data-turn="4"]:after { content: '5' }
-.table .table-arrow-players[data-turn="5"]:after { content: '6' }
+.table .table__arrow__players[data-turn="0"]:after { content: '1' }
+.table .table__arrow__players[data-turn="1"]:after { content: '2' }
+.table .table__arrow__players[data-turn="2"]:after { content: '3' }
+.table .table__arrow__players[data-turn="3"]:after { content: '4' }
+.table .table__arrow__players[data-turn="4"]:after { content: '5' }
+.table .table__arrow__players[data-turn="5"]:after { content: '6' }

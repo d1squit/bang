@@ -98,16 +98,9 @@ document.querySelector('.lobby__friends__invites').addEventListener('click', () 
 });
 
 document.querySelector('.lobby__search__button').addEventListener('click', () => {
-	if (document.querySelector('.lobby__search__button').textContent == 'Start Search') socket.emit('ready', window.user.gameId, session);
-	else socket.emit('not-ready', window.user.gameId, session);
-});
-
-socket.on('ready', () => {
-	document.querySelector('.lobby__search__button').textContent = 'Waiting...';
-});
-
-socket.on('not-ready', () => {
-	document.querySelector('.lobby__search__button').textContent = 'Start Search';
+	if (ban) return;
+	localStorage.setItem('search', true);
+	window.location.href = './search.html';
 });
 
 socket.on('decline', (error, tempSession) => {
@@ -188,6 +181,52 @@ socket.on('profile', user => {
 	createLobby(user);
 	document.querySelector('.wrapper').style.visibility = 'visible';
 	setTimeout(() => document.querySelector('.wrapper').style.opacity = '1', 200);
+	// socket.emit('ready', window.user.gameId, session);
+});
+
+const convertToTime = time => {
+	let seconds = Math.floor(time / 1000);
+	let minutes = Math.floor(seconds / 60);
+	let hours = Math.floor(minutes / 60);
+
+	seconds = seconds % 60;
+	minutes = minutes % 60;
+
+	return { seconds, minutes, hours };
+}
+
+const formatTime = time => {
+	const seconds = time.seconds >= 10 ? time.seconds.toString() : '0' + time.seconds.toString();
+	const minutes = time.minutes >= 10 ? time.minutes.toString() : '0' + time.minutes.toString();
+	const hours = time.hours >= 10 ? time.hours.toString() : '0' + time.hours.toString();
+	return { seconds, minutes, hours };
+}
+
+let banInterval = null;
+let ban = false;
+
+socket.on('ban-start', time => {
+	ban = true;
+	clearInterval(banInterval);
+	
+	const formatted = formatTime(convertToTime(time - Date.now()));
+	document.querySelector('.lobby__ban__time').textContent = `${formatted.hours}Ч : ${formatted.minutes}М : ${formatted.seconds}СЕК`;
+
+	banInterval = setInterval(() => {
+		if (time - Date.now() < 1000) clearInterval(banInterval);
+		const formatted = formatTime(convertToTime(time - Date.now()));
+		document.querySelector('.lobby__ban__time').textContent = `${formatted.hours}Ч : ${formatted.minutes}М : ${formatted.seconds}СЕК`;
+	}, 1000);
+
+	document.querySelector('.lobby__ban').style.height = '68px';
+	document.querySelector('.lobby__ban').style.setProperty('--banheight', '68px');
+});
+
+socket.on('ban-end', () => {
+	ban = false;
+	clearInterval(banInterval);
+	document.querySelector('.lobby__ban').style.height = '0px';
+	document.querySelector('.lobby__ban').style.setProperty('--banheight', '0px');
 });
 
 socket.on('friend-state', (friendId, state) => {
@@ -215,19 +254,6 @@ socket.on('lobby-state', (playerId, state) => {
 		if (state) document.querySelectorAll('.lobby__match .lobby__player')[playerIndex].classList.remove('disabled');
 		else document.querySelectorAll('.lobby__match .lobby__player')[playerIndex].classList.add('disabled');
 	}
-});
-
-socket.on('accept-game', lobby => {
-	document.querySelector('.accept-game').style.display = 'flex';
-	document.querySelector('.accept-game__players').innerHTML = '';
-	lobby.players.forEach((player, index) => {
-		document.querySelector('.accept-game__players').innerHTML += `<div class="accept-game__player${ player.accepted ? ' accepted' : '' }"></div>`;
-		document.querySelectorAll('.accept-game__player')[index].style.backgroundImage = `url('./assets/img/lobby/accepted.svg'), url('./assets/photos/${player.photo}.png')`;
-	});
-
-	document.querySelectorAll('.accept-game__button').forEach(element => element.addEventListener('click', () => {
-		socket.emit('accept-game', window.user.gameId, session);
-	}));
 });
 
 socket.on('lobby', lobby => {
@@ -267,7 +293,8 @@ class Invites {
 
 	nextInvite = () => {
 		document.querySelector('.lobby__invite').style.height = '0px';
-		document.querySelector('.lobby__invite').style.padding = '0px 20px';
+		document.querySelector('.lobby__invite').style.setProperty('--height', '0px');
+		document.querySelector('.lobby__invite').style.padding = '0px 0px';
 		clearTimeout(this.timeout);
 		this.stack.splice(0, 1);
 		this.sendInvite();
@@ -278,14 +305,17 @@ class Invites {
 
 		document.querySelector('.lobby__invite__name').textContent = this.stack[0].username;
 		document.querySelector('.lobby__invite').style.height = '68px';
-		document.querySelector('.lobby__invite').style.padding = '17px 20px';
+		document.querySelector('.lobby__invite').style.setProperty('--height', '68px');
+		document.querySelector('.lobby__invite').style.padding = '17px 0px';
 
 		document.querySelector('.lobby__invite__accept').addEventListener('click', () => socket.emit('invite-accept', this.stack[0].id, this.stack[0].invite));
 		document.querySelector('.lobby__invite__decline').addEventListener('click', () => socket.emit('invite-decline', this.stack[0].id, this.stack[0].invite));
 
 		this.timeout = setTimeout(() => {
 			document.querySelector('.lobby__invite').style.height = '0px';
-			document.querySelector('.lobby__invite').style.padding = '0px 20px';
+			document.querySelector('.lobby__invite').style.setProperty('--height', '0px');
+			document.querySelector('.lobby__invite').style.padding = '0px 0px';
+			socket.emit('invite-decline', this.stack[0].id, this.stack[0].invite);
 			this.stack.splice(0, 1);
 
 			if (this.stack.length > 0) {
@@ -299,7 +329,8 @@ class Invites {
 	stopInvite = () => {
 		clearTimeout(this.timeout);
 		document.querySelector('.lobby__invite').style.height = '0px';
-		document.querySelector('.lobby__invite').style.padding = '0px 20px';
+		document.querySelector('.lobby__invite').style.setProperty('--height', '0px');
+		document.querySelector('.lobby__invite').style.padding = '0px 0px';
 	}
 
 

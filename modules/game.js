@@ -1,11 +1,13 @@
 import { Player } from './player.js';
 import { characters, shuffle, cards, roles } from './utils.js';
-import { BangCard, BarrelCard, MissCard, SaloonCard } from './card.js';
+import { BangCard, BarrelCard, MissCard, SaloonCard, ScofieldCard, ShopCard } from './card.js';
 
 const getActivePlayers = (room) => room.players.filter(p => p.dead == false);
 
 const changeTurn = (io, room) => {
 	clearInterval(room.timeout.interval);
+
+	room.history.push([]);
 
 	const cards_delta = room.players[room.turn].cards.length - room.players[room.turn].health;
 
@@ -310,6 +312,8 @@ export const initGame = (io, socket, room) => {
 
 	room.shuffled = shuffle(cards);
 	room.destroyed = [];
+
+	io.to(room.id).emit('room-id', room.id);
 	
 	if (room.botFlag) {
 		room.shuffled[room.shuffled.length - 1] = new BangCard(2, 7);
@@ -340,16 +344,16 @@ export const initGame = (io, socket, room) => {
 			room.players.push(player);
 		});
 	} else {
+		room.shuffled[room.shuffled.length - 1] = new ShopCard(3, 6);
 		shuffle(roles).forEach((role, index) => {
-			const character_id = index + 7;
+			const character_id = index;
 			room.turn = 0;
-			const player = new Player(character_id, { name: room.users[index].name, rating: room.users[index].rating, id: room.sockets[index] }, index, characters[character_id].health, role, [], []);
-				
+			const player = new Player(character_id, { name: room.users[index].username, rating: room.users[index].rating, photo: room.users[index].photo, gameId: room.users[index].gameId, id: room.users[index].socketId }, index, characters[character_id].health, role, [], []);
+			
 			for (let i = 0; i < player.health; i++) {
 				player.cards.push(room.shuffled[room.shuffled.length - 1]);
 				room.shuffled.pop();
 			}
-				
 			promises.push(player.createMessage());
 			room.players.push(player);
 		});
@@ -376,7 +380,8 @@ export const initGame = (io, socket, room) => {
 }
 
 export const startGame = async (io, socket, room) => {
-	socket.on('turn-end', player => {
+	socket.on('turn-end', (player, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[player.player_id].gameId) return;
 		if (room.shop.cards.length > 0 || room.indians.len > 0 || room.duel.interval != null) return;
 
 		if (player.player_id == room.turn && player.player_id == room.wait) changeTurn(io, room);
@@ -388,13 +393,15 @@ export const startGame = async (io, socket, room) => {
 		}
 	});
 
-	socket.on('leave', player => {
+	socket.on('leave', (player, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[player.player_id].gameId) return;
 		if (room.shop.cards.length > 0 || room.indians.len > 0 || room.duel.interval != null) return;
 		io.to(room.id).emit('choose-player', room.player_choosed = -1);
 		kickPlayer(io, room, player);
 	});
 
-	socket.on('get-shop-card', (card, sender) => {
+	socket.on('get-shop-card', (card, sender, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		(function getShopCard (card, sender) {
 			if (room.shop.cards.length == 0) return;
 
@@ -433,7 +440,8 @@ export const startGame = async (io, socket, room) => {
 		})(card, sender);
 	});
 
-	socket.on('indians-send', (sender, card) => {
+	socket.on('indians-send', (sender, card, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		(function sendIndians (sender, from_player=true) {
 			if (sender == room.indians.wait) {
 				clearTimeout(room.indians.interval);
@@ -474,7 +482,8 @@ export const startGame = async (io, socket, room) => {
 		})(sender);
 	});
 
-	socket.on('duel-send', (sender, card) => {
+	socket.on('duel-send', (sender, card, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		(function sendDuel () {
 			if (sender == room.duel.players[room.duel.wait]) {
 				clearTimeout(room.duel.interval);
@@ -482,7 +491,7 @@ export const startGame = async (io, socket, room) => {
 				const card_index = room.players[room.duel.players[room.duel.wait]].cards.findIndex(item => item.card_id == card.card_id && item.suit == card.suit && item.rank == card.rank)
 
 
-				io.to(room.id).emit('accept-card', room.duel.players[room.duel.wait], card, card_index, room.duel.players[room.duel.wait], 'indians');
+				io.to(room.id).emit('accept-card', room.duel.players[room.duel.wait].player_id, card, card_index, room.duel.players[room.duel.wait].player_id, 'indians');
 				room.players[room.duel.players[room.duel.wait]].cards.splice(card_index, 1)
 				io.to(room.players[room.duel.players[room.duel.wait]].user.id).emit('player', room.players[room.duel.players[room.duel.wait]]);
 
@@ -508,7 +517,8 @@ export const startGame = async (io, socket, room) => {
 		})();
 	});
 
-	socket.on('delete-card', (sender, card) => {
+	socket.on('delete-card', (sender, card, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (!card) return;
 		const card_index = room.players[sender.player_id].cards.findIndex(item => card.title == item.title && card.modifier == item.modifier && card.suit == item.suit && card.rank == item.rank);
 		
@@ -534,7 +544,8 @@ export const startGame = async (io, socket, room) => {
 		}
 	});
 
-	socket.on('change-card', (sender, card) => {
+	socket.on('change-card', (sender, card, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		const card_index = room.players[sender.player_id].cards.findIndex(item => card.title == item.title && card.modifier == item.modifier && card.suit == item.suit && card.rank == item.rank);
 		
 		if (~card_index) {
@@ -551,14 +562,15 @@ export const startGame = async (io, socket, room) => {
 		}
 	});
 
-	socket.on('choose-from-three-send', (sender, card) => {
+	socket.on('choose-from-three-send', (sender, card, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (sender == room.wait) {
 			const card_index = room.choose_cards.findIndex(item => item.card_id == card.card_id && item.suit == card.suit && item.rank == card.rank);
 			if (~card_index) {
 
 				if (room.choose_three_cards.length < 2) {
 					room.choose_three_cards.push(room.players[sender].cards[card_index]);
-					io.to(room.id).emit('accept-card', sender, card, card_index, sender, 'choose-three');
+					io.to(room.id).emit('accept-card', sender.player_id, card, card_index, sender.player_id, 'choose-three');
 					room.players[sender].cards.push(card)	;
 					io.to(room.players[sender].user.id).emit('player', room.players[sender]);
 				}
@@ -577,7 +589,8 @@ export const startGame = async (io, socket, room) => {
 		}
 	});
 
-	socket.on('check-card-choose', (sender, card) => {
+	socket.on('check-card-choose', (sender, card, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (sender == room.wait) {
 			if (card.card_id == room.check_card.card_id && card.suit == room.check_card.suit && card.rank == room.check_card.rank) {
 				const mod_index = room.players[sender].modifiers.findIndex(item => room.check_card.title == item.title && room.check_card.modifier == item.modifier && room.check_card.suit == item.suit && room.check_card.rank == item.rank);
@@ -594,7 +607,7 @@ export const startGame = async (io, socket, room) => {
 				io.to(room.id).emit('table', { card_count: room.shuffled.length });
 				room.cancel_cards++;
 
-				io.to(room.id).emit('accept-card', sender, card, 0, sender, 'choose');
+				io.to(room.id).emit('accept-card', sender.player_id, card, 0, sender.player_id, 'choose');
 			} else if (card.card_id == room.second_check_card.card_id && card.suit == room.second_check_card.suit && card.rank == room.second_check_card.rank) {
 				const mod_index = room.players[sender].modifiers.findIndex(item => room.second_check_card.title == item.title && room.second_check_card.modifier == item.modifier && room.second_check_card.suit == item.suit && room.second_check_card.rank == item.rank);
 				if (room.second_check_card.suit == 1) sendWait(io, room, room.turn, 60, true);
@@ -610,14 +623,15 @@ export const startGame = async (io, socket, room) => {
 				io.to(room.id).emit('table', { card_count: room.shuffled.length });
 				room.cancel_cards++;
 
-				io.to(room.id).emit('accept-card', sender, card, 1, sender, 'choose');
+				io.to(room.id).emit('accept-card', sender.player_id, card, 1, sender.player_id, 'choose');
 			}
 			io.to(room.id).emit('choose-end');
 		}
 	});
 
 
-	socket.on('choose-destroyed', (choose, sender) => {
+	socket.on('choose-destroyed', (choose, sender, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (!room.players[sender].dead) {
 			if (room.players[sender].character.id == 6) {
 				if (choose == false && room.destroyed.length == 0) return;
@@ -627,7 +641,8 @@ export const startGame = async (io, socket, room) => {
 		}
 	});
 
-	socket.on('choose-player', sender => {
+	socket.on('choose-player', (sender, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (!room.players[sender].dead) {
 			if (room.players[sender].character.id == 12) {
 				if (room.player_choosed == -1) io.to(room.players[sender].user.id).emit('choose-player', ++room.player_choosed);
@@ -641,7 +656,9 @@ export const startGame = async (io, socket, room) => {
 
 	
 
-	socket.on('play-card', (sender, card, player) => {
+	socket.on('play-card', (sender, card, player, session) => {
+		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
+
 		function updateCardsCount (room) {
 			const count = [];
 			room.players.forEach(player => count.push(player.cards.length));
@@ -662,7 +679,7 @@ export const startGame = async (io, socket, room) => {
 			
 			room.destroyed.push(room.players[sender.player_id].cards[index]);
 			room.players[sender.player_id].cards.splice(index, 1);
-			io.to(room.id).emit('accept-card', sender, card, index, player, 'destroy');
+			io.to(room.id).emit('accept-card', sender.player_id, card, index, player.player_id, 'destroy');
 			return true;
 		}
 		
@@ -675,6 +692,7 @@ export const startGame = async (io, socket, room) => {
 			if (~card_index || ~mod_index) {
 				if (player.dead == false) {
 					if (room.wait != room.turn) {
+						room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card });
 						if (card.card_id == 6) {
 							if (room.players[room.turn].character.id == 1) {
 								if (room.cancel_cards == 0) {
@@ -741,11 +759,11 @@ export const startGame = async (io, socket, room) => {
 							if (~room.players[player.player_id].modifiers.findIndex(item => card.title == item.title)) { io.to(sender.user.id).emit('decline-card', 'Card repeats'); return; }
 
 							room.players[sender.player_id].cards.splice(card_index, 1);
-							io.to(room.id).emit('accept-card', sender, card, card_index, player, 'modifier');
+							io.to(room.id).emit('accept-card', sender.player_id, card, card_index, player.player_id, 'modifier');
 
 							const modifier_index = room.players[sender.player_id].modifiers.findIndex(item => item.card_id <= 4);
 							if (~modifier_index && card.card_id <= 4) {
-								io.to(room.id).emit('accept-card', sender, room.players[sender.player_id].modifiers[modifier_index], modifier_index, player, 'release');
+								io.to(room.id).emit('accept-card', sender.player_id, room.players[sender.player_id].modifiers[modifier_index], modifier_index, player.player_id, 'release');
 								room.players[sender.player_id].modifiers.splice(player.modifiers.findIndex(item => item.card_id <= 4), 1);
 							}
 
@@ -825,6 +843,8 @@ export const startGame = async (io, socket, room) => {
 									if (player.player_id != sender.player_id) sendDistances(io, room, player, (distance, index) => index == sender.player_id ? distance + 1 : distance);
 								});
 							}
+
+							room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 						} else if (card.modifier && player.player_id != sender.player_id) {
 							if (card.card_id == 17 && room.players[player.player_id].role != 0) {
 								let prison_found = false;
@@ -834,16 +854,18 @@ export const startGame = async (io, socket, room) => {
 								if (~room.players[player.player_id].modifiers.findIndex(item => card.title == item.title)) { io.to(sender.user.id).emit('decline-card', 'Card repeats'); return; }
 								
 								room.players[player.player_id].addModifier(card);
-								io.to(room.id).emit('accept-card', sender, card, card_index, player, 'prison');
+								io.to(room.id).emit('accept-card', sender.player_id, card, card_index, player.player_id, 'prison');
 								room.players[sender.player_id].cards.splice(card_index, 1);
 								io.to(room.players[sender.player_id].user.id).emit('player', room.players[sender.player_id]);
 								updateModifiers(room);
+								room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 							}
 						} else if (card.card_id == 9) {
 							if (sender.health < sender.character.health) {
 								io.to(room.id).emit('set-health', room.players[room.wait].player_id, room.players[room.wait].character.health, ++room.players[room.wait].health);
-								io.to(room.id).emit('accept-card', sender, card, card_index, player, 'destroy');
+								io.to(room.id).emit('accept-card', sender.player_id, card, card_index, player.player_id, 'destroy');
 								destroyCard(card_index);
+								room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 							} else io.to(sender.user.id).emit('decline-card', 'Full health');
 						} else if (card.card_id == 12) {
 							if (room.players[player.player_id].cards.length > 0) {
@@ -855,6 +877,7 @@ export const startGame = async (io, socket, room) => {
 
 								room.players[player.player_id].cards.splice(randomCardIndex, 1);
 								io.to(room.players[player.player_id].user.id).emit('player', room.players[player.player_id]);
+								room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 							} else io.to(sender.user.id).emit('decline-card', 'Not enough cards');
 						} else if (card.card_id == 13) {
 							destroyCard(card_index);
@@ -863,6 +886,8 @@ export const startGame = async (io, socket, room) => {
 								if (room.players[player.player_id].health < room.players[player.player_id].character.health)
 									io.to(room.id).emit('set-health', room.players[player.player_id].player_id, room.players[player.player_id].character.health, ++room.players[player.player_id].health);
 							});
+
+							room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 						} else if (card.card_id == 14) {
 							destroyCard(card_index);
 							room.duel.players = [sender.player_id, player.player_id];
@@ -881,6 +906,7 @@ export const startGame = async (io, socket, room) => {
 							}, 5000);
 
 							updateCardsCount(room);
+							room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 						} else if (card.card_id == 15) {
 							destroyCard(card_index);
 							room.shop.wait = sender.player_id;
@@ -904,6 +930,7 @@ export const startGame = async (io, socket, room) => {
 							}, 10000);
 
 							updateCardsCount(room);
+							room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 
 							function getShopCard (card, sender) {
 								if (room.shop.cards.length == 0) return;
@@ -951,6 +978,7 @@ export const startGame = async (io, socket, room) => {
 							}, 5000);
 
 							updateCardsCount(room);
+							room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 
 							function sendIndians () {
 								clearTimeout(room.indians.interval);
@@ -980,9 +1008,11 @@ export const startGame = async (io, socket, room) => {
 						} else if (card.card_id == 7) {
 							destroyCard(card_index);
 							sendNewCards(io, room, room.turn, 2);
+							room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 						} else if (card.card_id == 8) {
 							destroyCard(card_index);
 							sendNewCards(io, room, room.turn, 3);
+							room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 						} else if (card.card_id == 11) {
 							if (room.players[player.player_id].distances[sender.player_id] <= 1 && room.players[player.player_id].cards.length > 0) {
 								destroyCard(card_index);
@@ -990,13 +1020,13 @@ export const startGame = async (io, socket, room) => {
 								const randomCard = room.players[player.player_id].cards[randomCardIndex];
 
 								io.to(room.id).emit('accept-card', player.player_id, randomCard, randomCardIndex, sender.player_id, 'transfer');
-								io.to(room.id).emit('accept-card', sender, card, card_index, player, 'destroy');
+								io.to(room.id).emit('accept-card', sender.player_id, card, card_index, player.player_id, 'destroy');
 								
 								room.players[sender.player_id].cards.push(randomCard);
 								room.players[player.player_id].cards.splice(randomCardIndex, 1);
 								io.to(room.players[sender.player_id].user.id).emit('player', room.players[sender.player_id]);
 								io.to(room.players[player.player_id].user.id).emit('player', room.players[player.player_id]);
-								
+								room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 							}
 						} else if (card.card_id == 10) {
 							room.players.forEach(player_iter => {
@@ -1008,14 +1038,16 @@ export const startGame = async (io, socket, room) => {
 							room.players[sender.player_id].cards.splice(card_index, 1);
 							io.to(room.players[sender.player_id].user.id).emit('player', room.players[sender.player_id]);
 							io.to(room.id).emit('accept-card', player.player_id, card, card_index, player.player_id, 'remove');
+							room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 						} else if (card.card_id == 5) {
 							if (room.players[sender.player_id].distances[player.player_id] <= room.players[sender.player_id].shootDistance) {
 								if (~room.players[sender.player_id].modifiers.findIndex(modifier => modifier.card_id == 1) || room.players[sender.player_id].character.id == 14) {
 									room.cancel_cards = 0;
 									room.destroyed.push(room.players[sender.player_id].cards[card_index]);
-									io.to(room.id).emit('accept-card', sender, card, card_index, player, 'destroy');
+									io.to(room.id).emit('accept-card', sender.player_id, card, card_index, player.player_id, 'destroy');
 									room.players[sender.player_id].cards.splice(card_index, 1);
 									io.to(room.players[sender.player_id].user.id).emit('player', room.players[sender.player_id]);
+									room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 									
 									if (player.character.id == 13) {
 										if (room.shuffled >= 1) room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
@@ -1035,8 +1067,8 @@ export const startGame = async (io, socket, room) => {
 											io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
 										} else io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
 						
-										if (room.check_card.suit != 1) sendWait(io, room, player.player_id, 30, false);
-									} else sendWait(io, room, player.player_id, 30, false);
+										if (room.check_card.suit != 1) { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});}
+									} else { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card}); }
 								} else if (destroyCard(card_index, true)) {
 									if (player.character.id == 13) {
 										if (room.shuffled >= 1) room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
@@ -1055,14 +1087,14 @@ export const startGame = async (io, socket, room) => {
 											room.destroyed.push(room.second_check_card);
 											io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
 										} else io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
-						
-										if (room.check_card.suit != 1) sendWait(io, room, player.player_id, 30, false);
-									} else sendWait(io, room, player.player_id, 30, false);
+										
+										if (room.check_card.suit != 1) { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});}
+									} else { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card}); }
 								}
 							}
 						}
 					}
-					updateCardsCount(room);	
+					updateCardsCount(room);
 				} else io.to(sender.user.id).emit('decline-card', 'Target is dead');
 			} else io.to(sender.user.id).emit('decline-card', 'Invalid card');
 		} else io.to(sender.user.id).emit('decline-card', 'Invalid turn');
@@ -1073,4 +1105,6 @@ export const startGame = async (io, socket, room) => {
 			}
 		});
 	});
+
+	socket.on('history', () => socket.emit('history', room.history));
 }

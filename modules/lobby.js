@@ -1,19 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import nodemailer from 'nodemailer';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-import sqlite from 'sqlite3';
-const sqlite3 = sqlite.verbose();
-
-let db = new sqlite3.Database(path.join(__dirname, '/../bang.db'), sqlite3.OPEN_READWRITE, (err) => {
-	if (err) console.error(err.message);
-
-	db.run('CREATE TABLE users');
-});
 
 const sendMail = async (mail) => {
 	const transporter = nodemailer.createTransport({
@@ -202,6 +189,7 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 				if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[userIndex].gameId, true);
 			});
 
+			if (users[userIndex].ban > 0) socket.emit('ban-start', users[userIndex].ban);
 			socket.emit('profile', { username: users[userIndex].username, photo: users[userIndex].photo, rating: users[userIndex].rating, characters: users[userIndex].characters, friends: friends, requests: users[userIndex].requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId), inviteId: item.inviteId } }), gameId: users[userIndex].gameId });
 			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
 			
@@ -225,8 +213,8 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 	});
 
 	socket.on('invite', (sender, target, session) => {
-		const senderIndex = users.findIndex(item => item.gameId == sender && item.session == session);
-		const targetIndex = users.findIndex(item => item.gameId == target);
+		const senderIndex = users.findIndex(item => item.gameId == sender && item.session == session && item.ban === null);
+		const targetIndex = users.findIndex(item => item.gameId == target && item.ban === null);
 		const lobbyIndex = lobbies.findIndex(item => item.id == users[senderIndex].lobbyId);
 
 		if (~senderIndex && ~targetIndex) {
@@ -415,8 +403,8 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 	});
 
 	socket.on('invite-decline', (sender, inviteId) => {
-		const senderIndex = users.findIndex(item => item.gameId == sender);
-		const targetIndex = users.findIndex(item => item.socketId == socket.id);
+		const senderIndex = users.findIndex(item => item.gameId == sender && item.ban === null);
+		const targetIndex = users.findIndex(item => item.socketId == socket.id && item.ban === null);
 
 		if (~senderIndex && ~targetIndex) {
 			const inviteIndex = users[senderIndex].invites.findIndex(item => item == inviteId);
@@ -429,8 +417,8 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 	});
 
 	socket.on('invite-accept', (sender, inviteId) => {
-		const senderIndex = users.findIndex(item => item.gameId == sender);
-		const targetIndex = users.findIndex(item => item.socketId == socket.id);
+		const senderIndex = users.findIndex(item => item.gameId == sender && item.ban === null);
+		const targetIndex = users.findIndex(item => item.socketId == socket.id && item.ban === null);
 		
 		if (~senderIndex && ~targetIndex) {
 			const inviteIndex = users[senderIndex].invites.findIndex(item => item == inviteId);

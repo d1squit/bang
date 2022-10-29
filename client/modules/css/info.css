@@ -1,86 +1,145 @@
 .player-info {
 	display: flex;
-	flex-direction: column;
-	gap: 5px;
-	width: 230px;
-	border: 1px solid black;
-	border-radius: 5px;
-	padding: 5px;
-	background-color: #ebd5bd;
+	align-items: center;
+	padding: 10px;
+	width: 220px;
+	height: 65px;
+	background-image: url('../../assets/img/lobby/player-back.svg');
+	background-repeat: no-repeat;
 }
+
+.player-info h2 {
+	font-family: 'Bookman Old Style';
+	font-style: normal;
+	font-weight: 600;
+	font-size: 14px;
+	line-height: 18px;
+	letter-spacing: 0.875px;
+	color: #FFF4E5;
+}
+
+.player-info__user__bottom {
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	gap: 16px;
+}
+
+.player-info__bottom {
+	position: relative;
+	right: 74px;
+	bottom: -40px;
+}
+
+.player-info__state {
+	background-image: url('../../assets/img/lobby/online-back.svg');
+	width: 12px;
+	height: 12px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-left: -25px;
+	margin-top: 3px;
+}
+
+.player-info__state > div {
+	background: #6CB214;
+	border: 1px solid #5D9B10;
+	border-radius: 50%;
+	width: 8px;
+	height: 8px;
+}
+
+.player-info.disabled {
+	opacity: 1;
+}
+
+.player-info.disabled .player-info__state div {
+	background: #E3D9CC;
+	border: 1px solid #A7A7A7;
+}
+
+.player-info__user {
+	width: 150px;
+	overflow: hidden;
+}
+
+.player-info__cards {
+	justify-content: flex-start;
+}
+
 
 .player-info.dead {
-	background-color: #bbb;
+	opacity: 0.4;
 }
 
-.player-info .player-info-top {
+.player-info .player-info__top {
 	height: 42px;
 }
 
-.player-info .player-info-top, .player-info .player-info-bottom {
+.player-info .player-info__top, .player-info .player-info__bottom {
 	display: flex;
-	gap: 5px;
+	gap: 10px;
 }
 
-.player-info .player-info-top .player-info-userrating {
+.player-info .player-info__top .player-info__rating {
 	display: flex;
 	align-items: center;
 	gap: 3px;
-	background-color: #84B8DE;
 	border-radius: 5px;
 	padding: 2px 6px;
 }
 
-.player-info .player-info-top .player-info-userrating h4 {
+.player-info .player-info__top .player-info__rating h4 {
 	margin-top: 2px;
 }
 
-.player-info .player-info-top .player-info-userrating-icon {
+.player-info .player-info__top .player-info__rating-icon {
 	width: 18px;
 }
 
-.player-info .player-info-top .player-info-userphoto {
-	width: 42px;
+.player-info .player-info__top .player-info__photo {
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
 }
 
-.player-info .player-info-bottom .player-info-cards {
-	justify-content: flex-end;
-	margin-right: 100px;
-}
-
-.player-info .player-info-bottom .player-info-health {
+.player-info .player-info__bottom .player-info__health {
 	display: flex;
-	gap: 3px;
+	flex-direction: row-reverse;
+	width: 70px;
+	gap: 4px;
 }
 
-.player-info .player-info-bottom .player-info-health-point img {
-	height: 35px;
+.player-info .player-info__bottom .player-info__health-point img {
+	width: 8px;
+	height: 24px;
 }
 
 
-.player-info.dead .player-info-role {
+/* .player-info.dead .player-info__role {
 	background-image: url('../../assets/img/game/role-icons.webp');
-}
+} */
 
-.player-info-role {
+.player-info__role {
 	background-size: cover;
 	width: 34px;
 	height: 34px;
 }
 
-.player-info-role[data-role='0'] {
+.player-info__role[data-role='0'] {
 	background-image: url('../../assets/img/game/role-icons.webp');
 	background-position: 66% 0;
 }
 
-.player-info-role[data-role='1'] {
+.player-info__role[data-role='1'] {
 	background-position: 100% 0;
 }
 
-.player-info-role[data-role='2'] {
+.player-info__role[data-role='2'] {
 	background-position: 0% 0;
 }
 
-.player-info-role[data-role='3'] {
+.player-info__role[data-role='3'] {
 	background-position: 33% 0;
 }
