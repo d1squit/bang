@@ -48,12 +48,25 @@ friendsArrowPrevious.addEventListener('click', () => {
 // ------------------------------------------- LOBBY ------------------------------------------- //
 
 
-const session = localStorage.getItem('session');
+const session = getCookie('session');
+if (!session) window.location.href = '/home';
 let socket = io.connect('', { query: `session=${session}` });
+
+const load = setTimeout(() => {
+	if (getCookie('reload') == 'false') {
+		setCookie('reload', 'true');
+		window.location.reload();
+	} else {
+		setCookie('session', 'null');
+		document.cookie.split(";").forEach((c) => { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
+		window.location.reload();
+	}
+}, 5000);
+
 
 document.querySelector('.error').addEventListener('click', () => {
 	localStorage.removeItem('session');
-	setTimeout(() => location.href = './login.html', 1000);
+	setTimeout(() => location.href = '/home', 1000);
 });
 
 document.querySelector('.header__profile__logout').addEventListener('click', () => logOut(socket));
@@ -73,7 +86,7 @@ document.querySelectorAll('*:not(.lobby__match__start__mode__tip)').forEach(elem
 
 $.getJSON("https://api.ipify.org?format=json", (data) => {
 	if (session) socket.emit('get-profile', session, data.ip);
-	else window.location.href = './login.html';
+	else window.location.href = '/home.html';
 });
 
 socket.on('users', users => {
@@ -99,18 +112,31 @@ document.querySelector('.lobby__friends__invites').addEventListener('click', () 
 
 document.querySelector('.lobby__search__button').addEventListener('click', () => {
 	if (ban) return;
-	localStorage.setItem('search', true);
-	window.location.href = './search.html';
+	if (document.querySelector('.lobby__search__button').textContent == 'Start Search') socket.emit('search-start', window.user.gameId, session);
+	else socket.emit('search-end', window.user.gameId, session);
 });
 
-socket.on('decline', (error, tempSession) => {
-	document.querySelector('.error').style.width = '300px';
-	if (error == -1) document.querySelector('.error').textContent = 'Неверные данные для входа';
-	else {
-		document.querySelector('.error').textContent = 'Выполнен вход с другого устройства. Перейдите по ссылке в письме';
-		if (tempSession) localStorage.setItem('tempSession', tempSession);
-	}
+socket.on('search-start', () => {
+	document.querySelector('.lobby__search__button').textContent = 'Waiting...';
 });
+
+socket.on('search-end', () => {
+	document.querySelector('.lobby__search__button').textContent = 'Start Search';
+});
+
+socket.on('ready', () => {
+	setCookie('search', true);
+	window.location.href = '../search';
+});
+
+// socket.on('decline', (error, tempSession) => {
+// 	document.querySelector('.error').style.width = '300px';
+// 	if (error == -1) document.querySelector('.error').textContent = 'Неверные данные для входа';
+// 	else {
+// 		document.querySelector('.error').textContent = 'Выполнен вход с другого устройства. Перейдите по ссылке в письме';
+// 		if (tempSession) setCookie('tempSession', tempSession);
+// 	}
+// });
 
 const displayFriends = (start, end, friends=null, mode=false, decline=false) => {
 	if (!friends) friends = window.user.friends;
@@ -123,10 +149,12 @@ const displayFriends = (start, end, friends=null, mode=false, decline=false) => 
 		document.querySelectorAll('.lobby__friend .player__name')[index].textContent = friend.name;
 		document.querySelectorAll('.lobby__friend .player__rating > h2')[index].textContent = friend.rating;
 		document.querySelectorAll('.lobby__friend .player__photo')[index].src = `./assets/photos/${friend.photo}.png`;
-		if (window.lobby && ~window.lobby.players.findIndex(item => item.gameId == friend.gameId) && document.querySelectorAll('.player__invite').length > 0) document.querySelectorAll('.player__invite')[index].style.display = 'none';
-		if (!friend.online) {
-			document.querySelectorAll('.lobby__friend')[index].classList.add('disabled');
-			if (!mode) document.querySelector(`.lobby__friend:nth-child(${index + 1}) .player__invite`).style.display = 'none';
+		if (!mode) {
+			if (window.lobby && ~window.lobby.players.findIndex(item => item.gameId == friend.gameId) && document.querySelectorAll('.player__invite').length > 0) document.querySelectorAll('.player__invite')[index].style.display = 'none';
+			if (!friend.online) {
+				document.querySelectorAll('.lobby__friend')[index].classList.add('disabled');
+				if (!mode) document.querySelector(`.lobby__friend:nth-child(${index + 1}) .player__invite`).style.display = 'none';
+			}
 		}
 	});
 
@@ -148,6 +176,8 @@ const displayFriends = (start, end, friends=null, mode=false, decline=false) => 
 }
 
 socket.on('profile', user => {
+	clearTimeout(load);
+
 	const createLobby = (user) => {
 		window.user = user;
 		window.user.navigation = { characters: { outlined: 0, outlinedPage: 1, currentPage: 1 }, friends: { currentPage: 1 } };

@@ -83,3 +83,33 @@
 .disabled {
 	opacity: 0.4;
 }
+
+.short-profile {
+	display: flex;
+	gap: 16px;
+	height: 50px;
+}
+
+.short-profile__right {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.short-profile__photo {
+	border-radius: 8px;
+}
+
+.short-profile__username, .short-profile__rating {
+	font-family: 'Bookman Old Style';
+	font-size: 18px;
+	line-height: 21px;
+	letter-spacing: 1.125px;
+	color: #493F39;
+}
+
+.short-profile__rating {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}

@@ -1,0 +1,290 @@
+body {
+	background-color: #F1E5D6;
+}
+
+header {
+	background-image: url('../assets/img/rating/header-background.png');
+	height: 640px;
+}
+
+.header__container {
+	flex-direction: column;
+	justify-content: flex-start;
+	position: inherit;
+	padding: 58px 100px;
+}
+
+.header__logo {
+	width: 280px;
+	height: 80px;
+}
+
+.header__link {
+	font-size: 28px;
+	line-height: 32px;
+	text-align: center;
+	letter-spacing: 1.75px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+}
+
+.header__button {
+	background-image: url('../assets/img/button-back.png');
+	background-size: 100% 100%;
+	width: 252px;
+	height: 72px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 28px;
+	line-height: 32px;
+	text-align: center;
+	letter-spacing: 1.75px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+	cursor: pointer;
+}
+
+.header__top {
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+}
+
+.header__crown {
+	margin-top: 70px;
+}
+
+.header__select {
+	margin-top: 24px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 40px;
+}
+
+.header__select__option {
+	background-image: url('../assets/img/button-back.png');
+	background-size: 100% 100%;
+	width: 318px;
+	height: 80px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 28px;
+	line-height: 32px;
+	text-align: center;
+	letter-spacing: 1.75px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+	cursor: pointer;
+}
+
+.header__date {
+	font-family: 'Bookman Old Style';
+	font-size: 18px;
+	line-height: 28px;
+	letter-spacing: 1.125px;
+	color: #FFF4E5;
+	margin-top: 40px;
+}
+
+.header__title {
+	font-size: 48px;
+	line-height: 56px;
+	text-align: right;
+	letter-spacing: 3.75px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+	margin-top: 8px;
+}
+
+.header__prize {
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+}
+
+.header__price {
+	font-size: 96px;
+	line-height: 111px;
+	text-align: right;
+	color: #E7532C;
+}
+
+.header__symbol {
+	font-size: 40px;
+	line-height: 46px;
+	letter-spacing: 2.5px;
+	color: #FFF4E5;
+}
+
+.bracket {
+	padding: 40px 5%;
+	height: 1026px;
+	background-image: url('../assets/img/rating/bracket-background.svg');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: 0% 101%;
+	display: flex;
+	justify-content: center;
+}
+
+.bracket__container {
+	flex-direction: column;
+	align-items: center;
+}
+
+.tables {
+	display: flex;
+	gap: 5%;
+	background-color: #F1E5D6;
+	border-radius: 20px;
+	max-width: 1440px;
+	justify-content: center;
+}
+
+.bracket__table {
+	width: 694px;
+	border-collapse: separate;
+}
+
+th:first-child, td:first-child {
+	width: 95px;
+	padding-left: 32px;
+}
+
+th:nth-child(2), td:nth-child(2) {
+	width: 76px;
+}
+
+th:nth-child(3), td:nth-child(3) {
+	width: 294px;
+	overflow: hidden;
+}
+
+th:nth-child(4), td:nth-child(4) {
+	width: 113px;
+}
+
+th:nth-child(5), td:nth-child(5) {
+	width: 116px;
+}
+
+tr, th, td {
+	text-align: left;
+	vertical-align: middle;
+	height: 73px;
+	overflow: hidden;
+}
+
+th {
+	font-family: 'Bookman Old Style';
+	font-style: normal;
+	font-weight: 600;
+	font-size: 14px;
+	line-height: 36px;
+	letter-spacing: 0.875px;
+	color: #493F39;
+	opacity: 0.4;
+}
+
+.number {
+	font-family: 'Bookman Old Style';
+	font-size: 14px;
+	line-height: 36px;
+	letter-spacing: 0.875px;
+	color: #493F39;
+}
+
+.photo img {
+	width: 48px;
+	height: 48px;
+	margin-bottom: -10px;
+}
+
+.username {
+	font-family: 'Bookman Old Style';
+	font-size: 18px;
+	line-height: 36px;
+	letter-spacing: 1.125px;
+	color: #493F39;	
+}
+
+.trophy {
+	margin-right: 8px;
+	margin-bottom: -2px;
+}
+
+.rating {
+	font-family: 'Bookman Old Style';
+	font-style: normal;
+	font-weight: 600;
+	font-size: 18px;
+	line-height: 36px;
+	letter-spacing: 1.125px;
+	color: #2D1509;
+	opacity: 0.8;
+}
+
+.prize {
+	display: flex;
+	justify-content: flex-start;
+}
+
+.price {
+	display: inline;
+	font-size: 40px;
+	line-height: 46px;
+	color: #E7532C;	
+}
+
+.symbol {
+	display: inline;
+	font-size: 18px;
+	line-height: 21px;
+	letter-spacing: 2.5px;
+	color: #2D1509;
+	margin-bottom: 10px;
+}
+
+tr:nth-child(odd):has(img) {
+	background: #EADBC9;
+}
+
+tr:nth-child(odd) td:first-child {
+	border-bottom-left-radius: 10px;
+	border-top-left-radius: 10px;
+}
+
+tr:nth-child(odd) td:last-child {
+	border-bottom-right-radius: 10px;
+	border-top-right-radius: 10px;
+}
+
+table {
+	height: 800px;
+}
+
+.bracket__nav {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	gap: 24px;
+}
+
+.bracket__size {
+	font-size: 30px;
+	line-height: 35px;
+	text-align: center;
+	letter-spacing: 1.875px;
+	color: #2D1509;
+}
+
+.bracket__arrow {
+	width: 35px;
+	height: 35px;
+	background-image: url('../assets/img/rating/arrow.png');
+	cursor: pointer;
+}

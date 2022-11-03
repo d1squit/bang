@@ -20,7 +20,11 @@
     "socket.io": "^4.5.1"
   },
   "devDependencies": {
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "eth-sig-util": "^3.0.1",
+    "ethereum-address": "^0.0.4",
+    "ethereumjs-util": "^7.1.5",
     "nodemailer": "^6.8.0",
     "path": "^0.12.7",
     "sqlite3": "^5.1.2"

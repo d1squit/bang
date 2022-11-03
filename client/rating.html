@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/x-icon" href="./assets/img/logo-image.svg">
+	<link rel="stylesheet" href="./css/reset.css">
+	<link rel="stylesheet" href="./css/header.css">
+	<link rel="stylesheet" href="./css/footer.css">
+	<link rel="stylesheet" href="./css/common.css">
+	<link rel="stylesheet" href="./css/rating.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.3/web3.min.js" integrity="sha512-Ws+qbaGHSFw2Zc1e7XRpvW+kySrhmPLFYTyQ95mxAkss0sshj6ObdNP3HDWcwTs8zBJ60KpynKZywk0R8tG1GA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<title>Rating Table</title>
+</head>
+<body>
+	<div class="wrapper">
+		<header>
+			<div class="header__container __container">
+				<div class="header__top">
+					<img src="./assets/img/rating/logo.png" class="header__logo">
+					<div class="header__nav">
+						<div class="header__links">
+							<a href="../lobby" class="header__link">LOBBY</a>
+							<a href="" class="header__link">ABOUT</a>
+						</div>
+						<ul class="header__socials">
+							<li class="header__social"><a href=""><img src="./assets/img/header/geeko-button.svg" alt="" class="header__social__image"></a></li>
+							<li class="header__social"><a href=""><img src="./assets/img/header/discord-button.svg" alt="" class="header__social__image"></a></li>
+							<li class="header__social"><a href=""><img src="./assets/img/header/twitter-button.svg" alt="" class="header__social__image"></a></li>
+							<li class="header__social"><a href=""><img src="./assets/img/header/empty-button.svg" alt="" class="header__social__image"></a></li>
+							<li class="header__social"><a href=""><img src="./assets/img/header/wallet-button.svg" alt="" class="header__social__image"></a></li>
+						</ul>
+						<div class="header__button login__submit text-shadow">PLAY NOW</div>
+					</div>
+				</div>
+				<img src="./assets/img/rating/crown.svg" alt="" class="header__crown">
+				<div class="header__select">
+					<img src="./assets/img/rating/star.svg" alt="" class="header__select__star">
+					<div class="header__select__option header__select__tournament text-shadow">турнирный рейтинг</div>
+					<div class="header__select__option header__select__common text-shadow">обычный рейтинг</div>
+					<img src="./assets/img/rating/star.svg" alt="" class="header__select__star">
+				</div>
+				<div class="header__date">C 20 по 30 сентября</div>
+				<div class="header__title">призовой фонд турнира:</div>
+				<div class="header__prize">
+					<div class="header__price">10.000</div>
+					<div class="header__symbol">$</div>
+				</div>
+			</div>
+		</header>
+
+		<div class="bracket">
+			<div class="bracket__container __container">
+				<div class="tables">
+					<table class="bracket__table left-bracket">
+						<tr>
+							<th>Место</th>
+							<th></th>
+							<th>Игрок</th>
+							<th>Рейтинг</th>
+							<th>Награда</th>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+					</table>
+					<table class="bracket__table right-bracket">
+						<tr>
+							<th>Место</th>
+							<th></th>
+							<th>Игрок</th>
+							<th>Рейтинг</th>
+							<th>Награда</th>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+						<tr>
+							<td class="number"></td>
+							<td class="photo"></td>
+							<td class="username"></td>
+							<td class="rating"></td>
+							<td><div class="prize"></td>
+						</tr>
+					</table>
+				</div>
+				<div class="bracket__nav">
+					<div class="bracket__arrow bracket__arrow_left flip"></div>
+					<h2 class="bracket__size">1-100</h2>
+					<div class="bracket__arrow bracket__arrow_right"></div>
+				</div>
+			</div>
+		</div>
+
+		<footer>
+			<div class="footer__container __container">
+				<div class="footer__title title-block">
+					<img src="./assets/img/home/top-image.svg" alt="" class="title-block__top-image">
+					<div class="title-block__bottom">
+						<img src="./assets/img/home/star.svg" alt="" class="title-block__star">
+						<h2 class="title-block__title white">partners and ambassadors</h2>
+						<img src="./assets/img/home/star.svg" alt="" class="title-block__star">
+					</div>
+				</div>
+				<div class="footer__partners">
+					<img src="./assets/img/home/disney.png" alt="" class="footer__partner">
+					<img src="./assets/img/home/amazon.png" alt="" class="footer__partner">
+					<img src="./assets/img/home/canon.png" alt="" class="footer__partner">
+					<img src="./assets/img/home/nathans.png" alt="" class="footer__partner">
+					<img src="./assets/img/home/cocacola.png" alt="" class="footer__partner">
+				</div>
+				<img src="./assets/img/home/ornament.svg" alt="" class="footer__ornament">
+				<h3 class="footer__copyright">© All right reserved. 2022</h3>
+			</div>
+		</footer>
+	</div>
+
+	<script src="./js/common.js"></script>
+	<script src="./js/rating.js"></script>
+	<script src="./js/login.js"></script>
+</body>
+</html>

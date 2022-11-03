@@ -1,5 +1,5 @@
 body {
-	background-image: url('../../client/assets/img/lobby/background.png');
+	background-image: url('../../assets/img/lobby/background.png');
 	background-size: cover;
 }
 
@@ -195,6 +195,10 @@ main {
 	line-height: 24px;
 	letter-spacing: 1px;
 	color: #FFF4E5;
+}
+
+.lobby__profile__rating {
+	justify-content: flex-end;
 }
 
 .lobby__profile__rating__number {

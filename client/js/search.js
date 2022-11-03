@@ -1,8 +1,8 @@
-const session = localStorage.getItem('session');
+const session = getCookie('session');
 let socket = io.connect('', { query: `session=${session}&extra=ready` });
-let id = null
+let id = null;
 
-if (localStorage.getItem('search')) {
+if (getCookie('search')) {
 	socket.on('game-id', gameId => { id = gameId; socket.emit('ready', gameId, session); });
 
 	let time = 0;
@@ -12,13 +12,13 @@ if (localStorage.getItem('search')) {
 		const seconds = time % 60 >= 10 ? (time % 60).toString() : '0' + (time % 60).toString();
 		document.querySelector('.time').textContent = minutes + ':' + seconds; time++;
 	}, 1000);
-} else window.location.href = './lobby.html';
+} else window.location.href = '../lobby';
 
 document.querySelector('.decline').addEventListener('click', () => {
 	if (!id) return;
-	localStorage.setItem('search', false);
+	setCookie('search', false);
 	socket.emit('not-ready', id, session);
-	window.location.href = './lobby.html';
+	window.location.href = '../lobby';
 });
 
 socket.on('accept-game', lobby => {
@@ -37,18 +37,18 @@ socket.on('accept-game', lobby => {
 });
 
 socket.on('ban-start', () => {
-	localStorage.setItem('search', false);
-	window.location.href = './lobby.html';
+	setCookie('search', false);
+	window.location.href = '../lobby';
 });
 
 socket.on('ready-decline', () => {
-	localStorage.setItem('search', false);
-	window.location.href = './lobby.html';
+	setCookie('search', false);
+	window.location.href = '../lobby';
 });
 
 socket.on('start-game', () => {
-	localStorage.setItem('search', false);
-	location.href = './index.html';
+	setCookie('search', false);
+	location.href = '../game';
 });
 
 socket.on('search-refresh', () => window.location.reload());

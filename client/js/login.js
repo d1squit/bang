@@ -1,22 +1,55 @@
-let socket = io();
+try { socket; } catch (e) { socket = io(); }
+let session = getCookie('session');
 
-if (localStorage.getItem('session')) window.location.href = './lobby.html';
+jQuery(document).ready($ => {
+	$('.login__submit').on('click', async () => {
+		const provider = await detectEthereumProvider();
+		if (!provider) window.open("https://metamask.io/download/", "_blank");
+		provider.enable();
 
+		const web3 = new Web3(provider);
+		const walletAddress = await web3.eth.getCoinbase();
+		console.log(walletAddress)
+		const nonceResponse = await fetch(`/nonce?walletAddress=${walletAddress}`);
+		const { nonce } = await nonceResponse.json();
 
+		const signedNonce = await web3.eth.personal.sign(nonce, walletAddress); console.log(signedNonce);
 
-document.querySelector('.login__submit').addEventListener('click', () => {
-	$.getJSON("https://api.ipify.org?format=json", (data) => {
-		socket.emit('login', document.querySelector('.login__input').value, document.querySelector('.password__input').value, data.ip);
-    })
-});
+		if (!session) { socket.emit('session', walletAddress); console.log(walletAddress); }
+		else {
+			const successResponse = await fetch(`/verify?walletAddress=${walletAddress}&signedNonce=${signedNonce}&session=${session}`);
+			const { success } = await successResponse.json();
+			console.log(success, walletAddress)
+			if (!success) socket.emit('session', walletAddress, 1);
+			await checkSession(true);
+		}
 
-socket.on('decline', (error, tempSession) => {
-	console.log(error)
-	localStorage.setItem('code', tempSession);
-});
+		socket.on('session', async localSession => {
+			console.log(localSession)
+			console.log(`/verify?walletAddress=${walletAddress}&signedNonce=${signedNonce}&session=${localSession}`)
+			session = localSession; setCookie('session', session);
+			const successResponse = await fetch(`/verify?walletAddress=${walletAddress}&signedNonce=${signedNonce}&session=${localSession}`);
+			const { success } = await successResponse.json();
+			await checkSession(true);
+		});
+	});
 
+	const checkSession = async (redirect=false) => {
+		const response = await fetch("/check");
+		const { success, walletAddress } = await response.json();
+		if (success) {
+			setCookie('session', session);
+			if (redirect) window.location.href = './lobby';
+			if (document.querySelector('.login__submit')) socket.emit('get-short-profile', session);
+		} else socket.emit('session', walletAddress);
+	}
 
-socket.on('lobby-redirect', session => {
-	localStorage.setItem('session', session);
-	window.location.href = './lobby.html';
+	socket.on('short-profile', user => {
+		if (document.querySelector('.login__submit')) {
+			document.querySelector('.login__submit').parentElement.innerHTML += shortProfile(user);
+			document.querySelector('.login__submit').parentElement.removeChild(document.querySelector('.login__submit'));
+		}
+	});
+
+	checkSession();
 });

@@ -2,10 +2,10 @@
 	{
 		"players": [
 			{
-				"username": "bot1bot1bot1bot1bot1",
+				"username": "bot1",
 				"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d651",
 				"rating": 1000,
-				"gameId": "a7ae81befeaad14cfb5875c4a4627399",
+				"gameId": "28333140afc5381857313666a0e70cf2",
 				"online": false
 			}
 		],
@@ -13,7 +13,7 @@
 			"min": 950,
 			"max": 1050
 		},
-		"id": "96572402287afea799f61e9c6a74d8ff",
+		"id": "2411b5ef1dfa1168b7ef9c936c755048",
 		"accepted": [],
 		"interval": null
 	}

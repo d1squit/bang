@@ -64,6 +64,7 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	cursor: pointer;
 }
 
 
@@ -136,7 +137,7 @@
 	}
 
 	.roadmap {
-		margin-top: 160px;
+		/* margin-top: 160px; */
 	}
 }
 
@@ -441,6 +442,10 @@
 		gap: 10px;
 	}
 
+	.history__container {
+		margin-top: 340px;
+	}
+
 	.info__tournament__bracket {
 		margin-top: 150px;
 	}
@@ -489,7 +494,6 @@
 	z-index: 10;
 	padding: 0px 280px;
 	padding-bottom: 120px;
-	margin-top: -360px;
 }
 
 .roadmap__container {
@@ -497,30 +501,29 @@
 	justify-content: center;
 	align-items: center;
 	padding-top: 50px;
-	margin-top: 300px;
 }
 
 @media screen and (max-width: 1649.98px) {
 	.roadmap {
-		margin-top: -385px;
+		/* margin-top: -385px; */
 	}
 }
 
 @media screen and (max-width: 1549.98px) {
 	.roadmap {
-		margin-top: -405px;
+		/* margin-top: -405px; */
 	}
 }
 
 @media screen and (max-width: 1299.98px) {
 	.roadmap {
-		margin-top: -418px;
+		/* margin-top: -418px; */
 	}
 }
 
 @media screen and (max-width: 1199.98px) {
 	.roadmap {
-		margin-top: -200px;
+		/* margin-top: -200px; */
 	}
 
 	.roadmap__container {
@@ -530,7 +533,7 @@
 
 @media screen and (max-width: 799.98px) {
 	.roadmap {
-		margin-top: 0px;
+		/* margin-top: 0px; */
 	}
 }
 
@@ -577,7 +580,7 @@
 @media screen and (max-width: 1705.98px) {
 	.roadmap {
 		padding: 0px 50px;
-		padding-bottom: 120px;
+		/* padding-bottom: 120px; */
 	}
 }
 
@@ -648,5 +651,78 @@
 	.title-block__title {
 		font-size: 34px;
 		line-height: 50px;
+	}
+}
+
+
+.history {
+	margin-top: -360px;
+	background-image: url('../assets/img/home/history-background.svg');
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: bottom;
+	background-color: #EDDBC5;
+}
+
+.history__container {
+	justify-content: center;
+	flex-direction: column;
+	margin-top: 260px;
+	height: 660px;
+}
+
+.history__text > * {
+	margin-top: 48px;
+	font-family: 'Bookman Old Style';
+	font-size: 18px;
+	line-height: 28px;
+	text-align: center;
+	letter-spacing: 1.125px;
+	color: #493F39;
+}
+
+@media (max-width: 999.98px) {
+	.history {
+		background-image: none;
+	}
+}
+
+.history__buttons {
+	display: flex;
+	justify-content: center;
+	gap: 48px;
+	margin-top: auto;
+	margin-bottom: 100px;
+}
+
+.history__button {
+	width: 280px;
+	height: 80px;
+	background-image: url('../assets/img/button-back.png');
+	background-size: 100% 100%;
+	font-size: 32px;
+	line-height: 37px;
+	text-align: center;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+}
+
+.history__text_2, .history__text_3, .history__text_4 {
+	display: none;
+}
+
+.history__button__back {
+	display: none;
+}
+
+@media screen and (max-width: 799.98px) {
+
+	.history__container {
+		margin-top: 340px;
 	}
 }

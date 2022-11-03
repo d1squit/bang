@@ -1,18 +1,10 @@
 import crypto from 'crypto';
 import fs from 'fs';
-import nodemailer from 'nodemailer';
+import { selectUserInTable, writeUserInTable } from './database.js';
 
-const sendMail = async (mail) => {
-	const transporter = nodemailer.createTransport({
-		service: 'gmail',
-		auth: {
-			user: 'anat.yudin06@gmail.com',
-			pass: 'ajranbgtiukrikxs'
-		}
-	});
-
-	await transporter.sendMail(mail);
-}
+import sql from 'sqlite3'
+const sqlite3 = sql.verbose();
+let db = new sqlite3.Database('./bang.db', sqlite3.OPEN_READWRITE, (err) => { if (err) console.error(err.message) });
 
 
 
@@ -90,369 +82,326 @@ export class Lobby {
 	removePlayer = (socket) => this.players.splice(this.players.findIndex(player => player.gameId == socket.gameId), 1);
 }
 
+
 export const initializeLobby = (io, socket, users, lobbies) => {
 	if (socket.handshake.query.session) {
-		const userIndex = users.findIndex(item => item.session == socket.handshake.query.session);
-		if (~userIndex) users[userIndex].socketId = socket.id;
-		fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-	}
-
-	const checkSocket = (user, ip) => {
-		// if (ip != user.headers['ip']) return 1;
-		// if (socket.request.headers['sec-ch-ua'] != user.headers['sec-ch-ua']) return 2;
-		// if (socket.request.headers['user-agent'] != user.headers['user-agent']) return 3;
-		// if (socket.request.headers['sec-ch-ua-platform'] != user.headers['sec-ch-ua-platform']) return 4;
-		return true;
-	}
-
-	const decline = (error, userIndex = null) => {
-		console.log(error)
-		if (!users[userIndex]) socket.emit('decline', error);
-		else {
-			socket.emit('decline', error, users[userIndex].tempSession = crypto.randomBytes(16).toString("hex"));
-			if (~error) sendMail({ from: 'BANG', to: 'anat.yudin06@gmail.com', subject: 'Login attempted from new device', html: `To verify your identity, follow the link: <a href="http://localhost:3000/client/verification.html?code=${users[userIndex].tempCode = crypto.randomBytes(16).toString("hex")}">VERIFICATION</a>` });
-		}
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${socket.handshake.query.session}'`).then(user => {
+			user.socketId = socket.id;
+			writeUserInTable(db, 11, user);
+		});
 	}
 
 	socket.on('disconnect', () => {
-		const userIndex = users.findIndex(item => item.socketId == socket.id);
-		if (~userIndex) {
-			users[userIndex].friends.forEach(friendId => {
+		selectUserInTable(db, `SELECT * FROM users WHERE socketId='${socket.id}'`).then(user => {
+			user.friends.forEach(friendId => {
 				const friendIndex = users.findIndex(item => item.gameId == friendId);
-				if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[userIndex].gameId, false);
+				if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', user.gameId, false);
 			});
 
-			const lobbyIndex = lobbies.findIndex(item => item.id == users[userIndex].lobbyId);
+			const lobbyIndex = lobbies.findIndex(item => item.id == user.lobbyId);
 			if (~lobbyIndex) {
 				lobbies[lobbyIndex].players.forEach((player, index) => {
 					const playerIndex = users.findIndex(item => item.gameId == player.gameId);
-					if (player.gameId == users[userIndex].gameId) lobbies[lobbyIndex].players[index].online = false;
-					if (~playerIndex) io.to(users[playerIndex].socketId).emit('lobby-state', users[userIndex].gameId, false);
+					if (player.gameId == user.gameId) lobbies[lobbyIndex].players[index].online = false;
+					if (~playerIndex) io.to(users[playerIndex].socketId).emit('lobby-state', user.gameId, false);
 				});
 			}
 
-			users[userIndex].socketId = null;
-		}
-		fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+			user.socketId = null;
+			writeUserInTable(db, 12, user);
+		});
 		fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
 	});
 
-	socket.on('login', (login, password) => {
-		const userIndex = users.findIndex(item => item.login == login && item.password == password);
-		if (~userIndex) {
-			users[userIndex].socketId = socket.id;
-			socket.emit('lobby-redirect', users[userIndex].session = crypto.randomBytes(16).toString("hex"));
-			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-		} else decline(userIndex);
-	});
-
-	socket.on('logout', (session, ip) => {
-		const userIndex = users.findIndex(item => item.session == session && session);
-		if (~userIndex) {
-			const verification = checkSocket(users[userIndex], ip);
-			if (verification !== true) { decline(verification, userIndex); return false; }
-			socket.emit('login-redirect', users[userIndex].session = null);
-			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-		} else decline(userIndex);
-	});
-
-	socket.on('verification', (session, code, ip) => {
-		const userIndex = users.findIndex(item => item.tempSession == session && session);
-		if (~userIndex) {
-			if (code == users[userIndex].tempCode) {
-				users[userIndex].socketId = socket.id;
-				users[userIndex].headers['ip'] = ip;
-				users[userIndex].headers['sec-ch-ua'] = socket.request.headers['sec-ch-ua'];
-				users[userIndex].headers['user-agent'] = socket.request.headers['user-agent'];
-				users[userIndex].headers['sec-ch-ua-platform'] = socket.request.headers['sec-ch-ua-platform'];
-				socket.emit('login-redirect');
-				fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-			}
-		} else decline(userIndex);
-	});
-
 	socket.on('get-profile', (session, ip) => {
-		const userIndex = users.findIndex(item => item.session == session && session);
-		if (~userIndex) {
-			const verification = checkSocket(users[userIndex], ip);
-			if (verification !== true) { decline(verification, userIndex); return false; }
-			users[userIndex].socketId = socket.id;
+		if (!session) return;
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(user => {
+			selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
+				user.socketId = socket.id;
 
-			let friends = [];
-			users[userIndex].friends.forEach(friendId => {
-				const friendIndex = users.findIndex(item => item.gameId == friendId);
-				if (~friendIndex) friends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
-			});
-
-			users[userIndex].friends.forEach(friendId => {
-				const friendIndex = users.findIndex(item => item.gameId == friendId);
-				if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[userIndex].gameId, true);
-			});
-
-			if (users[userIndex].ban > 0) socket.emit('ban-start', users[userIndex].ban);
-			socket.emit('profile', { username: users[userIndex].username, photo: users[userIndex].photo, rating: users[userIndex].rating, characters: users[userIndex].characters, friends: friends, requests: users[userIndex].requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId), inviteId: item.inviteId } }), gameId: users[userIndex].gameId });
-			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-			
-			let lobbyIndex = -1;
-			if (users[userIndex].lobbyId) lobbyIndex = lobbies.findIndex(item => item.id == users[userIndex].lobbyId);
-			if (~lobbyIndex) {
-				io.to(users[userIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
-				lobbies[lobbyIndex].players.forEach(player => {
-					const playerIndex = users.findIndex(item => item.gameId == player.gameId);
-					if (~playerIndex) io.to(users[playerIndex].socketId).emit('lobby-state', users[userIndex].gameId, true);
+				let friends = [];
+				user.friends.forEach(friendId => {
+					const friendIndex = users.findIndex(item => item.gameId == friendId);
+					if (~friendIndex) friends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
 				});
-			} else {
-				lobbies.push(new Lobby({ username: users[userIndex].username, photo: users[userIndex].photo, rating: users[userIndex].rating, gameId: users[userIndex].gameId, online: Boolean(users[userIndex].socketId) }, users[userIndex].rating));
-				users[userIndex].lobbyId = lobbies[lobbies.length - 1].id;
-				socket.emit('lobby', lobbies[lobbies.length - 1]);
-			}
-			
-			
-			fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
-		} else decline(userIndex);
-	});
 
-	socket.on('invite', (sender, target, session) => {
-		const senderIndex = users.findIndex(item => item.gameId == sender && item.session == session && item.ban === null);
-		const targetIndex = users.findIndex(item => item.gameId == target && item.ban === null);
-		const lobbyIndex = lobbies.findIndex(item => item.id == users[senderIndex].lobbyId);
+				user.friends.forEach(friendId => {
+					const friendIndex = users.findIndex(item => item.gameId == friendId);
+					if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', user.gameId, true);
+				});
 
-		if (~senderIndex && ~targetIndex) {
-			if (~lobbyIndex && ~lobbies[lobbyIndex].players.findIndex(item => item.gameId == users[targetIndex].gameId)) return;
+				if (user.ban > 0) socket.emit('ban-start', user.ban);
+				socket.emit('profile', { username: user.username, photo: user.photo, rating: user.rating, characters: user.characters, friends: friends, requests: user.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId), inviteId: item.inviteId } }), gameId: user.gameId });
 
-			const inviteId = crypto.randomBytes(30).toString("hex");
-			users[senderIndex].invites.push(inviteId);
-			io.to(users[targetIndex].socketId).emit('invite', {	username: users[senderIndex].username, id: users[senderIndex].gameId }, inviteId);
-			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-
-			setTimeout(() => {
-				const inviteIndex = users[senderIndex].invites.findIndex(item => item == inviteId);
-				if (~inviteIndex) {
-					users[senderIndex].invites.splice(inviteIndex, 1);
-					fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+				let lobbyIndex = -1;
+				if (user.lobbyId) lobbyIndex = lobbies.findIndex(item => item.id == user.lobbyId);
+				if (~lobbyIndex) {
+					io.to(user.socketId).emit('lobby', lobbies[lobbyIndex]);
+					lobbies[lobbyIndex].players.forEach(player => {
+						const playerIndex = users.findIndex(item => item.gameId == player.gameId);
+						if (~playerIndex) io.to(users[playerIndex].socketId).emit('lobby-state', user.gameId, true);
+					});
+				} else {
+					lobbies.push(new Lobby({ username: user.username, photo: user.photo, rating: user.rating, gameId: user.gameId, online: Boolean(user.socketId) }, user.rating));
+					user.lobbyId = lobbies[lobbies.length - 1].id;
+					socket.emit('lobby', lobbies[lobbies.length - 1]);
 				}
-			}, 30000);
-		}
+
+				writeUserInTable(db, 14, user);
+				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
+			});
+		});
 	});
 
-	socket.on('add-friend', (sender, target, session) => {
-		const senderIndex = users.findIndex(item => item.gameId == sender && item.session == session);
-		const targetIndex = users.findIndex(item => item.gameId == target);
+	socket.on('invite', (senderId, targetId, session) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE gameId='${senderId}' AND session='${session}' AND ban=0`).then(sender => {
+			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${targetId}' AND ban=0`).then(target => {
+				const lobbyIndex = lobbies.findIndex(item => item.id == sender.lobbyId);
 
-		if (~senderIndex && ~targetIndex) {
-			if (~users[senderIndex].friends.findIndex(item => item.gameId == target) || ~users[targetIndex].requests.findIndex(item => item.gameId == sender)) return;
-			users[targetIndex].requests.push(users[senderIndex]);
-			users[targetIndex].requests[users[targetIndex].requests.length - 1].inviteId = crypto.randomBytes(30).toString("hex");
-			io.to(users[targetIndex].socketId).emit('requests', users[targetIndex].requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId), inviteId: item.inviteId } }));
-			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-		}
+				if (~lobbyIndex && ~lobbies[lobbyIndex].players.findIndex(item => item.gameId == target.gameId)) return;
+				
+				const inviteId = crypto.randomBytes(30).toString("hex");
+				sender.invites.push(inviteId);
+				io.to(target.socketId).emit('invite', {	username: sender.username, id: sender.gameId }, inviteId);
+				writeUserInTable(db, 15, sender, target);
+				
+				setTimeout(() => {
+					selectUserInTable(db, `SELECT * FROM users WHERE gameId='${senderId}' AND session='${session}' AND ban=0`).then(sender => {
+						const inviteIndex = sender.invites.findIndex(item => item == inviteId);
+						if (~inviteIndex) {
+							sender.invites.splice(inviteIndex, 1);
+							writeUserInTable(db, 16, sender);
+						}
+					});
+				}, 30000);
+			});
+		});
+	});
+
+	socket.on('add-friend', (senderId, targetId, session) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE gameId='${senderId}' AND session='${session}'`).then(sender => {
+			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${targetId}'`).then(target => {
+				if (~sender.friends.findIndex(item => item.gameId == targetId) || ~target.friends.findIndex(item => item.gameId == senderId)) return;
+				target.requests.push(sender);
+				target.requests[target.requests.length - 1].inviteId = crypto.randomBytes(30).toString("hex");
+				io.to(target.socketId).emit('requests', target.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId), inviteId: item.inviteId } }));
+				writeUserInTable(db, 17, sender, target);
+			});
+		});
 	});
 
 	socket.on('request-decline', (requestId, gameId, session) => {
-		const targetIndex = users.findIndex(item => item.session == session);
-		const senderIndex = users.findIndex(item => item.gameId == gameId);
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(target => {
+			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${gameId}'`).then(sender => {
+				const requestIndex = target.requests.findIndex(item => item.inviteId == requestId);
+				if (~requestIndex) {
+					target.requests.splice(requestIndex, 1);
 
-		if (~targetIndex && ~senderIndex) {
-			const requestIndex = users[targetIndex].requests.findIndex(item => item.inviteId == requestId);
-			if (~requestIndex) {
-				users[targetIndex].requests.splice(requestIndex, 1);
+					let senderFriends = [];
+					sender.friends.forEach(friendId => {
+						const friendIndex = users.findIndex(item => item.gameId == friendId);
+						if (~friendIndex) senderFriends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
+					});
+					sender.friends.forEach(friendId => {
+						const friendIndex = users.findIndex(item => item.gameId == friendId);
+						if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', sender.gameId, true);
+					});
 
-				let senderFriends = [];
-				users[senderIndex].friends.forEach(friendId => {
-					const friendIndex = users.findIndex(item => item.gameId == friendId);
-					if (~friendIndex) senderFriends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
-				});
-				users[senderIndex].friends.forEach(friendId => {
-					const friendIndex = users.findIndex(item => item.gameId == friendId);
-					if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[senderIndex].gameId, true);
-				});
+					let targetFriends = [];
+					target.friends.forEach(friendId => {
+						const friendIndex = users.findIndex(item => item.gameId == friendId);
+						if (~friendIndex) targetFriends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
+					});
+					target.friends.forEach(friendId => {
+						const friendIndex = users.findIndex(item => item.gameId == friendId);
+						if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', target.gameId, true);
+					});
 
-				let targetFriends = [];
-				users[targetIndex].friends.forEach(friendId => {
-					const friendIndex = users.findIndex(item => item.gameId == friendId);
-					if (~friendIndex) targetFriends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
-				});
-				users[targetIndex].friends.forEach(friendId => {
-					const friendIndex = users.findIndex(item => item.gameId == friendId);
-					if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[targetIndex].gameId, true);
-				});
-
-				io.to(users[senderIndex].socketId).emit('profile', {
-					username: users[senderIndex].username,
-					photo: users[senderIndex].photo,
-					rating: users[senderIndex].rating,
-					characters: users[senderIndex].characters,
-					friends: senderFriends,
-					requests: users[senderIndex].requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }),
-					gameId: users[senderIndex].gameId
-				});
-				io.to(users[targetIndex].socketId).emit('profile', {
-					username: users[targetIndex].username,
-					photo: users[targetIndex].photo,
-					rating: users[targetIndex].rating,
-					characters: users[targetIndex].characters,
-					friends: targetFriends,
-					requests: users[targetIndex].requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }),
-					gameId: users[targetIndex].gameId
-				});
-				io.to(users[targetIndex].socketId).emit('requests', users[targetIndex].requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId), inviteId: item.inviteId } }));
-				fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-			}
-		}
+					io.to(sender.socketId).emit('profile', {
+						username: sender.username,
+						photo: sender.photo,
+						rating: sender.rating,
+						characters: sender.characters,
+						friends: senderFriends,
+						requests: sender.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }),
+						gameId: sender.gameId
+					});
+					io.to(target.socketId).emit('profile', {
+						username: target.username,
+						photo: target.photo,
+						rating: target.rating,
+						characters: target.characters,
+						friends: targetFriends,
+						requests: target.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }),
+						gameId: target.gameId
+					});
+					io.to(target.socketId).emit('requests', target.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId), inviteId: item.inviteId } }));
+					writeUserInTable(db, 18, sender, target);
+				}
+			});
+		});
 	});
 
 	socket.on('request-accept', (requestId, gameId, session) => {
-		const targetIndex = users.findIndex(item => item.session == session);
-		const senderIndex = users.findIndex(item => item.gameId == gameId);
-
-		if (~targetIndex && ~senderIndex && !~users[targetIndex].friends.findIndex(item => item.gameId == gameId)) {
-			const requestIndex = users[targetIndex].requests.findIndex(item => item.inviteId == requestId);
-			if (~requestIndex) {
-				users[targetIndex].friends.push(users[senderIndex].gameId);
-				users[senderIndex].friends.push(users[targetIndex].gameId);
-				users[targetIndex].requests.splice(requestIndex, 1);
-
-				let senderFriends = [];
-				users[senderIndex].friends.forEach(friendId => {
-					const friendIndex = users.findIndex(item => item.gameId == friendId);
-					if (~friendIndex) senderFriends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
-				});
-				users[senderIndex].friends.forEach(friendId => {
-					const friendIndex = users.findIndex(item => item.gameId == friendId);
-					if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[senderIndex].gameId, true);
-				});
-
-				let targetFriends = [];
-				users[targetIndex].friends.forEach(friendId => {
-					const friendIndex = users.findIndex(item => item.gameId == friendId);
-					if (~friendIndex) targetFriends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
-				});
-				users[targetIndex].friends.forEach(friendId => {
-					const friendIndex = users.findIndex(item => item.gameId == friendId);
-					if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', users[targetIndex].gameId, true);
-				});
-
-				io.to(users[senderIndex].socketId).emit('profile', {
-					username: users[senderIndex].username,
-					photo: users[senderIndex].photo,
-					rating: users[senderIndex].rating,
-					characters: users[senderIndex].characters,
-					friends: senderFriends,
-					requests: users[senderIndex].requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }),
-					gameId: users[senderIndex].gameId
-				});
-				io.to(users[targetIndex].socketId).emit('profile', {
-					username: users[targetIndex].username,
-					photo: users[targetIndex].photo,
-					rating: users[targetIndex].rating,
-					characters: users[targetIndex].characters,
-					friends: targetFriends,
-					requests: users[targetIndex].requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }),
-					gameId: users[targetIndex].gameId
-				});
-				io.to(users[targetIndex].socketId).emit('requests', users[targetIndex].requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId), inviteId: item.inviteId } }));
-				fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-			}
-		}
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(target => {
+			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${gameId}'`).then(sender => {
+				if (!~target.friends.findIndex(item => item.gameId == gameId)) {
+					const requestIndex = target.requests.findIndex(item => item.inviteId == requestId);
+					if (~requestIndex) {
+						target.friends.push(sender.gameId);
+						sender.friends.push(target.gameId);
+						target.requests.splice(requestIndex, 1);
+					
+						let senderFriends = [];
+						sender.friends.forEach(friendId => {
+							const friendIndex = users.findIndex(item => item.gameId == friendId);
+							if (~friendIndex) senderFriends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
+						});
+						sender.friends.forEach(friendId => {
+							const friendIndex = users.findIndex(item => item.gameId == friendId);
+							if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', sender.gameId, true);
+						});
+					
+						let targetFriends = [];
+						target.friends.forEach(friendId => {
+							const friendIndex = users.findIndex(item => item.gameId == friendId);
+							if (~friendIndex) targetFriends.push({ gameId: friendId, name: users[friendIndex].username, photo: users[friendIndex].photo, rating: users[friendIndex].rating, online: Boolean(users[friendIndex].socketId) });
+						});
+						target.friends.forEach(friendId => {
+							const friendIndex = users.findIndex(item => item.gameId == friendId);
+							if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', target.gameId, true);
+						});
+					
+						io.to(sender.socketId).emit('profile', {
+							username: sender.username,
+							photo: sender.photo,
+							rating: sender.rating,
+							characters: sender.characters,
+							friends: senderFriends,
+							requests: sender.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }),
+							gameId: sender.gameId
+						});
+						io.to(target.socketId).emit('profile', {
+							username: target.username,
+							photo: target.photo,
+							rating: target.rating,
+							characters: target.characters,
+							friends: targetFriends,
+							requests: target.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }),
+							gameId: target.gameId
+						});
+						io.to(target.socketId).emit('requests', target.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId), inviteId: item.inviteId } }));
+						writeUserInTable(db, 19, sender, target);
+					}
+				}
+			});
+		});
 	});
 
 	socket.on('get-users', (key, session) => {
-		const userIndex = users.findIndex(item => item.session == session);
-		if (~userIndex) socket.emit('users', users.filter(item => item.username.includes(key) && item.gameId != users[userIndex].gameId).map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }));
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(user => {
+			selectUserInTable(db, `SELECT * FROM users WHERE username LIKE '${key}%' AND gameId<>'${user.gameId}'`, false).then(users => {
+				socket.emit('users', users.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: Boolean(item.socketId) } }));
+			});
+		});
 	});
 
-	socket.on('kick', (sender, target, session) => {
-		const senderIndex = users.findIndex(item => item.gameId == sender && item.session == session);
-		const targetIndex = users.findIndex(item => item.gameId == target);
-		const lobbyIndex = lobbies.findIndex(item => item.id == users[senderIndex].lobbyId);
+	socket.on('kick', (senderId, targetId, session) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE gameId='${senderId}' AND session='${session}'`).then(sender => {
+			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${targetId}'`).then(target => {
+				const lobbyIndex = lobbies.findIndex(item => item.id == sender.lobbyId);
 
-		if (~senderIndex && ~targetIndex && ~lobbyIndex) {
-			if (senderIndex == targetIndex) {
-				const inLobbyIndex = lobbies[lobbyIndex].players.findIndex(item => item.gameId == sender);
-				if (~inLobbyIndex) {
-					lobbies[lobbyIndex].players.splice(inLobbyIndex, 1);
-					if (lobbies[lobbyIndex].players.length == 0) lobbies.splice(lobbyIndex, 1);
-					else {
-						lobbies[lobbyIndex].players.forEach(player => {
-							const userIndex = users.findIndex(item => item.gameId == player.gameId);
-							if (~userIndex) io.to(users[userIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
-						});
-					}
-					lobbies.push(new Lobby({ username: users[senderIndex].username, photo: users[senderIndex].photo, rating: users[senderIndex].rating, gameId: users[senderIndex].gameId, online: Boolean(users[senderIndex].socketId) }, users[senderIndex].rating));
-					users[senderIndex].lobbyId = lobbies[lobbies.length - 1].id;
-					io.to(users[senderIndex].socketId).emit('lobby', lobbies[lobbies.length - 1]);
-				}
-			} else if (lobbies[lobbyIndex].players[0].gameId == sender) {
-				const inLobbyIndex = lobbies[lobbyIndex].players.findIndex(item => item.gameId == target);
-				if (~inLobbyIndex) {
-					lobbies[lobbyIndex].players.splice(inLobbyIndex, 1);
-					if (lobbies[lobbyIndex].players.length == 0) lobbies.splice(lobbyIndex, 1);
-					else {
-						lobbies[lobbyIndex].players.forEach(player => {
-							const userIndex = users.findIndex(item => item.gameId == player.gameId);
-							if (~userIndex) io.to(users[userIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
-						});
-					}
-					lobbies.push(new Lobby({ username: users[targetIndex].username, photo: users[targetIndex].photo, rating: users[targetIndex].rating, gameId: users[targetIndex].gameId, online: Boolean(users[targetIndex].socketId) }, users[targetIndex].rating));
-					users[targetIndex].lobbyId = lobbies[lobbies.length - 1].id;
-					io.to(users[targetIndex].socketId).emit('lobby', lobbies[lobbies.length - 1]);
-					io.to(users[senderIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
-				}
-			}
-		}
-	});
-
-	socket.on('invite-decline', (sender, inviteId) => {
-		const senderIndex = users.findIndex(item => item.gameId == sender && item.ban === null);
-		const targetIndex = users.findIndex(item => item.socketId == socket.id && item.ban === null);
-
-		if (~senderIndex && ~targetIndex) {
-			const inviteIndex = users[senderIndex].invites.findIndex(item => item == inviteId);
-			if (~inviteIndex) {
-				io.to(users[targetIndex].socketId).emit('invite-next');
-				users[senderIndex].invites.splice(inviteIndex, 1);
-				fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-			}
-		}
-	});
-
-	socket.on('invite-accept', (sender, inviteId) => {
-		const senderIndex = users.findIndex(item => item.gameId == sender && item.ban === null);
-		const targetIndex = users.findIndex(item => item.socketId == socket.id && item.ban === null);
-		
-		if (~senderIndex && ~targetIndex) {
-			const inviteIndex = users[senderIndex].invites.findIndex(item => item == inviteId);
-			if (~inviteIndex) {
-				io.to(users[targetIndex].socketId).emit('invite-next');
-				users[senderIndex].invites.splice(inviteIndex, 1);
-				fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-
-				const oldLobbyIndex = lobbies.findIndex(item => item.id == users[targetIndex].lobbyId);
-				if (~oldLobbyIndex) {
-					const playerIndex = lobbies[oldLobbyIndex].players.findIndex(item => item.gameId == users[targetIndex].gameId);
-					if (~playerIndex) lobbies[oldLobbyIndex].players.splice(playerIndex, 1);
-					if (lobbies[oldLobbyIndex].players.length == 0) lobbies.splice(oldLobbyIndex, 1);
-					else {
-						lobbies[oldLobbyIndex].players.forEach(player => {
-							const userIndex = users.findIndex(item => item.gameId == player.gameId);
-							if (~userIndex) io.to(users[userIndex].socketId).emit('lobby', lobbies[oldLobbyIndex]);
-						});
-					}
-				}
-
-				const lobbyIndex = lobbies.findIndex(item => item.id == users[senderIndex].lobbyId);
 				if (~lobbyIndex) {
-					users[targetIndex].lobbyId = lobbies[lobbyIndex].id;
-					const target = { username: users[targetIndex].username, photo: users[targetIndex].photo, rating: users[targetIndex].rating, gameId: users[targetIndex].gameId, online: Boolean(users[targetIndex].socketId) };
-					io.to(users[targetIndex].socketId).emit('not-ready');
-					lobbies[lobbyIndex].addPlayer(target);
-					lobbies[lobbyIndex].players.forEach(player => {
-						const userIndex = users.findIndex(item => item.gameId == player.gameId);
-						if (~userIndex) io.to(users[userIndex].socketId).emit('lobby', lobbies[lobbyIndex]);
-					});
-					fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
+					if (sender.gameId == target.gameId) {
+						const inLobbyIndex = lobbies[lobbyIndex].players.findIndex(item => item.gameId == senderId);
+						if (~inLobbyIndex) {
+							lobbies[lobbyIndex].players.splice(inLobbyIndex, 1);
+							if (lobbies[lobbyIndex].players.length == 0) lobbies.splice(lobbyIndex, 1);
+							else {
+								lobbies[lobbyIndex].players.forEach(player => {
+									selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}`).then(user => {
+										io.to(user.socketId).emit('lobby', lobbies[lobbyIndex]);
+									});
+								});
+							}
+							lobbies.push(new Lobby({ username: sender.username, photo: sender.photo, rating: sender.rating, gameId: sender.gameId, online: Boolean(sender.socketId) }, sender.rating));
+							sender.lobbyId = lobbies[lobbies.length - 1].id;
+							io.to(sender.socketId).emit('lobby', lobbies[lobbies.length - 1]);
+						}
+					} else if (lobbies[lobbyIndex].players[0].gameId == senderId) {
+						const inLobbyIndex = lobbies[lobbyIndex].players.findIndex(item => item.gameId == targetId);
+						if (~inLobbyIndex) {
+							lobbies[lobbyIndex].players.splice(inLobbyIndex, 1);
+							if (lobbies[lobbyIndex].players.length == 0) lobbies.splice(lobbyIndex, 1);
+							else {
+								lobbies[lobbyIndex].players.forEach(player => {
+									selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}`).then(user => {
+										io.to(user.socketId).emit('lobby', lobbies[lobbyIndex]);
+									});
+								});
+							}
+							lobbies.push(new Lobby({ username: target.username, photo: target.photo, rating: target.rating, gameId: target.gameId, online: Boolean(target.socketId) }, target.rating));
+							target.lobbyId = lobbies[lobbies.length - 1].id;
+							io.to(target.socketId).emit('lobby', lobbies[lobbies.length - 1]);
+							io.to(sender.socketId).emit('lobby', lobbies[lobbyIndex]);
+						}
+					}
 				}
-			}
-		}
+			});
+		});
+	});
+
+	socket.on('invite-decline', (senderId, inviteId) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE gameId='${senderId}' AND session='${session}' AND ban=0`).then(sender => {
+			selectUserInTable(db, `SELECT * FROM users WHERE socketId='${socket.id}' AND ban=0`).then(target => {
+				const inviteIndex = sender.invites.findIndex(item => item == inviteId);
+				if (~inviteIndex) {
+					io.to(target.socketId).emit('invite-next');
+					sender.invites.splice(inviteIndex, 1);
+					writeUserInTable(db, 20, sender, target);
+				}
+			});
+		});
+	});
+
+	socket.on('invite-accept', (senderId, inviteId) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE gameId='${senderId}' AND ban=0`).then(sender => {
+			selectUserInTable(db, `SELECT * FROM users WHERE socketId='${socket.id}' AND ban=0`).then(target => {
+				const inviteIndex = sender.invites.findIndex(item => item == inviteId);
+				if (~inviteIndex) {
+					io.to(target.socketId).emit('invite-next');
+					sender.invites.splice(inviteIndex, 1);
+					writeUserInTable(db, 21, sender, target);
+				
+					const oldLobbyIndex = lobbies.findIndex(item => item.id == target.lobbyId);
+					if (~oldLobbyIndex) {
+						const playerIndex = lobbies[oldLobbyIndex].players.findIndex(item => item.gameId == target.gameId);
+						if (~playerIndex) lobbies[oldLobbyIndex].players.splice(playerIndex, 1);
+						if (lobbies[oldLobbyIndex].players.length == 0) lobbies.splice(oldLobbyIndex, 1);
+						else {
+							lobbies[oldLobbyIndex].players.forEach(player => {
+								selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}`).then(user => {
+									io.to(user.socketId).emit('lobby', lobbies[oldLobbyIndex]);
+								});
+							});
+						}
+					}
+				
+					const lobbyIndex = lobbies.findIndex(item => item.id == sender.lobbyId);
+					if (~lobbyIndex) {
+						target.lobbyId = lobbies[lobbyIndex].id;
+						const targetObject = { username: target.username, photo: target.photo, rating: target.rating, gameId: target.gameId, online: Boolean(target.socketId) };
+						io.to(targetObject.socketId).emit('not-ready');
+						lobbies[lobbyIndex].addPlayer(targetObject);
+						lobbies[lobbyIndex].players.forEach(player => {
+							selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
+								io.to(user.socketId).emit('lobby', lobbies[lobbyIndex]);
+							});
+						});
+						fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
+					}
+				}
+			});
+		});
 	});
 }

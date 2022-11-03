@@ -1,4 +1,4 @@
-const session = localStorage.getItem('session');
+const session = getCookie('session');
 let socket = io.connect('', { query: `session=${session}&extra=start-game` });
 
 let myPlayer = null;
@@ -15,7 +15,7 @@ const board = document.querySelector('#board');
 const info = document.querySelector('#info');
 const cards = document.querySelector('.cards-bottom');
 
-socket.on('disconnect', () => location.href = './lobby.html');
+socket.on('disconnect', () => location.href = '../lobby');
 
 
 const mask = document.querySelector('.mask');

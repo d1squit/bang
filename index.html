@@ -5,13 +5,17 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="./assets/img/logo-image.svg">
-	<script src="./client/js/cookie.js"></script>
 	<title>Document</title>
 </head>
 <body>
 	<script>
-		if (localStorage.getItem('session')) window.location.href = './client/lobby.html';
-		else window.location.href = './client/login.html';
+		const getCookie = (name) => {
+			let matches = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
+			return matches ? decodeURIComponent(matches[1]) : undefined;
+		}
+
+		if (getCookie('session')) window.location.href = './lobby';
+		else window.location.href = './home';
 	</script>
 </body>
 </html>

@@ -263,7 +263,7 @@ html, body {
 }
 
 body {
-	background-image: url('../../client/assets/img/game-background.png');
+	background-image: url('../../assets/img/game-background.png');
 	background-size: cover;
 }
 

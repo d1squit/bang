@@ -10,6 +10,10 @@
 	<link rel="stylesheet" href="./css/footer.css">
 	<link rel="stylesheet" href="./css/common.css">
 	<link rel="stylesheet" href="./css/home.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.3/web3.min.js" integrity="sha512-Ws+qbaGHSFw2Zc1e7XRpvW+kySrhmPLFYTyQ95mxAkss0sshj6ObdNP3HDWcwTs8zBJ60KpynKZywk0R8tG1GA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="/socket.io/socket.io.js"></script>
 	<title>West Bang</title>
 </head>
 <body>
@@ -19,7 +23,8 @@
 				<img src="./assets/img/header/logo.svg" alt="" class="header__logo">
 				<div class="header__links">
 					<nav class="header__nav">
-						<a href="./about.html" class="header__nav__link">ABOUT</a>
+						<a href="../rating" class="header__nav__link">RATING</a>
+						<a href="../lobby" class="header__nav__link">LOBBY</a>
 					</nav>
 					<ul class="header__socials">
 						<li class="header__social"><a href=""><img src="./assets/img/header/geeko-button.svg" alt="" class="header__social__image"></a></li>
@@ -28,7 +33,7 @@
 						<li class="header__social"><a href=""><img src="./assets/img/header/empty-button.svg" alt="" class="header__social__image"></a></li>
 						<li class="header__social"><a href=""><img src="./assets/img/header/wallet-button.svg" alt="" class="header__social__image"></a></li>
 					</ul>
-					<a href="" class="main-screen__mint__button">PLAY NOW</a>
+					<div class="main-screen__mint__button login__submit">PLAY NOW</div>
 				</div>
 			</div>
 		</header>
@@ -141,6 +146,40 @@
 					
 				</div>
 			</section>
+			<section class="history">
+				<div class="history__container __container">
+					<div class="history__title title-block">
+						<img src="./assets/img/home/top-image.svg" alt="" class="title-block__top-image">
+						<div class="title-block__bottom">
+							<img src="./assets/img/home/star.svg" alt="" class="title-block__star">
+							<h2 class="title-block__title">history</h2>
+							<img src="./assets/img/home/star.svg" alt="" class="title-block__star">
+						</div>
+					</div>
+					<div class="history__text">
+						<div class="history__text_1">
+							Эта история случилась на Диком Западе, когда шерифы и их помощники гонялись<br>за бандитами на лошадях. Хотя иногда бывало и наоборот.<br><br>
+							В маленьком тихом городке, где, кажется, лет сто уже не происходило совсем ничего утро<br>началось со стрельбы. Жители Гэдс-Хилл в ужасе вскакивали с кроватей и закрывали ставни.<br><br>
+							Пыль на центральной улице поднималась до самых крыш. Не удавалось разглядеть почти<br>ничего. Крики смешивались с топотом копыт и чьим то зловещим хохотом…<br><br>
+						</div>
+						<div class="history__text_2">
+							Когда пыль рассеялась все увидели шерифа. Он сидел на своей лошади и держал револьвер<br>навскидку. Перед ним, в точно такой же позе стоял человек с каким-то удивительно знакомым<br>лицом.<br><br>
+							Да это же настоящий бандит! Его знали даже мальчишки, потому что потрепанная афиша<br>«Разыскивается» с фотографией этого человека и наградой в 1 000 золотых монет уже<br>несколько месяцев украшала двери салуна.
+						</div>
+						<div class="history__text_3">
+							Лошади нервно перебирали копытами, на площади собрались все: шериф, помощники шерифа<br>и шайка головорезов. Завязалась перестрелка, которая продолжалась несколько часов -<br>грабители отступили. Но ни один житель Луисвилла уже не мог спать спокойно. Преступники<br>обещали собрать подкрепление и вернуться через несколько дней.<br><br>
+							Шериф с помощниками тоже не полезли за словом в карман и пообещали негодяям «теплую»<br>встречу. Возможно, эта история могла бы закончиться хорошо, если бы не ренегат. Он работал<br>одним из помощников шерифа и все время ждал подходящего момента, чтобы помочь<br>бандитам ограбить местное отделение банка.<br><br>
+						</div>
+						<div class="history__text_4">
+							А какой сценарий выбираешь ты? Опустошить городскую казну вместе с бандой отъявленных<br>головорезов или помочь шерифу защитить мирных жителей Луисвилла? Приключения<br>начинаются, когда приходит время раздавать карты…
+						</div>
+					</div>
+					<div class="history__buttons">
+						<div class="history__button history__button__back">Назад</div>
+						<div class="history__button history__button__next">Далее</div>
+					</div>
+				</div>
+			</section>
 			<section class="roadmap">
 				<div class="roadmap__container __container">
 					<div class="roadmap__title title-block">
@@ -206,5 +245,9 @@
 			</div>
 		</footer>
 	</div>
+
+	<script src="./js/common.js"></script>
+	<script src="./js/home.js"></script>
+	<script src="./js/login.js"></script>
 </body>
 </html>

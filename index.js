@@ -8,6 +8,11 @@ import { bans } from './modules/utils.js';
 
 import { startGame, initGame } from './modules/game.js';
 import { Lobby, initializeLobby } from './modules/lobby.js';
+import { selectUserInTable, writeUserInTable } from './modules/database.js';
+
+import { recoverPersonalSignature } from "eth-sig-util";
+import { bufferToHex } from "ethereumjs-util";
+import cookieParser from "cookie-parser";
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -30,9 +35,9 @@ let lobbies = [];
 let searchLobbies = [];
 
 
-db.all(`SELECT * FROM users WHERE username='bot3'`, [], (err, rows) => {
-	console.log(rows)
-});
+// db.all(`SELECT * FROM users WHERE session='6f19525b2cb9726d08b95ea8b7db8d5b'`, [], (err, rows) => {
+// 	console.log(rows)
+// });
 
 
 // fs.readFile('./users.json', (err, data) => users = JSON.parse(data.toString()));
@@ -48,13 +53,82 @@ let server = http.createServer(app);
 let io = new Server(server);
 
 
-app.use('/', express.static(__dirname + '/'));
-app.use(cors());
-
-
 app.get('/', (request, response) => {
-	response.sendFile(path.join(__dirname, '/index.html'));
+	response.sendFile('./index.html', { root: __dirname });
 });
+
+app.use(express.static('client'));
+app.use(cookieParser());
+
+const nonceList = {};
+
+app.get("/nonce", (request, response) => {
+	const { walletAddress } = request.query;
+	const nonce = String(Math.floor(Math.random() * 10000));
+	nonceList[walletAddress] = nonce;
+	response.send({ nonce });
+});
+
+app.get("/verify", (request, response) => {
+	const { walletAddress, signedNonce, session } = request.query;
+	const nonce = nonceList[walletAddress];
+	try {
+		const hexNonce = bufferToHex(Buffer.from(nonce, "utf8"));
+		const retrievedAddress = recoverPersonalSignature({
+			data: hexNonce,
+			sig: signedNonce,
+		});
+
+		db.all(`SELECT * FROM users WHERE wallet = '${walletAddress}'`, [], (error, rows) => {
+			console.log(session)
+			if (error) console.log(error);
+			const rowIndex = rows.findIndex(item => item.wallet == retrievedAddress);
+			if (~rowIndex && rows[rowIndex].session == session) { response.cookie("walletAddress", walletAddress).send({ success: true }); return; }
+			else return response.send({ success: false });
+		});
+	} catch (err) {
+		return response.send({ success: false });
+	}
+});
+
+app.get("/check", (request, response) => {
+	const { walletAddress } = request.cookies;
+	if (walletAddress) {
+		return response.send({ success: true, walletAddress });
+	}
+	return response.send({ success: false });
+});
+
+app.get("/logout", (request, response) => {
+	response.clearCookie("walletAddress");
+	response.send({ success: true });
+});
+
+app.get('/lobby', (request, response) => {
+	response.sendFile('./client/lobby.html', { root: __dirname });
+});
+
+app.get('/rating', (request, response) => {
+	response.sendFile('./client/rating.html', { root: __dirname });
+});
+
+app.get('/game', (request, response) => {
+	response.sendFile('./client/index.html', { root: __dirname });
+});
+
+app.get('/search', (request, response) => {
+	response.sendFile('./client/search.html', { root: __dirname });
+});
+
+app.get('/home', (request, response) => {
+	response.sendFile('./client/home.html', { root: __dirname });
+});
+
+// app.get('*', (request, response) => {
+// 	response.status(404).send(`<script>window.location.href = './lobby.html';</script>`);
+// });
+
+
 
 let rooms = [];
 
@@ -69,15 +143,14 @@ const createRoom = async (players, botFlag = false) => {
 		room.botFlag = botFlag;
 
 		players.forEach(player => {
-			const userIndex = users.findIndex(item => item.gameId == player.gameId);
-			if (!~userIndex) return;
+			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
+				let socket = Array.from(io.sockets.sockets).find(item => item[0] == user.socketId);
+				if (socket) socket = socket[1]; else return;
 
-			let socket = Array.from(io.sockets.sockets).find(item => item[0] == users[userIndex].socketId);
-			if (socket) socket = socket[1]; else return;
-
-			if (player.socketId != 'bot') socket.join(room.id);
-			room.sockets.push(socket);
-			room.users.push({ username: player.username, photo: player.photo, rating: player.rating, gameId: player.gameId, socketId: socket.id, session: users[userIndex].session });
+				if (player.socketId != 'bot') socket.join(room.id);
+				room.sockets.push(socket);
+				room.users.push({ username: player.username, photo: player.photo, rating: player.rating, gameId: player.gameId, socketId: socket.id, session: user.session });
+			});
 		});
 
 		room.players = [];
@@ -104,11 +177,11 @@ const createRoom = async (players, botFlag = false) => {
 }
 
 users.forEach(user => {
-	if (user.ban <= Date.now()) user.ban = null;
+	if (user.ban <= Date.now()) user.ban = 0;
 	else {
 		setTimeout(() => {
 			io.to(user.socketId).emit('ban-end');
-			user.ban = null;
+			user.ban = 0;
 			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
 		}, user.ban - Date.now());
 	}
@@ -116,13 +189,13 @@ users.forEach(user => {
 
 
 process.on("SIGINT", () => {
-	users.forEach(user => {
-		user.socketId = null;
-		user.tempSession = null;
-		user.tempCode = null;
-		user.ban = null;
+	selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
+		users.forEach(user => {
+			user.socketId = null;
+			user.ban = 0;
+			writeUserInTable(db, 0, user);
+		});
 	});
-	fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
 	setTimeout(() => process.exit(0), 100);
 });
 
@@ -130,63 +203,121 @@ io.on('connection', (socket) => {
 	initializeLobby(io, socket, users, lobbies);
 
 	if (socket.handshake.query.session) {
-		const userIndex = users.findIndex(item => item.session == socket.handshake.query.session);
-		if (~userIndex) {
-			if (socket.handshake.query.extra == 'ready') socket.emit('game-id', users[userIndex].gameId);
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${socket.handshake.query.session}'`).then(user => {
+			user.socketId = socket.id;
 			
-			const roomIndex = rooms.findIndex(item => ~item.players.findIndex(player => player.user.gameId == users[userIndex].gameId));
+			if (socket.handshake.query.extra == 'ready') socket.emit('game-id', user.gameId);
+			
+			const roomIndex = rooms.findIndex(item => ~item.players.findIndex(player => player.user.gameId == user.gameId));
 			if (~roomIndex) {
-				rooms[roomIndex].players[rooms[roomIndex].players.findIndex(player => player.user.gameId == users[userIndex].gameId)].user.id = socket.id;
+				rooms[roomIndex].players[rooms[roomIndex].players.findIndex(player => player.user.gameId == user.gameId)].user.id = socket.id;
 
 				const promises = [];
 				rooms[roomIndex].players.forEach(player => promises.push(player.createMessage()));
 
 				Promise.all(promises).then(players => {
-					rooms[roomIndex].users.find(user => user.gameId == users[userIndex].gameId).session = socket.handshake.query.session;
+					rooms[roomIndex].users.find(user => user.gameId == user.gameId).session = socket.handshake.query.session;
 					socket.join(rooms[roomIndex].id)
 					socket.emit('room-id', rooms[roomIndex].id);
 					socket.emit('board', players);
 					socket.emit('table', { card_count: rooms[roomIndex].shuffled.length, last_card: null });
-					socket.emit('player', rooms[roomIndex].players[players.findIndex(player => player.user.gameId == users[userIndex].gameId)]);
+					socket.emit('player', rooms[roomIndex].players[players.findIndex(player => player.user.gameId == user.gameId)]);
 					startGame(io, socket, rooms[roomIndex]);
+					writeUserInTable(db, 1, user);
 					return;
 				});
 			}
 
 
-			const lobbyIndex = searchLobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == users[userIndex].gameId));
+			const lobbyIndex = searchLobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == user.gameId));
 			if (~lobbyIndex) {
-				const playerIndex = searchLobbies[lobbyIndex].players.findIndex(item => item.gameId == users[userIndex].gameId);
+				const playerIndex = searchLobbies[lobbyIndex].players.findIndex(item => item.gameId == user.gameId);
 				if (~playerIndex && searchLobbies[lobbyIndex].players[playerIndex].inGame && socket.handshake.query.extra == 'start-game') {
-					searchLobbies[lobbyIndex].players[userIndex].loaded = true;
+					searchLobbies[lobbyIndex].players[playerIndex].loaded = true;
 				}
 			}
-		}
+
+			writeUserInTable(db, 2, user);
+		});
 		fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 	}
+	
+	if (socket.handshake.query.extra == 'get-rating') {
+		selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
+			socket.emit(socket.emit('rating', users.sort((a, b) => b.tournament - a.tournament).map(user => { return { username: user.username, photo: user.photo, rating: user.rating, tournament: user.tournament } }).slice(0, 100)));
+		});
+	}
+
+	socket.on('session', (wallet, flag) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE wallet='${wallet}'`).then(user => {
+			user.session = crypto.randomBytes(16).toString("hex");
+			user.socketId = socket.id;
+			socket.emit('session', user.session);
+			writeUserInTable(db, 3, user);
+		});
+	});
+
+	socket.on('get-short-profile', session => {
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(user => {
+			socket.emit('short-profile', { photo: user.photo, username: user.username, rating: user.rating });
+		});
+	});
+
+	socket.on('search-start', (id, session) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`, true, () => socket.emit('ready-decline')).then(user => {
+			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
+			if (~lobbyIndex) {
+				const playerIndex = lobbies[lobbyIndex].players.findIndex(player => player.gameId == id);
+				if (~playerIndex) lobbies[lobbyIndex].players[playerIndex].search = true;
+
+				if (lobbies[lobbyIndex].players.every(item => item.search)) {
+					lobbies[lobbyIndex].players.forEach(player => {
+						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(player => {
+							io.to(player.socketId).emit('ready');
+						});
+					});
+				}
+
+				socket.emit('search-start');
+				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
+				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
+			} else socket.emit('ready-decline');
+		});
+	});
+
+	socket.on('search-end', (id, session) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`).then(user => {
+			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
+			if (~lobbyIndex) {
+				const playerIndex = lobbies[lobbyIndex].players.findIndex(player => player.gameId == id);
+				if (~playerIndex) lobbies[lobbyIndex].players[playerIndex].search = false;
+
+				socket.emit('search-end');
+				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
+				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
+			}
+		});
+	});
 
 	socket.on('ready', (id, session) => {
-		const userIndex = users.findIndex(item => item.gameId == id && item.session == session && item.ban === null);
-		if (~userIndex) {
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`, true, () => socket.emit('ready-decline')).then(user => {
 			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
 			if (~lobbyIndex) {
 				const playerIndex = lobbies[lobbyIndex].players.findIndex(player => player.gameId == id);
 				if (~playerIndex) lobbies[lobbyIndex].players[playerIndex].ready = true;
-				socket.emit('ready');
 
-				if (lobbies[lobbyIndex].players.every(item => item.ready)) {
+				if (lobbies[lobbyIndex].players.every(item => item.search)) {
 					searchLobbies.push(Object.assign({}, lobbies[lobbyIndex]));
 				}
 
 				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
 				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 			} else socket.emit('ready-decline');
-		} else socket.emit('ready-decline');
+		});
 	});
 
 	socket.on('not-ready', (id, session) => {
-		const userIndex = users.findIndex(item => item.gameId == id && item.session == session && item.ban === null);
-		if (~userIndex) {
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`).then(user => {
 			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
 			if (~lobbyIndex) {
 				const playerIndex = lobbies[lobbyIndex].players.findIndex(player => player.gameId == id);
@@ -199,24 +330,24 @@ io.on('connection', (socket) => {
 				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
 				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 			}
-		}
+		});
 	});
 
 	socket.on('accept-game', (id, session) => {
-		const userIndex = users.findIndex(item => item.gameId == id && item.session == session && item.ban === null);
-		if (~userIndex) {
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`).then(user => {
 			const lobbyIndex = searchLobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
 			if (~lobbyIndex) {
 				const playerIndex = searchLobbies[lobbyIndex].players.findIndex(player => player.gameId == id);
 				if (~playerIndex && !searchLobbies[lobbyIndex].players[playerIndex].accepted) {
 					searchLobbies[lobbyIndex].players[playerIndex].accepted = true;
 					searchLobbies[lobbyIndex].players.forEach(player => {
-						const index = users.findIndex(item => item.gameId == player.gameId);
-						if (~index) io.to(users[index].socketId).emit('accept-game', searchLobbies[lobbyIndex]);
+						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
+							io.to(user.socketId).emit('accept-game', searchLobbies[lobbyIndex]);
+						});
 					});
 				}
 			}
-		}
+		});
 		fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 	});
 
@@ -235,9 +366,12 @@ setInterval(() => {
 		else if (searchLobbies[lobbyIndex].players.length == 2) {
 			if (searchLobbies[lobbyIndex].state != 'accept') {
 				searchLobbies[lobbyIndex].state = 'accept';
+
 				searchLobbies[lobbyIndex].players.forEach(player => {
-					const userIndex = users.findIndex(item => item.gameId == player.gameId);
-					if (~userIndex) io.to(users[userIndex].socketId).emit('accept-game', searchLobbies[lobbyIndex]);
+					selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
+						console.log(user.socketId)
+						io.to(user.socketId).emit('accept-game', searchLobbies[lobbyIndex]);
+					});
 				});
 
 				setTimeout(() => {
@@ -247,51 +381,53 @@ setInterval(() => {
 						return indices;
 					})(searchLobbies[lobbyIndex].players, item => !item.accepted);
 
+					console.log(indices)
+
 					for (let i = 0; i < indices.length; i++) {
-						const userIndex = users.findIndex(item => item.gameId == searchLobbies[lobbyIndex].players[indices[i] - i].gameId);
-						if (~userIndex) {
+						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${searchLobbies[lobbyIndex].players[indices[i] - i].gameId}'`).then(user => {
 							searchLobbies[lobbyIndex].players.splice(indices[i] - i, 1);
 
-							const banTime = bans[users[userIndex].banLevel <= 10 ? users[userIndex].banLevel : 10] * 60000
-							users[userIndex].ban = Date.now() + banTime;
-							users[userIndex].banLevel++;
-							io.to(users[userIndex].socketId).emit('ban-start', users[userIndex].ban);
+							const banTime = bans[user.banLevel <= 10 ? user.banLevel : 10] * 60000
+							user.ban = Date.now() + banTime;
+							user.banLevel++;
+							io.to(user.socketId).emit('ban-start', user.ban);
+
 							setTimeout(() => {
-								io.to(users[userIndex].socketId).emit('ban-end');
-								users[userIndex].ban = null;
-								fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
+								io.to(user.socketId).emit('ban-end');
+								user.ban = 0;
+								writeUserInTable(db, 4, user);
 							}, banTime);
-						}
+
+							writeUserInTable(db, 5, user);
+						});
 					};
 
 					searchLobbies[lobbyIndex].players.forEach(player => {
-						const userIndex = users.findIndex(item => item.gameId == player.gameId);
-						if (~userIndex) io.to(users[userIndex].socketId).emit('search-refresh');
+						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
+							io.to(user.socketId).emit('search-refresh');
+						});
 					});
-					fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
 				}, 5000);
 
 				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 			} else {
 				if (searchLobbies[lobbyIndex].players.every(player => player.accepted) && !searchLobbies[lobbyIndex].players.every(player => player.loaded)) {
 					searchLobbies[lobbyIndex].players.forEach((player, index) => {
-						const userIndex = users.findIndex(item => item.gameId == player.gameId);
-						if (~userIndex) {
+						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
 							searchLobbies[lobbyIndex].players[index].inGame = true;
-							io.to(users[userIndex].socketId).emit('start-game');
+							io.to(user.socketId).emit('start-game');
 							fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
-						}
+						});
 					});
 				} else if (searchLobbies[lobbyIndex].players.every(player => player.loaded)) {
-					const userIndex = users.findIndex(item => item.gameId == searchLobbies[lobbyIndex].players[0].gameId);
-					if (~userIndex) {
+					selectUserInTable(db, `SELECT * FROM users WHERE gameId='${searchLobbies[lobbyIndex].players[0].gameId}'`).then(user => {
 						createRoom(searchLobbies[lobbyIndex].players).then(room => {
 							initGame(io, room.sockets[0], room);
 							room.sockets.forEach(socket => startGame(io, socket, room));
 							rooms.push(room);
 							searchLobbies.splice(searchLobbies.findIndex(item => item.id == searchLobbies[lobbyIndex].id), 1);
 						});
-					}
+					});
 				}
 			}
 		} else if (0 < searchLobbies[lobbyIndex].players.length < 6) {
