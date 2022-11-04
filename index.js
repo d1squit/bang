@@ -16,7 +16,7 @@ import cookieParser from "cookie-parser";
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import cors from 'cors';
+import ethereumAddress from 'ethereum-address';
 
 import crypto from 'crypto';
 import fs from 'fs';
@@ -79,14 +79,15 @@ app.get("/verify", (request, response) => {
 			sig: signedNonce,
 		});
 
-		db.all(`SELECT * FROM users WHERE wallet = '${walletAddress}'`, [], (error, rows) => {
-			console.log(session)
+		db.all(`SELECT * FROM users WHERE wallet = '${walletAddress}' AND username<>''`, [], (error, rows) => {
 			if (error) console.log(error);
+
 			const rowIndex = rows.findIndex(item => item.wallet == retrievedAddress);
 			if (~rowIndex && rows[rowIndex].session == session) { response.cookie("walletAddress", walletAddress).send({ success: true }); return; }
 			else return response.send({ success: false });
 		});
 	} catch (err) {
+		console.log(err);
 		return response.send({ success: false });
 	}
 });
@@ -189,6 +190,7 @@ users.forEach(user => {
 
 
 process.on("SIGINT", () => {
+	db.run(`DELETE FROM users WHERE username=''`);
 	selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
 		users.forEach(user => {
 			user.socketId = null;
@@ -249,11 +251,33 @@ io.on('connection', (socket) => {
 	}
 
 	socket.on('session', (wallet, flag) => {
-		selectUserInTable(db, `SELECT * FROM users WHERE wallet='${wallet}'`).then(user => {
-			user.session = crypto.randomBytes(16).toString("hex");
-			user.socketId = socket.id;
-			socket.emit('session', user.session);
-			writeUserInTable(db, 3, user);
+		console.log(wallet)
+		selectUserInTable(db, `SELECT * FROM users WHERE wallet='${wallet}'`, true, () => {
+			if (ethereumAddress.isAddress(wallet)) {
+				const session = crypto.randomBytes(16).toString("hex");
+				db.run(`INSERT INTO users (wallet, session, gameId) VALUES ('${wallet}', '${session}', '${crypto.randomBytes(16).toString("hex")}')`);
+				socket.emit('get-username', session);
+			}
+		}).then(user => {		
+			if (user.username == '') socket.emit('get-username', user.session);
+			else {
+				user.session = crypto.randomBytes(16).toString("hex");
+				user.socketId = socket.id;
+				socket.emit('session', user.session);
+				writeUserInTable(db, 3, user);
+			}
+		});
+	});
+
+	socket.on('set-username', (username, session, wallet) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE wallet='${wallet}' AND session='${session}' AND username=''`).then(user => {
+			if (username.length >= 3 && username.length <= 99) {
+				selectUserInTable(db, `SELECT * FROM users WHERE username='${username}'`, true, () => {
+					user.username = username;
+					writeUserInTable(db, 0, user);
+					socket.emit('accept-username');
+				}).then(() => socket.emit('decline-username', 1));
+			} else socket.emit('decline-username', 0);
 		});
 	});
 

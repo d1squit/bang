@@ -1,6 +1,26 @@
 try { socket; } catch (e) { socket = io(); }
 let session = getCookie('session');
 
+
+const setUsername = (session, walletAddress) => {
+	document.body.innerHTML += `
+	<div class="username-form">
+		<h2 class="username-form__title">Рады Вас приветствовать. Вы авторизовались с адреса ${walletAddress}</h2>
+		<h2 class="username-form__question">укажите ваш никнейм</h2>
+		<h2 class="username-form__error"></h2>
+		<input type="edit" class="username-form__input" minlength="3" maxlength="99">
+		<div class="username-form__button text-shadow">принять</div>
+	</div>`;
+	document.querySelector('.username-form__button').addEventListener('click', () => socket.emit('set-username', document.querySelector('.username-form__input').value, session, walletAddress));
+}
+
+socket.on('decline-username', reason => {
+	if (reason == 0) document.querySelector('.username-form__error').textContent = 'Никнейм должен быть длиной от 3 до 99 символов';
+	else if (reason == 1) document.querySelector('.username-form__error').textContent = 'Никнейм уже занят';
+});
+
+socket.on('accept-username', () => window.location.href = './lobby');
+
 jQuery(document).ready($ => {
 	$('.login__submit').on('click', async () => {
 		const provider = await detectEthereumProvider();
@@ -15,11 +35,16 @@ jQuery(document).ready($ => {
 
 		const signedNonce = await web3.eth.personal.sign(nonce, walletAddress); console.log(signedNonce);
 
+		socket.on('get-username', (localSession) => {
+			session = localSession;
+			setCookie('session', localSession);
+			setUsername(localSession, walletAddress);
+		});
+
 		if (!session) { socket.emit('session', walletAddress); console.log(walletAddress); }
 		else {
 			const successResponse = await fetch(`/verify?walletAddress=${walletAddress}&signedNonce=${signedNonce}&session=${session}`);
 			const { success } = await successResponse.json();
-			console.log(success, walletAddress)
 			if (!success) socket.emit('session', walletAddress, 1);
 			await checkSession(true);
 		}
