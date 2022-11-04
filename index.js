@@ -61,7 +61,7 @@ app.get('/favicon.ico', (request, response) => {
 	response.status(404).send({});
 });
 
-app.use(express.static('client'));
+app.use(express.static(__dirname + '/client'));
 app.use(cookieParser());
 
 const nonceList = {};
