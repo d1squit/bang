@@ -57,6 +57,10 @@ app.get('/', (request, response) => {
 	response.sendFile('./index.html', { root: __dirname });
 });
 
+app.get('/favicon.ico', (request, response) => {
+	response.status(404).send({});
+});
+
 app.use(express.static('client'));
 app.use(cookieParser());
 
