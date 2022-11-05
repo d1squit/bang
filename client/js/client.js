@@ -136,11 +136,6 @@ document.addEventListener('scroll', () => { if (historyActivate) { document.quer
 
 
 
-document.querySelector('.leave-after-result').addEventListener('click', () => {
-	document.querySelector('main').style.display = 'none';
-	document.querySelector('.game-result').style.display = 'none';
-});
-
 
 document.querySelector('.end-turn').addEventListener('click', () => {
 	socket.emit('turn-end', myPlayer, session);
@@ -155,15 +150,15 @@ const assignObjects = (string, ...objects) => {
 
 const drawCards = (c) => {
 	search = false;
-	cards.querySelector('.common-ctn').innerHTML = '';
+	document.querySelector('.common-ctn').innerHTML = '';
 
 	c.forEach(card => {
-		cards.querySelector('.common-ctn').innerHTML += assignObjects(card_html, card);
-		// cards.querySelector('.common-ctn').querySelectorAll('.card-change')[cards.querySelector('.common-ctn').querySelectorAll('.card-change').length - 1].style.display = (myPlayer.character.id == 5 && (card.card_id == 5 || card.card_id == 6)) ? 'block' : 'none';
+		document.querySelector('.common-ctn').innerHTML += assignObjects(card_html, card);
+		// document.querySelector('.common-ctn').querySelectorAll('.card-change')[document.querySelector('.common-ctn').querySelectorAll('.card-change').length - 1].style.display = (myPlayer.character.id == 5 && (card.card_id == 5 || card.card_id == 6)) ? 'block' : 'none';
 	});
 
 	for (let index = 0; index < 10 - c.length; index++) {
-		cards.querySelector('.common-ctn').innerHTML += '<div class="card empty" data-card="-1"></div>';
+		document.querySelector('.common-ctn').innerHTML += '<div class="card empty" data-card="-1"></div>';
 	}
 
 	if (boardPlayers.length == 6) {
@@ -767,14 +762,30 @@ socket.on('turn', turn => {
 	document.querySelector(`.player[player-id='${turn}']`).classList.add('turn');
 });
 
+socket.on('end-game', (end, results) => {
+	document.querySelector('.result').style.display = 'flex';
+
+	results.forEach((player, index) => {
+		document.querySelector('.result__users').innerHTML += `
+		<div class="result__user">
+			<img src="./assets/photos/${player.photo}.png" alt="" class="result__user__photo">
+			<div class="result__user__name">${player.username}</div>
+			<div class="result__user__rating"><img src="./assets/img/trophy-icon.svg" alt="" class="result__trophy-icon">${player.rating}<span>${player.result}</span></div>
+		</div>`;
+	});
+
+	if (end == 0) document.querySelector('.result__title').textContent = 'ПОБЕДА ШЕРИФА';
+	else if (end == 2) document.querySelector('.result__title').textContent = 'ПОБЕДА МАНЬЯКА';
+	else if (end == 3) document.querySelector('.result__title').textContent = 'ПОБЕДА БАНДИТОВ';
+
+	document.querySelector('.result__button').addEventListener('click', () => window.location.href = './lobby');
+});
+
 socket.on('kick', player => {
 	if (player.player_id == myPlayer.player_id) {
 		cards.innerHTML = '';
-		document.querySelector('.game-result h1').textContent = 'Вы проиграли!';
-		document.querySelector('.game-result').style.display = 'flex';
 	}
 	boardPlayers[player.player_id].dead = true;
-	info.querySelector(`.player-info:nth-child(${player.player_id + 1}) .player-info-role`).setAttribute('data-role', player.role.toString());
 	info.querySelector(`.player-info:nth-child(${player.player_id + 1})`).classList.add('dead');
 	try { board.removeChild(document.querySelector(`.player[player-id='${player.player_id}']`)); } catch (e) {};
 	board.setAttribute('player-count', board.getAttribute('player-count') - 1);

@@ -1,21 +1,11 @@
 [
 	{
-		"players": [],
-		"average": {
-			"min": -50,
-			"max": 50
-		},
-		"id": "859d8d4d3eb69ad523c33579a6a9c4bb",
-		"accepted": [],
-		"interval": null
-	},
-	{
 		"players": [
 			{
-				"username": "d1squit",
+				"username": "bot1",
 				"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d652",
 				"rating": 0,
-				"gameId": "88a13373daaeaff686fbef002d46efcc",
+				"gameId": "ece20acbf179fc81dd85e5ac4729dad5",
 				"online": false,
 				"search": true,
 				"ready": true,
@@ -26,7 +16,7 @@
 				"username": "bot3",
 				"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d652",
 				"rating": 0,
-				"gameId": "eb0f7d8a0f7707aa4ab3e9dd503ed8d8",
+				"gameId": "4cc15c73d8781471e3db5bd899eec6fc",
 				"online": false,
 				"search": true,
 				"ready": true,
@@ -37,7 +27,7 @@
 				"username": "bot2",
 				"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d652",
 				"rating": 0,
-				"gameId": "cbc1577db26331c384284fca3531b76c",
+				"gameId": "3142d424d4b1e72e88a44299e300bdf9",
 				"online": false,
 				"search": true,
 				"ready": true,
@@ -49,7 +39,7 @@
 			"min": -50,
 			"max": 50
 		},
-		"id": "0149f9b18b6342f79e551b698895ba79",
+		"id": "a622c6f1dd78e76b71b5002953883973",
 		"accepted": [],
 		"interval": null
 	},
@@ -59,7 +49,17 @@
 			"min": -50,
 			"max": 50
 		},
-		"id": "280abc6a1b12ffde3c3d1bcd4869013e",
+		"id": "23cf287b096dab307776e26e242319ee",
+		"accepted": [],
+		"interval": null
+	},
+	{
+		"players": [],
+		"average": {
+			"min": -50,
+			"max": 50
+		},
+		"id": "09e9cc2019a785ebf6c5141e6ba073c0",
 		"accepted": [],
 		"interval": null
 	}

@@ -420,3 +420,101 @@ footer h2 {
 	flex-direction: column;
 	gap: 8px;
 }
+
+
+
+/* -------------------------------------------------------------------------------- */
+
+.result {
+	width: 1080px;
+	height: 650px;
+	background: rgba(17, 0, 0, 0.8);
+	border-radius: 10px;
+	display: none;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 40px;
+	position: fixed;
+	left: calc(50% - 540px);
+	top: calc(50% - 325px);
+}
+
+.result__top {
+	display: flex;
+	gap: 24px;
+	justify-content: center;
+	align-items: center;
+}
+
+.result__title {
+	font-size: 80px;
+	line-height: 93px;
+	letter-spacing: 1.75px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+}
+
+.result__user div, .result__user span {
+	font-family: 'Bookman Old Style';
+	font-size: 18px;
+	line-height: 36px;
+	letter-spacing: 1.125px;
+	color: #FFF4E5;
+}
+
+.result__users {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 50px;
+	width: 640px;
+	justify-content: center;
+	align-items: center;
+}
+
+.result__user {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.result__user__name {
+	max-width: 180px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: clip;
+}
+
+.result__user__photo {
+	width: 64px;
+	height: 64px;
+}
+
+.result__button {
+	background-image: url('../assets/img/button-back.png');
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 440px;
+	height: 80px;
+	font-size: 32px;
+	line-height: 37px;
+	text-align: center;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	color: #FFF4E5;
+	cursor: pointer;
+}
+
+.result__user__rating {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.result__user__rating span {
+	color: #EDE52E;
+}

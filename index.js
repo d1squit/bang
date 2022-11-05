@@ -231,7 +231,6 @@ io.on('connection', (socket) => {
 					socket.emit('table', { card_count: rooms[roomIndex].shuffled.length, last_card: null });
 					socket.emit('player', rooms[roomIndex].players[players.findIndex(player => player.user.gameId == user.gameId)]);
 					startGame(io, socket, rooms[roomIndex]);
-					writeUserInTable(db, 1, user);
 					return;
 				});
 			}

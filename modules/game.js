@@ -285,6 +285,46 @@ const kickPlayer = (io, room, player) => {
 	room.players[room.players.findIndex(p => p.player_id == player.player_id)].dead = true;
 
 	getActivePlayers(room).forEach(player => sendDistances(io, room, player));
+
+	const sheriffIndex = room.players.findIndex(player => !player.dead && player.role == 0);
+	const helperIndex = room.players.findIndex(player => !player.dead && player.role == 1);
+	const maniacIndex = room.players.findIndex(player => !player.dead && player.role == 2);
+	const banditIndex = room.players.findIndex(player => !player.dead && player.role == 3);
+
+	const endGame = (end) => {
+		room.end = true;
+
+		const results = room.users.map(player => { return { username: player.username, photo: player.photo, rating: player.rating } });
+
+		room.users.forEach((player, index) => {
+			results[index].result = 0;
+			if (end == 0) {
+				if (player.role == 0) results[index].result = 3;
+				else if (player.role == 1) {
+					if (player.dead) results[index].result = 2;
+					else results[index].result = 3;
+				} else if (player.role == 2) results[index].result = -2;
+				else if (player.role == 3) results[index].result = -2;
+			} else if (end == 2) {
+				if (player.role == 0) results[index].result = -2;
+				else if (player.role == 1) results[index].result = -2;
+				else if (player.role == 2) results[index].result = 3;
+				else if (player.role == 3) results[index].result = -2;
+			} else if (end == 3) {
+				if (player.role == 0) results[index].result = -2;
+				else if (player.role == 1) results[index].result = -2;
+				else if (player.role == 2) results[index].result = -2;
+				else if (player.role == 3) results[index].result = 3;
+			}
+		});
+
+		io.to(room.id).emit('end-game', end, results);
+	}
+
+	if (!~sheriffIndex) {
+		if (~banditIndex || ~helperIndex) endGame(3);
+		else if (~maniacIndex) endGame(2);
+	} else if (!~banditIndex) endGame(0);
 }
 
 const healthModifiers = (io, room) => {
