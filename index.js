@@ -67,6 +67,7 @@ app.use(cookieParser());
 const nonceList = {};
 
 app.get("/nonce", (request, response) => {
+	console.log(nonceList)
 	const { walletAddress } = request.query;
 	const nonce = String(Math.floor(Math.random() * 10000));
 	nonceList[walletAddress] = nonce;
