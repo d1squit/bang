@@ -35,15 +35,6 @@ let lobbies = [];
 let searchLobbies = [];
 
 
-// db.all(`SELECT * FROM users WHERE session='6f19525b2cb9726d08b95ea8b7db8d5b'`, [], (err, rows) => {
-// 	console.log(rows)
-// });
-
-
-// fs.readFile('./users.json', (err, data) => users = JSON.parse(data.toString()));
-// fs.readFile('./lobbies.json', (err, data) => lobbies = JSON.parse(data.toString()));
-
-
 // ----------------------------------------------------------------------------------------- //
 
 const port = 3000;
@@ -182,15 +173,17 @@ const createRoom = async (players, botFlag = false) => {
 	});
 }
 
-users.forEach(user => {
-	if (user.ban <= Date.now()) user.ban = 0;
-	else {
-		setTimeout(() => {
-			io.to(user.socketId).emit('ban-end');
-			user.ban = 0;
-			fs.writeFile('./users.json', JSON.stringify(users, null, '\t'), () => {});
-		}, user.ban - Date.now());
-	}
+selectUserInTable(db, 'SELECT * FROM users', false).then(users => {
+	users.forEach(user => {
+		if (user.ban <= Date.now()) user.ban = 0;
+		else {
+			setTimeout(() => {
+				io.to(user.socketId).emit('ban-end');
+				user.ban = 0;
+				writeUserInTable(db, 0, user);
+			}, user.ban - Date.now());
+		}
+	});
 });
 
 
