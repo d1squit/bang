@@ -478,4 +478,6 @@ setInterval(() => {
 }, 1000);
 
 
-server.listen(process.env.PORT || port, () => {});
+server.listen(process.env.PORT || port, () => {
+	console.log('Stating server on port ' + process.env.PORT || port);
+});
