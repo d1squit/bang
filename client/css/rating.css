@@ -123,7 +123,7 @@ header {
 	padding: 40px 5%;
 	height: 1026px;
 	background-image: url('../assets/img/rating/bracket-background.svg');
-	background-size: contain;
+	background-size: 100%;
 	background-repeat: no-repeat;
 	background-position: 0% 101%;
 	display: flex;

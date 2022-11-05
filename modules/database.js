@@ -26,8 +26,6 @@ export const selectUserInTable = (db, query, first = true, onfalse = () => {}) =
 						result[result.length - 1].invites = JSON.parse(user.invites);
 						result[result.length - 1].requests = JSON.parse(user.requests);
 					});
-
-					// console.log('read', mark, result);
 					
 					resolve(first ? result[0] : result);
 				} else if (onfalse) onfalse();

@@ -2,18 +2,18 @@
 	{
 		"players": [
 			{
-				"username": "bot7",
+				"username": "d1squit",
 				"photo": "b0f50496833d799ea7b4a0397943ae18fb398275c283d652",
-				"rating": 500,
-				"gameId": "6d9bdf12ac506e4ccb388151df20e442",
-				"online": true
+				"rating": 0,
+				"gameId": "88a13373daaeaff686fbef002d46efcc",
+				"online": false
 			}
 		],
 		"average": {
-			"min": 450,
-			"max": 550
+			"min": -50,
+			"max": 50
 		},
-		"id": "791d5fd5ca61ef2f087a62ea04723fe1",
+		"id": "8204411929275e99e8eb58b6d14ff005",
 		"accepted": [],
 		"interval": null
 	}

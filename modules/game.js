@@ -345,7 +345,8 @@ export const initGame = (io, socket, room) => {
 		});
 	} else {
 		room.shuffled[room.shuffled.length - 1] = new ShopCard(3, 6);
-		shuffle(roles).forEach((role, index) => {
+		// shuffle(roles).forEach((role, index) => {
+		[3, 3, 0].forEach((role, index) => {
 			const character_id = index;
 			room.turn = 0;
 			const player = new Player(character_id, { name: room.users[index].username, rating: room.users[index].rating, photo: room.users[index].photo, gameId: room.users[index].gameId, id: room.users[index].socketId }, index, characters[character_id].health, role, [], []);

@@ -65,6 +65,7 @@ html, body {
 }
 
 .board-wrapper {
+	height: 800px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -262,7 +263,7 @@ html, body {
 	font-size: 100%;
 }
 
-body {
+.wrapper {
 	background-image: url('../../assets/img/game-background.png');
 	background-size: cover;
 }

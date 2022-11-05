@@ -129,7 +129,7 @@ app.get('/home', (request, response) => {
 
 let rooms = [];
 
-const createRoom = async (players, botFlag = false) => {
+const createRoom = (players, botFlag = false) => {
 	return new Promise((resolve, reject) => {
 		const room = {};
 
@@ -139,37 +139,44 @@ const createRoom = async (players, botFlag = false) => {
 
 		room.botFlag = botFlag;
 
-		players.forEach(player => {
-			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
-				let socket = Array.from(io.sockets.sockets).find(item => item[0] == user.socketId);
-				if (socket) socket = socket[1]; else return;
+		let promises = [];
 
-				if (player.socketId != 'bot') socket.join(room.id);
-				room.sockets.push(socket);
-				room.users.push({ username: player.username, photo: player.photo, rating: player.rating, gameId: player.gameId, socketId: socket.id, session: user.session });
-			});
+		players.forEach(player => {
+			promises.push(selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`));
 		});
 
-		room.players = [];
-		room.history = [[]];
-		room.turn = 0;
-		room.wait = 0;
+		Promise.all(promises).then(users => {
+			users.forEach(user => {
+				let socket = Array.from(io.sockets.sockets).find(item => item[0] == user.socketId);
+				console.log(1, socket)
+				if (socket) socket = socket[1]; else return;
+				
+				if (user.socketId != 'bot') socket.join(room.id);
+				room.sockets.push(socket);
+				room.users.push({ username: user.username, photo: user.photo, rating: user.rating, gameId: user.gameId, socketId: socket.id, session: user.session });
+			});
 
-		room.cancel_cards = 0;
-		room.health_cards = 0;
-		room.turn_cards = [];
+			room.players = [];
+			room.history = [[]];
+			room.turn = 0;
+			room.wait = 0;
 
-		room.timeout = { interval: null, time: 10 };
-		room.shop = { cards: [], wait: 0, interval: null };
-		room.indians = { len: 0, wait: 0, interval: null };
-		room.duel = { players: [], wait: 0, interval: null };
-		room.choose_three_cards = [];
+			room.cancel_cards = 0;
+			room.health_cards = 0;
+			room.turn_cards = [];
 
-		room.destroyed_choosed = false;
-		room.player_choosed = -1;
-		room.destroyed = [];
+			room.timeout = { interval: null, time: 10 };
+			room.shop = { cards: [], wait: 0, interval: null };
+			room.indians = { len: 0, wait: 0, interval: null };
+			room.duel = { players: [], wait: 0, interval: null };
+			room.choose_three_cards = [];
 
-		resolve(room);
+			room.destroyed_choosed = false;
+			room.player_choosed = -1;
+			room.destroyed = [];
+
+			resolve(room);
+		});
 	});
 }
 
@@ -189,6 +196,7 @@ selectUserInTable(db, 'SELECT * FROM users', false).then(users => {
 
 process.on("SIGINT", () => {
 	db.run(`DELETE FROM users WHERE username=''`);
+	fs.writeFile('./search.json', JSON.stringify([], null, '\t'), () => {});
 	selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
 		users.forEach(user => {
 			user.socketId = null;
@@ -270,11 +278,14 @@ io.on('connection', (socket) => {
 	socket.on('set-username', (username, session, wallet) => {
 		selectUserInTable(db, `SELECT * FROM users WHERE wallet='${wallet}' AND session='${session}' AND username=''`).then(user => {
 			if (username.length >= 3 && username.length <= 99) {
-				selectUserInTable(db, `SELECT * FROM users WHERE username='${username}'`, true, () => {
-					user.username = username;
-					writeUserInTable(db, 0, user);
-					socket.emit('accept-username');
-				}).then(() => socket.emit('decline-username', 1));
+				const english = /^[A-Za-z0-9]*$/;
+				if (english.test(username)) {
+					selectUserInTable(db, `SELECT * FROM users WHERE username='${username}'`, true, () => {
+						user.username = username;
+						writeUserInTable(db, 0, user);
+						socket.emit('accept-username');
+					}).then(() => socket.emit('decline-username', 1));
+				} else socket.emit('decline-username', 2);
 			} else socket.emit('decline-username', 0);
 		});
 	});
@@ -384,8 +395,9 @@ io.on('connection', (socket) => {
 
 setInterval(() => {
 	for (let lobbyIndex = 0; lobbyIndex < searchLobbies.length; lobbyIndex++) {
+		try {
 		if (searchLobbies[lobbyIndex].players.length == 0) { searchLobbies.splice(lobbyIndex, 1); lobbyIndex--; }
-		else if (searchLobbies[lobbyIndex].players.length == 2) {
+		else if (searchLobbies[lobbyIndex].players.length == 3) {
 			if (searchLobbies[lobbyIndex].state != 'accept') {
 				searchLobbies[lobbyIndex].state = 'accept';
 
@@ -397,6 +409,7 @@ setInterval(() => {
 				});
 
 				setTimeout(() => {
+					try {
 					const indices = (function getAllIndices (arr, cb) {
 						let indices = [], i = -1;
 						while (~arr.slice(i + 1).findIndex(cb)) { i += arr.slice(i + 1).findIndex(cb) + 1; indices.push(i); }
@@ -423,13 +436,15 @@ setInterval(() => {
 							writeUserInTable(db, 5, user);
 						});
 					};
+					
 
 					searchLobbies[lobbyIndex].players.forEach(player => {
 						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
 							io.to(user.socketId).emit('search-refresh');
 						});
 					});
-				}, 5000);
+					} catch (e) {console.log(searchLobbies, e)}
+				}, 10000);
 
 				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 			} else {
@@ -444,6 +459,7 @@ setInterval(() => {
 				} else if (searchLobbies[lobbyIndex].players.every(player => player.loaded)) {
 					selectUserInTable(db, `SELECT * FROM users WHERE gameId='${searchLobbies[lobbyIndex].players[0].gameId}'`).then(user => {
 						createRoom(searchLobbies[lobbyIndex].players).then(room => {
+							console.log(room)
 							initGame(io, room.sockets[0], room);
 							room.sockets.forEach(socket => startGame(io, socket, room));
 							rooms.push(room);
@@ -468,6 +484,7 @@ setInterval(() => {
 				}
 			};
 		}
+	} catch (e) {console.log(lobbyIndex, e)}
 	}
 }, 1000);
 

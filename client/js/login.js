@@ -17,6 +17,7 @@ const setUsername = (session, walletAddress) => {
 socket.on('decline-username', reason => {
 	if (reason == 0) document.querySelector('.username-form__error').textContent = 'Никнейм должен быть длиной от 3 до 99 символов';
 	else if (reason == 1) document.querySelector('.username-form__error').textContent = 'Никнейм уже занят';
+	else if (reason == 2) document.querySelector('.username-form__error').textContent = 'Можно использовать только латинский алфавит';
 });
 
 socket.on('accept-username', () => window.location.href = './lobby');
@@ -41,7 +42,7 @@ jQuery(document).ready($ => {
 			setUsername(localSession, walletAddress);
 		});
 
-		if (!session) { socket.emit('session', walletAddress); console.log(walletAddress); }
+		if (session == 'null') { socket.emit('session', walletAddress); console.log(walletAddress); }
 		else {
 			const successResponse = await fetch(`/verify?walletAddress=${walletAddress}&signedNonce=${signedNonce}&session=${session}`);
 			const { success } = await successResponse.json();
