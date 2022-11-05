@@ -42,7 +42,7 @@ jQuery(document).ready($ => {
 			setUsername(localSession, walletAddress);
 		});
 
-		if (session == 'null') { socket.emit('session', walletAddress); console.log(walletAddress); }
+		if (session == 'null' || !session) { socket.emit('session', walletAddress); console.log(walletAddress); }
 		else {
 			const successResponse = await fetch(`/verify?walletAddress=${walletAddress}&signedNonce=${signedNonce}&session=${session}`);
 			const { success } = await successResponse.json();
