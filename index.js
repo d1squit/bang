@@ -479,6 +479,13 @@ setInterval(() => {
 }, 1000);
 
 
+setInterval(() => {
+	db.run('SELECT * FROM users', (err, rows) => {
+		console.log('DB: ' + rows)
+	});
+}, 3000);
+
+
 server.listen(process.env.PORT || port, () => {
 	console.log('Stating server on port ' + process.env.PORT || port);
 });
