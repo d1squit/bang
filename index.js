@@ -472,13 +472,13 @@ setInterval(() => {
 }, 1000);
 
 
-setInterval(() => {
-	db.serialize(() => {
-		db.all('SELECT * FROM users', (err, rows) => {
-			console.log(rows)
-		});
-	});
-}, 3000);
+// setInterval(() => {
+// 	db.serialize(() => {
+// 		db.all('SELECT * FROM users', (err, rows) => {
+// 			console.log(rows)
+// 		});
+// 	});
+// }, 3000);
 
 
 server.listen(process.env.PORT || port, () => {

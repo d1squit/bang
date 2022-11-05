@@ -288,3 +288,11 @@ table {
 	background-image: url('../assets/img/rating/arrow.png');
 	cursor: pointer;
 }
+
+.short-profile__username, .short-profile__rating {
+	color: #FFF4E5;
+}
+
+.short-profile__rating img {
+	filter: invert(85%) sepia(19%) saturate(183%) hue-rotate(340deg) brightness(107%) contrast(105%);
+}
