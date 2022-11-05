@@ -480,8 +480,10 @@ setInterval(() => {
 
 
 setInterval(() => {
-	db.run('SELECT * FROM users', (err, rows) => {
-		console.log('DB: ' + rows)
+	db.serialize(() => {
+		db.run('SELECT * FROM users', (err, rows) => {
+			console.log('DB: ' + rows)
+		});
 	});
 }, 3000);
 
