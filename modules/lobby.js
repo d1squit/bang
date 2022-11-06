@@ -319,7 +319,7 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 							if (lobbies[lobbyIndex].players.length == 0) lobbies.splice(lobbyIndex, 1);
 							else {
 								lobbies[lobbyIndex].players.forEach(player => {
-									selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}`).then(user => {
+									selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
 										io.to(user.socketId).emit('lobby', lobbies[lobbyIndex]);
 									});
 								});
@@ -335,7 +335,7 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 							if (lobbies[lobbyIndex].players.length == 0) lobbies.splice(lobbyIndex, 1);
 							else {
 								lobbies[lobbyIndex].players.forEach(player => {
-									selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}`).then(user => {
+									selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
 										io.to(user.socketId).emit('lobby', lobbies[lobbyIndex]);
 									});
 								});
@@ -380,7 +380,7 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 						if (lobbies[oldLobbyIndex].players.length == 0) lobbies.splice(oldLobbyIndex, 1);
 						else {
 							lobbies[oldLobbyIndex].players.forEach(player => {
-								selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}`).then(user => {
+								selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
 									io.to(user.socketId).emit('lobby', lobbies[oldLobbyIndex]);
 								});
 							});

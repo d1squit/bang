@@ -1,6 +1,6 @@
 import { Player } from './player.js';
 import { characters, shuffle, cards, roles } from './utils.js';
-import { BangCard, BarrelCard, MissCard, SaloonCard, ScofieldCard, ShopCard } from './card.js';
+import { BangCard, BarrelCard, MissCard, MustangCard, SaloonCard, ScofieldCard, ShopCard } from './card.js';
 
 import sql from 'sqlite3'
 const sqlite3 = sql.verbose();
@@ -10,6 +10,7 @@ import { selectUserInTable, writeUserInTable } from './database.js';
 const getActivePlayers = (room) => room.players.filter(p => p.dead == false);
 
 const changeTurn = (io, room) => {
+	if (room.end) return;
 	clearInterval(room.timeout.interval);
 
 	room.history.push([]);
@@ -85,6 +86,7 @@ const changeTurn = (io, room) => {
 }
 
 const checkShuffled = (io, room) => {
+	if (room.end) return;
 	if (room.shuffled.length == 0) {
 		room.shuffled = shuffle(room.destroyed);
 		room.destroyed = [];
@@ -94,6 +96,7 @@ const checkShuffled = (io, room) => {
 }
 
 const sendNewCards = (io, room, player_id, count) => {
+	if (room.end) return;
 	for (let i = 0; i < count; i++) room.players[player_id].cards.push(room.shuffled[room.shuffled.length - i - 1]);
 	if (room.shuffled.length >= count) room.shuffled.splice(room.shuffled.length - count, count);
 	else {
@@ -105,11 +108,13 @@ const sendNewCards = (io, room, player_id, count) => {
 }
 
 const sendTurn = (io, room) => {
+	if (room.end) return;
 	io.to(room.id).emit('turn', room.turn);
 	room.turn_cards = [];
 }
 
 const sendWait = (io, room, player_id, time, new_turn) => {
+	if (room.end) return;
 	room.wait = player_id;
 	room.timeout.time = time;
 	room.health_cards = 0;
@@ -222,6 +227,7 @@ const sendWait = (io, room, player_id, time, new_turn) => {
 
 	let interval = time;
 	room.timeout.interval = setInterval(() => {
+		if (room.end) { clearInterval(room.timeout.interval); return; };
 		io.to(room.id).emit('wait', player_id, interval, new_turn);
 		if (interval <= 0) {
 			if (new_turn) {
@@ -237,6 +243,7 @@ const sendWait = (io, room, player_id, time, new_turn) => {
 }
 
 const sendDistances = (io, room, player, modifier=null) => {
+	if (room.end) return;
 	const player_index = getActivePlayers(room).findIndex(p => p.player_id == player.player_id);
 	const divide = Math.ceil(getActivePlayers(room).length / 2);
 	let distances = [];
@@ -265,6 +272,7 @@ const sendDistances = (io, room, player, modifier=null) => {
 }
 
 const kickPlayer = (io, room, player) => {
+	if (room.end) return;
 	// const foundPlayer = room.players.findIndex(player => player.character.id == 10);
 
 	// if (~foundPlayer) {
@@ -303,6 +311,7 @@ const kickPlayer = (io, room, player) => {
 	const banditIndex = room.players.findIndex(player => !player.dead && player.role == 3);
 
 	const endGame = (end) => {
+		if (room.end) return;
 		room.end = true;
 
 		const results = room.users.map(player => { return { username: player.username, photo: player.photo, rating: player.rating } });
@@ -343,6 +352,7 @@ const kickPlayer = (io, room, player) => {
 }
 
 const healthModifiers = (io, room) => {
+	if (room.end) return;
 	// if (room.players[room.wait].character.id == 2 && !room.botFlag) {
 	// 	const randomCardIndex = Math.floor(Math.random() * room.players[room.turn].cards.length);
 	// 	const randomCard = room.players[room.turn].cards[randomCardIndex];
@@ -363,6 +373,7 @@ const healthModifiers = (io, room) => {
 }
 
 export const initGame = (io, socket, room) => {
+	if (room.end) return;
 	const promises = [];
 
 	room.shuffled = shuffle(cards);
@@ -399,7 +410,7 @@ export const initGame = (io, socket, room) => {
 			room.players.push(player);
 		});
 	} else {
-		room.shuffled[room.shuffled.length - 1] = new BangCard(3, 6);
+		room.shuffled[room.shuffled.length - 1] = new MustangCard(3, 6);
 		// shuffle(roles).forEach((role, index) => {
 		[3, 3, 0].forEach((role, index) => {
 			const character_id = index;
@@ -436,7 +447,9 @@ export const initGame = (io, socket, room) => {
 }
 
 export const startGame = async (io, socket, room) => {
+	if (room.end) return;
 	socket.on('turn-end', (player, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[player.player_id].gameId) return;
 		if (room.shop.cards.length > 0 || room.indians.len > 0 || room.duel.interval != null) return;
 
@@ -450,6 +463,7 @@ export const startGame = async (io, socket, room) => {
 	});
 
 	socket.on('leave', (player, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[player.player_id].gameId) return;
 		if (room.shop.cards.length > 0 || room.indians.len > 0 || room.duel.interval != null) return;
 		io.to(room.id).emit('choose-player', room.player_choosed = -1);
@@ -457,6 +471,7 @@ export const startGame = async (io, socket, room) => {
 	});
 
 	socket.on('get-shop-card', (card, sender, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		(function getShopCard (card, sender) {
 			if (room.shop.cards.length == 0) return;
@@ -497,6 +512,7 @@ export const startGame = async (io, socket, room) => {
 	});
 
 	socket.on('indians-send', (sender, card, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		(function sendIndians (sender, from_player=true) {
 			if (sender == room.indians.wait) {
@@ -539,6 +555,7 @@ export const startGame = async (io, socket, room) => {
 	});
 
 	socket.on('duel-send', (sender, card, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		(function sendDuel () {
 			if (sender == room.duel.players[room.duel.wait]) {
@@ -574,6 +591,7 @@ export const startGame = async (io, socket, room) => {
 	});
 
 	socket.on('delete-card', (sender, card, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (!card) return;
 		const card_index = room.players[sender.player_id].cards.findIndex(item => card.title == item.title && card.modifier == item.modifier && card.suit == item.suit && card.rank == item.rank);
@@ -601,6 +619,7 @@ export const startGame = async (io, socket, room) => {
 	});
 
 	socket.on('change-card', (sender, card, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		const card_index = room.players[sender.player_id].cards.findIndex(item => card.title == item.title && card.modifier == item.modifier && card.suit == item.suit && card.rank == item.rank);
 		
@@ -619,6 +638,7 @@ export const startGame = async (io, socket, room) => {
 	});
 
 	socket.on('choose-from-three-send', (sender, card, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (sender == room.wait) {
 			const card_index = room.choose_cards.findIndex(item => item.card_id == card.card_id && item.suit == card.suit && item.rank == card.rank);
@@ -646,6 +666,7 @@ export const startGame = async (io, socket, room) => {
 	});
 
 	socket.on('check-card-choose', (sender, card, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (sender == room.wait) {
 			if (card.card_id == room.check_card.card_id && card.suit == room.check_card.suit && card.rank == room.check_card.rank) {
@@ -687,6 +708,7 @@ export const startGame = async (io, socket, room) => {
 
 
 	socket.on('choose-destroyed', (choose, sender, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (!room.players[sender].dead) {
 			// if (room.players[sender].character.id == 6) {
@@ -698,6 +720,7 @@ export const startGame = async (io, socket, room) => {
 	});
 
 	socket.on('choose-player', (sender, session) => {
+		if (room.end) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (!room.players[sender].dead) {
 			// if (room.players[sender].character.id == 12) {
@@ -713,6 +736,8 @@ export const startGame = async (io, socket, room) => {
 	
 
 	socket.on('play-card', (sender, card, player, session) => {
+		if (room.end) return;
+		if (!card) return;
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 
 		function updateCardsCount (room) {
@@ -1174,6 +1199,8 @@ export const startGame = async (io, socket, room) => {
 				} else io.to(sender.user.id).emit('decline-card', 'Target is dead');
 			} else io.to(sender.user.id).emit('decline-card', 'Invalid card');
 		} else io.to(sender.user.id).emit('decline-card', 'Invalid turn');
+
+		
 
 		room.players.forEach(player => {
 			// if (player.character.id == 7) {

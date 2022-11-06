@@ -468,6 +468,7 @@ socket.on('show-card', card => {
 
 socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 	let text = '';
+	console.log(sender, player)
 
 	if (card.card_id == 5) {
 		console.log(player, sender)
@@ -533,7 +534,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 		return;
 	}
 
-	if (sender == myPlayer) {
+	if (sender == myPlayer.player_id) {
 		let release = false;
 		if (behaviour == 'release') {
 			let { absolute_card, card_rect } = createAbsoluteElement(document.querySelectorAll(`.player[player-id='${myPlayer.player_id}'] .modifier`)[card_id]);
@@ -592,10 +593,12 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 			release = true;
 			document.body.appendChild(absolute_card);
 		}
-
+		
 		if (behaviour == 'transfer') {
 			let { absolute_card, card_rect } = createAbsoluteElement(document.querySelectorAll('.common-ctn .card:not(.role)')[card_id]);
 			const character_rect = document.querySelector(`.player[player-id='${player}'] .player-character`).getBoundingClientRect();
+
+			myPlayer.cards.splice(card_id, 1);
 
 			setTimeout(() => {
 				absolute_card.style.transform = `translate(${character_rect.x - card_rect.x + 5}px, ${character_rect.y - card_rect.y - 8}px)`;
@@ -610,6 +613,8 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 		if (behaviour == 'prison') {
 			let { absolute_card, card_rect } = createAbsoluteElement(document.querySelectorAll('.common-ctn .card:not(.role)')[card_id]);
 			const character_rect = document.querySelector(`.player[player-id='${player}'] .player-character`).getBoundingClientRect();
+
+			myPlayer.cards.splice(card_id, 1);
 
 			setTimeout(() => {
 				absolute_card.style.transform = `translate(${character_rect.x - card_rect.x + 5}px, ${character_rect.y - card_rect.y - 8}px)`;
@@ -627,6 +632,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 		const character_rect = document.querySelector(`.player[player-id='${player}'] .player-character`).getBoundingClientRect();
 
 		myPlayer.cards.splice(card_id, 1);
+
 		setTimeout(() => {
 			absolute_card.style.transform = `translate(${character_rect.x - card_rect.x + 5}px, ${character_rect.y - card_rect.y - 8}px)`;
 			absolute_card.classList.remove('selected');
@@ -688,7 +694,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 		
 		if (behaviour == 'transfer') {
 			let animation = createElementFromHTML(card_html, card, document.querySelector(`.player[player-id='${sender}'] .player-character`), document.querySelector(`.player[player-id='${player}'] .player-character`));
-
+			myPlayer.cards.splice(card_id, 1);
 			setTimeout(() => {
 				animation.absolute_card.style.transform = `translate(${animation.target_rect.x - animation.sender_rect.x + 5}px, ${animation.target_rect.y - animation.sender_rect.y - 8}px)`;
 				animation.absolute_card.classList.remove('selected');
@@ -701,7 +707,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 
 		if (behaviour == 'prison') {
 			let animation = createElementFromHTML(card_html, card, document.querySelector(`.player[player-id='${sender}'] .player-character`), document.querySelector(`.player[player-id='${player}'] .player-character`));
-
+			myPlayer.cards.splice(card_id, 1);
 			setTimeout(() => {
 				animation.absolute_card.style.transform = `translate(${animation.target_rect.x - animation.sender_rect.x + 5}px, ${animation.target_rect.y - animation.sender_rect.y - 8}px)`;
 				animation.absolute_card.classList.remove('selected');
@@ -716,7 +722,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 		if (behaviour == 'modifier' || behaviour == 'release') return;
 
 		let animation = createElementFromHTML(card_html, card, document.querySelector(`.player[player-id='${sender}'] .player-character`), document.querySelector(`.player[player-id='${player}'] .player-character`));
-
+		myPlayer.cards.splice(card_id, 1);
 		setTimeout(() => {
 			animation.absolute_card.style.transform = `translate(${animation.target_rect.x - animation.sender_rect.x + 5}px, ${animation.target_rect.y - animation.sender_rect.y - 8}px)`;
 			animation.absolute_card.classList.remove('selected');
@@ -787,7 +793,7 @@ socket.on('kick', player => {
 	}
 	boardPlayers[player.player_id].dead = true;
 	info.querySelector(`.player-info:nth-child(${player.player_id + 1})`).classList.add('dead');
-	try { board.removeChild(document.querySelector(`.player[player-id='${player.player_id}']`)); } catch (e) {console.log(e, `.player[player-id='${player.player_id}']`)};
+	try { document.querySelector(`.player[player-id='${player.player_id}']`).parentElement.removeChild(document.querySelector(`.player[player-id='${player.player_id}']`)); } catch (e) {console.log(e, `.player[player-id='${player.player_id}']`)};
 	board.setAttribute('player-count', board.getAttribute('player-count') - 1);
 });
 
