@@ -2,6 +2,11 @@ import { Player } from './player.js';
 import { characters, shuffle, cards, roles } from './utils.js';
 import { BangCard, BarrelCard, MissCard, SaloonCard, ScofieldCard, ShopCard } from './card.js';
 
+import sql from 'sqlite3'
+const sqlite3 = sql.verbose();
+let db = new sqlite3.Database('./bang.db', sqlite3.OPEN_READWRITE, (err) => { if (err) console.error(err.message) });
+import { selectUserInTable, writeUserInTable } from './database.js';
+
 const getActivePlayers = (room) => room.players.filter(p => p.dead == false);
 
 const changeTurn = (io, room) => {
@@ -27,48 +32,49 @@ const changeTurn = (io, room) => {
 	if (index == players.length - 1) room.turn = players[0].player_id;
 	else room.turn = players[index + 1].player_id;
 
-	if (room.players[room.turn].character.id == 4) {
-		if (room.shuffled.length >= 3) room.choose_cards = room.shuffled.splice(room.shuffled.length - 3, 3);
-		else {
-			checkShuffled(io, room);
-			room.choose_cards = room.shuffled.splice(room.shuffled.length - 3, 3);
-		}
+	// if (room.players[room.turn].character.id == 4) {
+	// 	if (room.shuffled.length >= 3) room.choose_cards = room.shuffled.splice(room.shuffled.length - 3, 3);
+	// 	else {
+	// 		checkShuffled(io, room);
+	// 		room.choose_cards = room.shuffled.splice(room.shuffled.length - 3, 3);
+	// 	}
 
-		room.choose_cards.forEach(card => room.destroyed.push(card));
+	// 	room.choose_cards.forEach(card => room.destroyed.push(card));
 
-		io.to(room.players[room.turn].user.id).emit('choose-from-three', room.turn, room.choose_cards);
-	} else if (room.players[room.turn].character.id == 6) {
-		if (room.destroyed_choosed) {
-			room.players[room.turn].cards.push(room.destroyed.splice(room.destroyed.length - 1, 1)[0]);
-			setTimeout(() => io.to(room.id).emit('splice-destroyed', room.turn), 600);
-			sendNewCards(io, room, room.turn, 1);
-		} else sendNewCards(io, room, room.turn, 2);
-	} else if (room.players[room.turn].character.id == 12) {
-		if (room.player_choosed == -1 || room.player_choosed == room.turn) sendNewCards(io, room, room.turn, 2);
-		else {
-			const choosedPlayer = room.players[getActivePlayers(room)[room.player_choosed].player_id];
-			const randomCardIndex = Math.floor(Math.random() * choosedPlayer.cards.length);
-			const randomCard = choosedPlayer.cards.splice(randomCardIndex, 1)[0];
+	// 	io.to(room.players[room.turn].user.id).emit('choose-from-three', room.turn, room.choose_cards);
+	// } else if (room.players[room.turn].character.id == 6) {
+	// 	if (room.destroyed_choosed) {
+	// 		room.players[room.turn].cards.push(room.destroyed.splice(room.destroyed.length - 1, 1)[0]);
+	// 		setTimeout(() => io.to(room.id).emit('splice-destroyed', room.turn), 600);
+	// 		sendNewCards(io, room, room.turn, 1);
+	// 	} else sendNewCards(io, room, room.turn, 2);
+	// } else if (room.players[room.turn].character.id == 12) {
+	// 	if (room.player_choosed == -1 || room.player_choosed == room.turn) sendNewCards(io, room, room.turn, 2);
+	// 	else {
+	// 		const choosedPlayer = room.players[getActivePlayers(room)[room.player_choosed].player_id];
+	// 		const randomCardIndex = Math.floor(Math.random() * choosedPlayer.cards.length);
+	// 		const randomCard = choosedPlayer.cards.splice(randomCardIndex, 1)[0];
 
-			room.players[room.turn].cards.push(randomCard);
-			io.to(room.players[choosedPlayer.player_id].user.id).emit('player', room.players[choosedPlayer.player_id]);
-			setTimeout(() => io.to(room.id).emit('accept-card', getActivePlayers(room)[room.player_choosed].player_id, randomCard, randomCardIndex, room.turn, 'transfer'), 600);
+	// 		room.players[room.turn].cards.push(randomCard);
+	// 		io.to(room.players[choosedPlayer.player_id].user.id).emit('player', room.players[choosedPlayer.player_id]);
+	// 		setTimeout(() => io.to(room.id).emit('accept-card', getActivePlayers(room)[room.player_choosed].player_id, randomCard, randomCardIndex, room.turn, 'transfer'), 600);
 			
-			sendNewCards(io, room, room.turn, 1);
-		}
-	} else if (room.players[room.turn].character.id == 8) {
-		sendNewCards(io, room, room.turn, 1);
-		let checkCard = null;
-		if (room.shuffled.length >= 1) checkCard = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-		else {
-			checkShuffled(io, room);
-			checkCard = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-		}
+	// 		sendNewCards(io, room, room.turn, 1);
+	// 	}
+	// } else if (room.players[room.turn].character.id == 8) {
+	// 	sendNewCards(io, room, room.turn, 1);
+	// 	let checkCard = null;
+	// 	if (room.shuffled.length >= 1) checkCard = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+	// 	else {
+	// 		checkShuffled(io, room);
+	// 		checkCard = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+	// 	}
 
-		io.to(room.id).emit('show-card', checkCard);
-		room.players[room.turn].cards.push(checkCard);
-		if (checkCard.suit == 0 || checkCard.suit == 1) sendNewCards(io, room, room.turn, 1);
-	} else sendNewCards(io, room, room.turn, 2);
+	// 	io.to(room.id).emit('show-card', checkCard);
+	// 	room.players[room.turn].cards.push(checkCard);
+	// 	if (checkCard.suit == 0 || checkCard.suit == 1) sendNewCards(io, room, room.turn, 1);
+	// } else sendNewCards(io, room, room.turn, 2);
+	sendNewCards(io, room, room.turn, 2);
 
 	const count = [];
 	room.players.forEach(player => count.push(player.cards.length));
@@ -122,15 +128,16 @@ const sendWait = (io, room, player_id, time, new_turn) => {
 
 						room.destroyed.push(room.check_card);
 		
-						if (room.players[player_id].character.id == 15) {
-							if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-							else {
-								checkShuffled(io, room);
-								room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-							}
-							room.destroyed.push(room.second_check_card);
-							io.to(room.id).emit('check-card', player_id, room.check_card, room.second_check_card);
-						} else io.to(room.id).emit('check-card', player_id, room.check_card, null);
+						// if (room.players[player_id].character.id == 15) {
+						// 	if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+						// 	else {
+						// 		checkShuffled(io, room);
+						// 		room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+						// 	}
+						// 	room.destroyed.push(room.second_check_card);
+						// 	io.to(room.id).emit('check-card', player_id, room.check_card, room.second_check_card);
+						// } else io.to(room.id).emit('check-card', player_id, room.check_card, null);
+						io.to(room.id).emit('check-card', player_id, room.check_card, null);
 						
 						setTimeout(() => {
 							if (room.check_card.suit == 3 && room.check_card.rank >= 2 && room.check_card.rank <= 9) {
@@ -179,15 +186,16 @@ const sendWait = (io, room, player_id, time, new_turn) => {
 						}
 						room.destroyed.push(room.check_card);
 		
-						if (room.players[player_id].character.id == 15) {
-							if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-							else {
-								checkShuffled(io, room);
-								room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-							}
-							room.destroyed.push(room.second_check_card);
-							io.to(room.id).emit('check-card', player_id, room.check_card, room.second_check_card);
-						} else io.to(room.id).emit('check-card', player_id, room.check_card, null);
+						// if (room.players[player_id].character.id == 15) {
+						// 	if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+						// 	else {
+						// 		checkShuffled(io, room);
+						// 		room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+						// 	}
+						// 	room.destroyed.push(room.second_check_card);
+						// 	io.to(room.id).emit('check-card', player_id, room.check_card, room.second_check_card);
+						// } else io.to(room.id).emit('check-card', player_id, room.check_card, null);
+						io.to(room.id).emit('check-card', player_id, room.check_card, null);
 		
 						if (room.check_card.suit != 1) io.to(player.user.id).emit('turn-end');
 						else {
@@ -238,40 +246,43 @@ const sendDistances = (io, room, player, modifier=null) => {
 			if (index < player_index + divide) distances.push(Math.abs(player_index - index));
 			else distances.push(Math.abs(index - getActivePlayers(room).length) + player_index);
 
-			if (player.character.id == 0) distances[distances.length - 1] += 1;
+			// if (player.character.id == 0) distances[distances.length - 1] += 1;
 		});
 	} else {
 		getActivePlayers(room).forEach((player, index) => {
 			if (index > player_index - divide) distances.push(Math.abs(player_index - index));
 			else distances.push(Math.abs(index) + Math.abs(getActivePlayers(room).length - player_index));
 			
-			if (player.character.id == 0) distances[distances.length - 1] += 1;
+			// if (player.character.id == 0) distances[distances.length - 1] += 1;
 		});
 	}
 
 	if (modifier) distances.forEach((distance, index) => distances[index] = modifier(distance, index));
-	if (player.character.id == 3) distances.forEach((distance, index) => distances[index] = distance > 1 ? distance - 1 : distance);
+	// if (player.character.id == 3) distances.forEach((distance, index) => distances[index] = distance > 1 ? distance - 1 : distance);
 
 	room.players[player.player_id].distances = distances;
 	io.to(player.user.id).emit('distances', distances);
 }
 
 const kickPlayer = (io, room, player) => {
-	const foundPlayer = room.players.findIndex(player => player.character.id == 10);
+	// const foundPlayer = room.players.findIndex(player => player.character.id == 10);
 
-	if (~foundPlayer) {
-		player.cards.forEach((card, index) => {
-			room.players[foundPlayer].cards.push(room.players[player.player_id].cards[index]);
-		});
-		player.modifiers.forEach((modifier, index) => {
-			room.players[foundPlayer].cards.push(room.players[player.player_id].modifiers[index]);
-		});
-		io.to(room.players[foundPlayer].user.id).emit('player', room.players[foundPlayer]);
-	} else {
-		player.cards.forEach((card, index) => {
-			room.destroyed.push(room.players[player.player_id].cards[index]);
-		});
-	}
+	// if (~foundPlayer) {
+	// 	player.cards.forEach((card, index) => {
+	// 		room.players[foundPlayer].cards.push(room.players[player.player_id].cards[index]);
+	// 	});
+	// 	player.modifiers.forEach((modifier, index) => {
+	// 		room.players[foundPlayer].cards.push(room.players[player.player_id].modifiers[index]);
+	// 	});
+	// 	io.to(room.players[foundPlayer].user.id).emit('player', room.players[foundPlayer]);
+	// } else {
+	// 	player.cards.forEach((card, index) => {
+	// 		room.destroyed.push(room.players[player.player_id].cards[index]);
+	// 	});
+	// }
+	player.cards.forEach((card, index) => {
+		room.destroyed.push(room.players[player.player_id].cards[index]);
+	});
 
 	const count = [];
 	room.players.forEach(player => count.push(player.cards.length));
@@ -297,25 +308,29 @@ const kickPlayer = (io, room, player) => {
 		const results = room.users.map(player => { return { username: player.username, photo: player.photo, rating: player.rating } });
 
 		room.users.forEach((player, index) => {
-			results[index].result = 0;
 			if (end == 0) {
-				if (player.role == 0) results[index].result = 3;
-				else if (player.role == 1) {
-					if (player.dead) results[index].result = 2;
+				if (room.players[index].role == 0) results[index].result = 3;
+				else if (room.players[index].role == 1) {
+					if (room.players[index].dead) results[index].result = 2;
 					else results[index].result = 3;
-				} else if (player.role == 2) results[index].result = -2;
-				else if (player.role == 3) results[index].result = -2;
+				} else if (room.players[index].role == 2) results[index].result = -2;
+				else if (room.players[index].role == 3) results[index].result = -2;
 			} else if (end == 2) {
-				if (player.role == 0) results[index].result = -2;
-				else if (player.role == 1) results[index].result = -2;
-				else if (player.role == 2) results[index].result = 3;
-				else if (player.role == 3) results[index].result = -2;
+				if (room.players[index].role == 0) results[index].result = -2;
+				else if (room.players[index].role == 1) results[index].result = -2;
+				else if (room.players[index].role == 2) results[index].result = 3;
+				else if (room.players[index].role == 3) results[index].result = -2;
 			} else if (end == 3) {
-				if (player.role == 0) results[index].result = -2;
-				else if (player.role == 1) results[index].result = -2;
-				else if (player.role == 2) results[index].result = -2;
-				else if (player.role == 3) results[index].result = 3;
+				if (room.players[index].role == 0) results[index].result = -2;
+				else if (room.players[index].role == 1) results[index].result = -2;
+				else if (room.players[index].role == 2) results[index].result = -2;
+				else if (room.players[index].role == 3) results[index].result = 3;
 			}
+			if (results[index].rating < 2) results[index].result = 0;
+			selectUserInTable(db, `SELECT * FROM users WHERE socketId='${room.players[index].user.id}'`).then(user => {
+				user.rating += results[index].result;
+				writeUserInTable(db, 60, user);
+			});
 		});
 
 		io.to(room.id).emit('end-game', end, results);
@@ -328,19 +343,19 @@ const kickPlayer = (io, room, player) => {
 }
 
 const healthModifiers = (io, room) => {
-	if (room.players[room.wait].character.id == 2 && !room.botFlag) {
-		const randomCardIndex = Math.floor(Math.random() * room.players[room.turn].cards.length);
-		const randomCard = room.players[room.turn].cards[randomCardIndex];
+	// if (room.players[room.wait].character.id == 2 && !room.botFlag) {
+	// 	const randomCardIndex = Math.floor(Math.random() * room.players[room.turn].cards.length);
+	// 	const randomCard = room.players[room.turn].cards[randomCardIndex];
 
-		io.to(room.id).emit('accept-card', room.turn, randomCard, randomCardIndex, room.wait, 'transfer');
+	// 	io.to(room.id).emit('accept-card', room.turn, randomCard, randomCardIndex, room.wait, 'transfer');
 
-		room.players[room.wait].cards.push(randomCard);
-		room.players[room.turn].cards.splice(randomCardIndex, 1);
-		io.to(room.players[room.turn].user.id).emit('player', room.players[room.turn]);
-		io.to(room.players[room.wait].user.id).emit('player', room.players[room.wait]);
-	} else if (room.players[room.wait].character.id == 11) {
-		sendNewCards(io, room, room.players[room.wait].player_id, 1);
-	}
+	// 	room.players[room.wait].cards.push(randomCard);
+	// 	room.players[room.turn].cards.splice(randomCardIndex, 1);
+	// 	io.to(room.players[room.turn].user.id).emit('player', room.players[room.turn]);
+	// 	io.to(room.players[room.wait].user.id).emit('player', room.players[room.wait]);
+	// } else if (room.players[room.wait].character.id == 11) {
+	// 	sendNewCards(io, room, room.players[room.wait].player_id, 1);
+	// }
 
 	const count = [];
 	room.players.forEach(player => count.push(player.cards.length));
@@ -674,24 +689,24 @@ export const startGame = async (io, socket, room) => {
 	socket.on('choose-destroyed', (choose, sender, session) => {
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (!room.players[sender].dead) {
-			if (room.players[sender].character.id == 6) {
-				if (choose == false && room.destroyed.length == 0) return;
-				io.to(room.players[sender].user.id).emit('choose-destroyed', choose);
-				room.destroyed_choosed = choose;
-			}
+			// if (room.players[sender].character.id == 6) {
+			// 	if (choose == false && room.destroyed.length == 0) return;
+			// 	io.to(room.players[sender].user.id).emit('choose-destroyed', choose);
+			// 	room.destroyed_choosed = choose;
+			// }
 		}
 	});
 
 	socket.on('choose-player', (sender, session) => {
 		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[sender.player_id].gameId) return;
 		if (!room.players[sender].dead) {
-			if (room.players[sender].character.id == 12) {
-				if (room.player_choosed == -1) io.to(room.players[sender].user.id).emit('choose-player', ++room.player_choosed);
-				else {
-					if (room.player_choosed < getActivePlayers(room).length - 1) io.to(room.players[sender].user.id).emit('choose-player', ++room.player_choosed);
-					else io.to(room.players[sender].user.id).emit('choose-player', room.player_choosed = -1);
-				}
-			}
+			// if (room.players[sender].character.id == 12) {
+			// 	if (room.player_choosed == -1) io.to(room.players[sender].user.id).emit('choose-player', ++room.player_choosed);
+			// 	else {
+			// 		if (room.player_choosed < getActivePlayers(room).length - 1) io.to(room.players[sender].user.id).emit('choose-player', ++room.player_choosed);
+			// 		else io.to(room.players[sender].user.id).emit('choose-player', room.player_choosed = -1);
+			// 	}
+			// }
 		}
 	});
 
@@ -735,19 +750,21 @@ export const startGame = async (io, socket, room) => {
 					if (room.wait != room.turn) {
 						room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card });
 						if (card.card_id == 6) {
-							if (room.players[room.turn].character.id == 1) {
-								if (room.cancel_cards == 0) {
-									sendWait(io, room, room.wait, 30, false);
-									destroyCard(card_index);
-									room.cancel_cards++;
-								} else {
-									sendWait(io, room, room.turn, 60, true);
-									destroyCard(card_index);
-								}
-							} else {
-								sendWait(io, room, room.turn, 60, true);
-								destroyCard(card_index);
-							}
+							// if (room.players[room.turn].character.id == 1) {
+							// 	if (room.cancel_cards == 0) {
+							// 		sendWait(io, room, room.wait, 30, false);
+							// 		destroyCard(card_index);
+							// 		room.cancel_cards++;
+							// 	} else {
+							// 		sendWait(io, room, room.turn, 60, true);
+							// 		destroyCard(card_index);
+							// 	}
+							// } else {
+							// 	sendWait(io, room, room.turn, 60, true);
+							// 	destroyCard(card_index);
+							// }
+							sendWait(io, room, room.turn, 60, true);
+							destroyCard(card_index);
 						} else if (card.card_id == 9) {
 							if (sender.health == 1) {
 								sendWait(io, room, room.turn, 60, true);
@@ -763,31 +780,45 @@ export const startGame = async (io, socket, room) => {
 							}
 							room.destroyed.push(room.check_card);
 
-							if (room.players[sender.player_id].character.id == 15) {
-								if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-								else {
-									checkShuffled(io, room);
-									room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-								}
-								room.destroyed.push(room.second_check_card);
-								io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
-							} else {
-								io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
+							// if (room.players[sender.player_id].character.id == 15) {
+							// 	if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+							// 	else {
+							// 		checkShuffled(io, room);
+							// 		room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+							// 	}
+							// 	room.destroyed.push(room.second_check_card);
+							// 	io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
+							// } else {
+							// 	io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
 
 
-								if (room.check_card.suit == 1) sendWait(io, room, room.turn, 60, true);
-								else io.to(sender.user.id).emit('turn-end');
+							// 	if (room.check_card.suit == 1) sendWait(io, room, room.turn, 60, true);
+							// 	else io.to(sender.user.id).emit('turn-end');
 	
-								setTimeout(() => {
-									io.to(room.id).emit('destroy-modifier', room.players[sender.player_id].modifiers[mod_index], sender);
-									room.players[sender.player_id].modifiers.splice(mod_index, 1);
+							// 	setTimeout(() => {
+							// 		io.to(room.id).emit('destroy-modifier', room.players[sender.player_id].modifiers[mod_index], sender);
+							// 		room.players[sender.player_id].modifiers.splice(mod_index, 1);
 								
-									updateModifiers(room);
+							// 		updateModifiers(room);
 								
-									io.to(room.id).emit('table', { card_count: room.shuffled.length });
-								}, 800);
-								room.cancel_cards++;
-							}
+							// 		io.to(room.id).emit('table', { card_count: room.shuffled.length });
+							// 	}, 800);
+							// 	room.cancel_cards++;
+							// }
+							io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
+
+							if (room.check_card.suit == 1) sendWait(io, room, room.turn, 60, true);
+							else io.to(sender.user.id).emit('turn-end');
+
+							setTimeout(() => {
+								io.to(room.id).emit('destroy-modifier', room.players[sender.player_id].modifiers[mod_index], sender);
+								room.players[sender.player_id].modifiers.splice(mod_index, 1);
+							
+								updateModifiers(room);
+							
+								io.to(room.id).emit('table', { card_count: room.shuffled.length });
+							}, 800);
+							room.cancel_cards++;
 						}
 					} else {
 						if (card.modifier && player.player_id == sender.player_id) {
@@ -835,15 +866,16 @@ export const startGame = async (io, socket, room) => {
 
 								io.to(room.id).emit('table', { card_count: room.shuffled.length });
 				
-								if (room.players[sender.player_id].character.id == 15) {
-									if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-									else {
-										checkShuffled(io, room);
-										room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-									}
-									room.destroyed.push(room.second_check_card);
-									io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
-								} else io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
+								// if (room.players[sender.player_id].character.id == 15) {
+								// 	if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+								// 	else {
+								// 		checkShuffled(io, room);
+								// 		room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+								// 	}
+								// 	room.destroyed.push(room.second_check_card);
+								// 	io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
+								// } else io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
+								io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
 
 								const dynamite_index = room.players[player.player_id].modifiers.findIndex(item => item.title == card.title && item.rank == card.rank && item.suit == card.suit);
 								setTimeout(() => {
@@ -1082,7 +1114,8 @@ export const startGame = async (io, socket, room) => {
 							room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 						} else if (card.card_id == 5) {
 							if (room.players[sender.player_id].distances[player.player_id] <= room.players[sender.player_id].shootDistance) {
-								if (~room.players[sender.player_id].modifiers.findIndex(modifier => modifier.card_id == 1) || room.players[sender.player_id].character.id == 14) {
+								// if (~room.players[sender.player_id].modifiers.findIndex(modifier => modifier.card_id == 1) || room.players[sender.player_id].character.id == 14) {
+								if (~room.players[sender.player_id].modifiers.findIndex(modifier => modifier.card_id == 1)) {
 									room.cancel_cards = 0;
 									room.destroyed.push(room.players[sender.player_id].cards[card_index]);
 									io.to(room.id).emit('accept-card', sender.player_id, card, card_index, player.player_id, 'destroy');
@@ -1090,47 +1123,49 @@ export const startGame = async (io, socket, room) => {
 									io.to(room.players[sender.player_id].user.id).emit('player', room.players[sender.player_id]);
 									room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 									
-									if (player.character.id == 13) {
-										if (room.shuffled >= 1) room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-										else {
-											checkShuffled(io, room);
-											room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-										}
-										room.destroyed.push(room.check_card);
+									// if (player.character.id == 13) {
+									// 	if (room.shuffled >= 1) room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+									// 	else {
+									// 		checkShuffled(io, room);
+									// 		room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+									// 	}
+									// 	room.destroyed.push(room.check_card);
 						
-										if (room.players[sender.player_id].character.id == 15) {
-											if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-											else {
-												checkShuffled(io, room);
-												room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-											}
-											room.destroyed.push(room.second_check_card);
-											io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
-										} else io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
+									// 	if (room.players[sender.player_id].character.id == 15) {
+									// 		if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+									// 		else {
+									// 			checkShuffled(io, room);
+									// 			room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+									// 		}
+									// 		room.destroyed.push(room.second_check_card);
+									// 		io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
+									// 	} else io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
 						
-										if (room.check_card.suit != 1) { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});}
-									} else { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card}); }
+									// 	if (room.check_card.suit != 1) { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});}
+									// } else { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card}); }
+									sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 								} else if (destroyCard(card_index, true)) {
-									if (player.character.id == 13) {
-										if (room.shuffled >= 1) room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-										else {
-											checkShuffled(io, room);
-											room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-										}
-										room.destroyed.push(room.check_card);
+									// if (player.character.id == 13) {
+									// 	if (room.shuffled >= 1) room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+									// 	else {
+									// 		checkShuffled(io, room);
+									// 		room.check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+									// 	}
+									// 	room.destroyed.push(room.check_card);
 						
-										if (room.players[sender.player_id].character.id == 15) {
-											if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-											else {
-												checkShuffled(io, room);
-												room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
-											}
-											room.destroyed.push(room.second_check_card);
-											io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
-										} else io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
+									// 	if (room.players[sender.player_id].character.id == 15) {
+									// 		if (room.shuffled >= 1) room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+									// 		else {
+									// 			checkShuffled(io, room);
+									// 			room.second_check_card = room.shuffled.splice(room.shuffled.length - 1, 1)[0];
+									// 		}
+									// 		room.destroyed.push(room.second_check_card);
+									// 		io.to(room.id).emit('check-card', sender.player_id, room.check_card, room.second_check_card);
+									// 	} else io.to(room.id).emit('check-card', sender.player_id, room.check_card, null);
 										
-										if (room.check_card.suit != 1) { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});}
-									} else { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card}); }
+									// 	if (room.check_card.suit != 1) { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});}
+									// } else { sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card}); }
+									sendWait(io, room, player.player_id, 30, false); room.history[room.history.length - 1].push({ sender: sender.player_id, target: player.player_id, card: card});
 								}
 							}
 						}
@@ -1141,9 +1176,9 @@ export const startGame = async (io, socket, room) => {
 		} else io.to(sender.user.id).emit('decline-card', 'Invalid turn');
 
 		room.players.forEach(player => {
-			if (player.character.id == 7) {
-				if (player.cards.length == 0) sendNewCards(io, room, player.player_id, 1);
-			}
+			// if (player.character.id == 7) {
+			// 	if (player.cards.length == 0) sendNewCards(io, room, player.player_id, 1);
+			// }
 		});
 	});
 

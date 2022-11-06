@@ -274,18 +274,31 @@ io.on('connection', (socket) => {
 		});
 	});
 
-	socket.on('set-username', (username, session, wallet) => {
-		selectUserInTable(db, `SELECT * FROM users WHERE wallet='${wallet}' AND session='${session}' AND username=''`).then(user => {
+	socket.on('set-username', (username, session) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(user => {
 			if (username.length >= 3 && username.length <= 99) {
 				const english = /^[A-Za-z0-9]*$/;
 				if (english.test(username)) {
-					selectUserInTable(db, `SELECT * FROM users WHERE username='${username}'`, true, () => {
+					selectUserInTable(db, `SELECT * FROM users WHERE username='${username}' AND session<>'${session}'`, true, () => {
 						user.username = username;
 						writeUserInTable(db, 0, user);
 						socket.emit('accept-username');
 					}).then(() => socket.emit('decline-username', 1));
 				} else socket.emit('decline-username', 2);
 			} else socket.emit('decline-username', 0);
+		});
+	});
+
+	socket.on('set-photo', (photo, session) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(user => {
+			if (photo.includes('png')) {
+				user.photo = photo;
+				socket.emit('photo', photo);
+
+				const lobbyIndex = lobbies.findIndex(item => item.id == user.lobbyId);
+				if (~lobbyIndex) socket.emit('lobby', lobbies[lobbyIndex]);
+				writeUserInTable(db, 1, user);
+			}
 		});
 	});
 

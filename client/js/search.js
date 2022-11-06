@@ -28,7 +28,7 @@ socket.on('accept-game', lobby => {
 
 	lobby.players.forEach((player, index) => {
 		document.querySelector('.accept-game__players').innerHTML += `<div class="accept-game__player${ player.accepted ? ' accepted' : '' }"></div>`;
-		document.querySelectorAll('.accept-game__player')[index].style.backgroundImage = `url('./assets/img/lobby/accepted.svg'), url('./assets/photos/${player.photo}.png')`;
+		document.querySelectorAll('.accept-game__player')[index].style.backgroundImage = `url('./assets/img/lobby/accepted.svg'), url('${player.photo}')`;
 	});
 
 	document.querySelectorAll('.accept-game__button').forEach(element => element.addEventListener('click', () => {

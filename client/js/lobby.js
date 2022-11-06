@@ -63,6 +63,49 @@ const load = setTimeout(() => {
 	}
 }, 5000);
 
+var uploadField = document.querySelector('.edit__photo');
+
+uploadField.onchange = function() {
+    if (this.files[0].size > 524288){
+       alert("File is too big!");
+       this.value = "";
+    };
+};
+
+document.querySelector('.edit__send').addEventListener('click', () => {
+	if (document.querySelector('.edit__username').value != window.user.username) socket.emit('set-username', document.querySelector('.edit__username').value, session);
+	if (uploadField.files[0]) getBase64(uploadField.files[0]).then(data => socket.emit('set-photo', data, session));
+});
+
+document.querySelector('.edit__close').addEventListener('click', () => {
+	document.querySelector('.edit').style.display = 'none';
+});
+
+document.querySelectorAll('.profile__edit').forEach(element => element.addEventListener('click', () => {
+	document.querySelector('.edit').style.display = 'flex';
+}));
+
+function getBase64(file) {
+	return new Promise((resolve, reject) => {
+		let reader = new FileReader();
+		reader.readAsDataURL(file);
+		reader.onload = () => resolve(reader.result);
+	});
+ }
+
+socket.on('decline-username', reason => {
+	if (reason == 0) document.querySelector('.edit__username__error').textContent = 'Никнейм должен быть длиной от 3 до 99 символов';
+	else if (reason == 1) document.querySelector('.edit__username__error').textContent = 'Никнейм уже занят';
+	else if (reason == 2) document.querySelector('.edit__username__error').textContent = 'Можно использовать только латинский алфавит';
+});
+
+socket.on('photo', photo => {
+	document.querySelectorAll('.profile__image').forEach(element => {
+		window.user.photo = photo;
+		element.style.backgroundImage =	`url('${photo}')`;
+	});
+});
+
 
 document.querySelector('.error').addEventListener('click', () => {
 	localStorage.removeItem('session');
@@ -148,7 +191,7 @@ const displayFriends = (start, end, friends=null, mode=false, decline=false) => 
 		document.querySelectorAll('.player__invite')[index].style.display = 'block';
 		document.querySelectorAll('.lobby__friend .player__name')[index].textContent = friend.name;
 		document.querySelectorAll('.lobby__friend .player__rating > h2')[index].textContent = friend.rating;
-		document.querySelectorAll('.lobby__friend .player__photo')[index].src = `./assets/photos/${friend.photo}.png`;
+		document.querySelectorAll('.lobby__friend .player__photo')[index].src = friend.photo;
 		if (!mode) {
 			if (window.lobby && ~window.lobby.players.findIndex(item => item.gameId == friend.gameId) && document.querySelectorAll('.player__invite').length > 0) document.querySelectorAll('.player__invite')[index].style.display = 'none';
 			if (!friend.online) {
@@ -185,9 +228,11 @@ socket.on('profile', user => {
 		document.querySelectorAll('.profile__name').forEach(element => element.textContent = user.username);
 		document.querySelector('.lobby__profile__rating__number > h2').textContent = user.rating;
 
-		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('./assets/photos/${user.photo}.png')`);
-		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('./assets/photos/${user.photo}.png')`);
+		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('${user.photo}')`);
+		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('${user.photo}')`);
 		document.querySelector('.lobby__friends__invites').textContent = 'Friend requests ' + (user.requests.length < 99 ? user.requests.length : '99+');
+
+		document.querySelector('.edit__username').value = user.username;
 
 		if (user.characters.length <= 6) {
 			document.querySelector('.lobby__match__character__arrow:first-child').classList.add('disabled');
@@ -293,7 +338,7 @@ socket.on('lobby', lobby => {
 	document.querySelectorAll('.lobby__match .player').forEach(element => element.classList.add('inactive'));
 	lobby.players.forEach((player, index) => {
 		document.querySelector('.lobby__match .player.inactive').classList.remove('inactive');
-		document.querySelectorAll('.lobby__player .player__photo')[index].src = `./assets/photos/${player.photo}.png`;
+		document.querySelectorAll('.lobby__player .player__photo')[index].src = player.photo;
 		document.querySelectorAll('.lobby__player .player__name')[index].textContent = player.username;
 		document.querySelectorAll('.lobby__player .player__rating h2')[index].textContent = player.rating;
 		if (player.online) document.querySelectorAll('.lobby__match .lobby__player')[index].classList.remove('disabled');

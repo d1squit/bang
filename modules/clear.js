@@ -13,9 +13,9 @@ db.serialize(() => {
 	db.run(`CREATE TABLE \`users\` (
 		\`wallet\` TEXT(42) NOT NULL DEFAULT '',
 		\`username\` TEXT(99) NOT NULL DEFAULT '',
-		\`photo\` TEXT(48) NOT NULL DEFAULT 'b0f50496833d799ea7b4a0397943ae18fb398275c283d652',
-		\`rating\` INT NOT NULL DEFAULT 0,
-		\`tournament\` INT NOT NULL DEFAULT 0,
+		\`photo\` TEXT NOT NULL DEFAULT '',
+		\`rating\` INT NOT NULL DEFAULT 50,
+		\`tournament\` INT NOT NULL DEFAULT 50,
 		\`socketId\` TEXT(20) NOT NULL DEFAULT '',
 		\`session\` TEXT(32) NOT NULL DEFAULT '',
 		\`gameId\` TEXT(32) NOT NULL DEFAULT '',

@@ -768,9 +768,9 @@ socket.on('end-game', (end, results) => {
 	results.forEach((player, index) => {
 		document.querySelector('.result__users').innerHTML += `
 		<div class="result__user">
-			<img src="./assets/photos/${player.photo}.png" alt="" class="result__user__photo">
+			<img src="${player.photo}" alt="" class="result__user__photo">
 			<div class="result__user__name">${player.username}</div>
-			<div class="result__user__rating"><img src="./assets/img/trophy-icon.svg" alt="" class="result__trophy-icon">${player.rating}<span>${player.result}</span></div>
+			<div class="result__user__rating"><img src="./assets/img/trophy-icon.svg" alt="" class="result__trophy-icon">${player.rating}<span>${player.result > 0 ? '+ ' + player.result : '- ' + Math.abs(player.result)}</span></div>
 		</div>`;
 	});
 
@@ -787,7 +787,7 @@ socket.on('kick', player => {
 	}
 	boardPlayers[player.player_id].dead = true;
 	info.querySelector(`.player-info:nth-child(${player.player_id + 1})`).classList.add('dead');
-	try { board.removeChild(document.querySelector(`.player[player-id='${player.player_id}']`)); } catch (e) {};
+	try { board.removeChild(document.querySelector(`.player[player-id='${player.player_id}']`)); } catch (e) {console.log(e, `.player[player-id='${player.player_id}']`)};
 	board.setAttribute('player-count', board.getAttribute('player-count') - 1);
 });
 

@@ -36,7 +36,7 @@ const deleteAllCookies = () => {
 
 const shortProfile = (user) => {
 	return `<div class="short-profile">
-				<img src="./assets/photos/${user.photo}.png" class="short-profile__photo">
+				<img src="${user.photo}" class="short-profile__photo">
 				<div class="short-profile__right">
 					<h2 class="short-profile__username">${user.username}</h2>
 					<h2 class="short-profile__rating"><img src="./assets/img/rating/trophy-icon.svg" class="short-profile__trophy">${user.rating}</h2>
