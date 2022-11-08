@@ -130,14 +130,6 @@ select:active {
 	border: 1px solid black;
 }
 
-img {
-	pointer-events: none;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
-}
-
 a {
 	color: #000;
 	text-decoration: none;

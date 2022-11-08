@@ -36,10 +36,17 @@ const deleteAllCookies = () => {
 
 const shortProfile = (user) => {
 	return `<div class="short-profile">
-				<img src="${user.photo}" class="short-profile__photo">
+				<img src="./assets/photos/${user.photo}.png" class="short-profile__photo">
 				<div class="short-profile__right">
 					<h2 class="short-profile__username">${user.username}</h2>
 					<h2 class="short-profile__rating"><img src="./assets/img/rating/trophy-icon.svg" class="short-profile__trophy">${user.rating}</h2>
 				</div>
 			</div>`;
 }
+
+const langSwitch = document.querySelector('.header__social.lang');
+
+langSwitch.addEventListener('click', () => {
+	if (localStorage.getItem('lang') == 'en') { localStorage.setItem('lang', 'ru'); langSwitch.textContent = 'ru'; translate('ru'); }
+	else if (localStorage.getItem('lang') == 'ru') { localStorage.setItem('lang', 'en'); langSwitch.textContent = 'en'; translate('en'); }
+});

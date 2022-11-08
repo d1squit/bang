@@ -53,15 +53,17 @@ if (!session) window.location.href = '/home';
 let socket = io.connect('', { query: `session=${session}` });
 
 const load = setTimeout(() => {
-	if (getCookie('reload') == 'false') {
-		setCookie('reload', 'true');
-		window.location.reload();
-	} else {
-		setCookie('session', 'null');
-		document.cookie.split(";").forEach((c) => { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
-		window.location.reload();
-	}
-}, 5000);
+	setCookie('reload', 'true');
+	window.location.reload();
+	// if (getCookie('reload') == 'false') {
+	// 	setCookie('reload', 'true');
+	// 	window.location.reload();
+	// } else {
+	// 	setCookie('session', 'null');
+	// 	document.cookie.split(";").forEach((c) => { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
+	// 	window.location.reload();
+	// }
+}, 3000);
 
 var uploadField = document.querySelector('.edit__photo');
 
@@ -102,7 +104,7 @@ socket.on('decline-username', reason => {
 socket.on('photo', photo => {
 	document.querySelectorAll('.profile__image').forEach(element => {
 		window.user.photo = photo;
-		element.style.backgroundImage =	`url('${photo}')`;
+		element.style.backgroundImage =	`url('../assets/photos/${photo}.png')`;
 	});
 });
 
@@ -141,15 +143,21 @@ socket.on('users', users => {
 socket.on('requests', requests => {
 	window.user.requests = requests;
 	document.querySelector('.lobby__friends__invites').textContent = 'Friend requests ' + (window.user.requests.length < 99 ? window.user.requests.length : '99+');
+	document.querySelector('.lobby__friends__invites').classList.remove('close');
 });
 
+
 document.querySelector('.lobby__friends__invites').addEventListener('click', () => {
-	if (document.querySelector('.lobby__friends__invites').textContent.includes('request')) {
+	if (document.querySelector('.lobby__friends__invites').textContent.includes(lang[localStorage.getItem('lang')].lobby['friend-requests-default'])) {
 		displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6, window.user.requests, false, true);
-		document.querySelector('.lobby__friends__invites').textContent = 'Close';
+		lang[localStorage.getItem('lang')].lobby['friend-requests'] = 'Close';
+		document.querySelector('.lobby__friends__invites').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests-close'];
+		document.querySelector('.lobby__friends__invites').classList.add('close');
 	} else {
 		displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6);
-		document.querySelector('.lobby__friends__invites').textContent = 'Friend requests ' + (window.user.requests.length < 99 ? window.user.requests.length : '99+');
+		lang[localStorage.getItem('lang')].lobby['friend-requests'] = lang[localStorage.getItem('lang')].lobby['friend-requests-default'];
+		document.querySelector('.lobby__friends__invites').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests'] + ' ' + (window.user.requests.length < 99 ? window.user.requests.length : '99+');
+		document.querySelector('.lobby__friends__invites').classList.remove('close');
 	}
 });
 
@@ -191,7 +199,7 @@ const displayFriends = (start, end, friends=null, mode=false, decline=false) => 
 		document.querySelectorAll('.player__invite')[index].style.display = 'block';
 		document.querySelectorAll('.lobby__friend .player__name')[index].textContent = friend.name;
 		document.querySelectorAll('.lobby__friend .player__rating > h2')[index].textContent = friend.rating;
-		document.querySelectorAll('.lobby__friend .player__photo')[index].src = friend.photo;
+		document.querySelectorAll('.lobby__friend .player__photo')[index].src = `./assets/photos/${friend.photo}.png`;
 		if (!mode) {
 			if (window.lobby && ~window.lobby.players.findIndex(item => item.gameId == friend.gameId) && document.querySelectorAll('.player__invite').length > 0) document.querySelectorAll('.player__invite')[index].style.display = 'none';
 			if (!friend.online) {
@@ -219,6 +227,7 @@ const displayFriends = (start, end, friends=null, mode=false, decline=false) => 
 }
 
 socket.on('profile', user => {
+	console.log(user)
 	clearTimeout(load);
 
 	const createLobby = (user) => {
@@ -228,9 +237,10 @@ socket.on('profile', user => {
 		document.querySelectorAll('.profile__name').forEach(element => element.textContent = user.username);
 		document.querySelector('.lobby__profile__rating__number > h2').textContent = user.rating;
 
-		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('${user.photo}')`);
-		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('${user.photo}')`);
-		document.querySelector('.lobby__friends__invites').textContent = 'Friend requests ' + (user.requests.length < 99 ? user.requests.length : '99+');
+		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('../assets/photos/${user.photo}')`);
+		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('../assets/photos/${user.photo}.png')`);
+		document.querySelector('.lobby__friends__invites').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests'] + ' ' + (user.requests.length < 99 ? user.requests.length : '99+');
+		document.querySelector('.lobby__friends__invites').classList.remove('close');
 
 		document.querySelector('.edit__username').value = user.username;
 
@@ -338,7 +348,7 @@ socket.on('lobby', lobby => {
 	document.querySelectorAll('.lobby__match .player').forEach(element => element.classList.add('inactive'));
 	lobby.players.forEach((player, index) => {
 		document.querySelector('.lobby__match .player.inactive').classList.remove('inactive');
-		document.querySelectorAll('.lobby__player .player__photo')[index].src = player.photo;
+		document.querySelectorAll('.lobby__player .player__photo')[index].src = `./assets/photos/${player.photo}.png`;
 		document.querySelectorAll('.lobby__player .player__name')[index].textContent = player.username;
 		document.querySelectorAll('.lobby__player .player__rating h2')[index].textContent = player.rating;
 		if (player.online) document.querySelectorAll('.lobby__match .lobby__player')[index].classList.remove('disabled');

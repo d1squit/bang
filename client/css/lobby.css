@@ -726,3 +726,7 @@ main {
 ::-webkit-file-upload-button {
 	display: none;
 }
+
+.wrapper {
+	min-width: 1475px;
+}

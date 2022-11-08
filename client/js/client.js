@@ -774,7 +774,7 @@ socket.on('end-game', (end, results) => {
 	results.forEach((player, index) => {
 		document.querySelector('.result__users').innerHTML += `
 		<div class="result__user">
-			<img src="${player.photo}" alt="" class="result__user__photo">
+			<img src="./assets/photos/${player.photo}.png" alt="" class="result__user__photo">
 			<div class="result__user__name">${player.username}</div>
 			<div class="result__user__rating"><img src="./assets/img/trophy-icon.svg" alt="" class="result__trophy-icon">${player.rating}<span>${player.result > 0 ? '+ ' + player.result : '- ' + Math.abs(player.result)}</span></div>
 		</div>`;

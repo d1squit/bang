@@ -266,6 +266,7 @@ html, body {
 .wrapper {
 	background-image: url('../../assets/img/game-background.png');
 	background-size: cover;
+	min-width: 1475px;
 }
 
 .__container {

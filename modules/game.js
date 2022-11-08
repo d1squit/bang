@@ -239,7 +239,7 @@ const sendWait = (io, room, player_id, time, new_turn) => {
 		room.timeout.time--;
 		interval--;
 		if (room.botFlag) clearInterval(room.timeout.interval);
-	}, 1000);
+	}, 10000);
 }
 
 const sendDistances = (io, room, player, modifier=null) => {
@@ -412,7 +412,7 @@ export const initGame = (io, socket, room) => {
 	} else {
 		room.shuffled[room.shuffled.length - 1] = new MustangCard(3, 6);
 		// shuffle(roles).forEach((role, index) => {
-		[3, 3, 0].forEach((role, index) => {
+		roles.forEach((role, index) => {
 			const character_id = index;
 			room.turn = 0;
 			const player = new Player(character_id, { name: room.users[index].username, rating: room.users[index].rating, photo: room.users[index].photo, gameId: room.users[index].gameId, id: room.users[index].socketId }, index, characters[character_id].health, role, [], []);

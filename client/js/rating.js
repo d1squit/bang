@@ -23,7 +23,7 @@ const drawPage = (users) => {
 
 	users.slice(page * count, page * count + count).forEach((user, index) => {
 		leftTable.querySelectorAll('.number')[index].textContent = `#${page * count + index + 1}.`;
-		leftTable.querySelectorAll('.photo')[index].innerHTML = `<img src="${user.photo}">`;
+		leftTable.querySelectorAll('.photo')[index].innerHTML = `<img src="./assets/photos/${user.photo}.png">`;
 		leftTable.querySelectorAll('.username')[index].textContent = user.username;
 		leftTable.querySelectorAll('.rating')[index].innerHTML = `<img src="./assets/img/rating/trophy-icon.svg" alt="" class="trophy">${tournament ? user.tournament : user.rating}`;
 		leftTable.querySelectorAll('.prize')[index].innerHTML = `<div class="price">${300}</div><div class="symbol">$</div></div>`;
@@ -34,7 +34,7 @@ const drawPage = (users) => {
 
 	users.slice(page * count + count, page * count + 2 * count).forEach((user, index) => {
 		rightTable.querySelectorAll('.number')[index].textContent = `#${page * count + index + 1 + count}.`;
-		rightTable.querySelectorAll('.photo')[index].innerHTML = `<img src="${user.photo}">`;
+		rightTable.querySelectorAll('.photo')[index].innerHTML = `<img src="./assets/photos/${user.photo}.png">`;
 		rightTable.querySelectorAll('.username')[index].textContent = user.username;
 		rightTable.querySelectorAll('.rating')[index].innerHTML = `<img src="./assets/img/rating/trophy-icon.svg" alt="" class="trophy">${tournament ? user.tournament : user.rating}`;
 		rightTable.querySelectorAll('.prize')[index].innerHTML = `<div class="price">${300}</div><div class="symbol">$</div></div>`;

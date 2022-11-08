@@ -188,3 +188,19 @@
 	color: #FFF4E5;
 	cursor: pointer;
 }
+
+.header__social__image, .header__social {
+	cursor: pointer;
+}
+
+.header__social.lang {
+	background-image: url('../assets/img/header-social-empty.svg');
+	background-size: cover;
+	width: 40px;
+	height: 40px;
+	font-size: 19px;
+	line-height: 28px;
+	letter-spacing: 1.5px;
+	color: #FFE3BD;
+	text-transform: capitalize;
+}

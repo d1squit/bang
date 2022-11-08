@@ -10,11 +10,12 @@ let db = new sqlite3.Database('./bang.db', sqlite3.OPEN_READWRITE, (err) => { if
 
 export class Lobby {
 	constructor (players, rating) {
-		this.players = [players];
+		this.players = players ? [players] : [];
 		this.average = { min: rating - 50, max: rating + 50 };
 		this.id = crypto.randomBytes(16).toString("hex");
 		this.accepted = [];
 		this.interval = null;
+		this.parties = 1;
 	}
 
 	static searchLobby = (socket) => {
@@ -39,7 +40,7 @@ export class Lobby {
 				
 				for (let i = 0; i < this.players.length; i++) {
 					if (Lobby.lobbies[lobby].players.length < 6) {
-						Lobby.lobbies[lobby].addPlayer(this.players[i], true);
+						Lobby.lobbies[lobby].addPlayer(this.players[i], Lobby.lobbies[lobby].parties, true);
 						this.players.splice(i, 1); i--;
 					} else { unionBreak = true; break; }
 				}
@@ -69,9 +70,10 @@ export class Lobby {
 		}; return false;
 	}
 
-	addPlayer = (socket, setAverage=true) => {
+	addPlayer = (socket, party, setAverage=true) => {
 		if (this.players.length < 6) {
 			this.players.push(socket);
+			this.players[this.players.length - 1].party = party;
 			if (setAverage) {
 				const average =  Math.round(this.players.map(player => player.rating).reduce((sum, a) => sum + a, 0) / this.players.length);
 				this.average = { min: average - 50, max: average + 50 };
@@ -110,7 +112,6 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 			user.socketId = null;
 			writeUserInTable(db, 12, user);
 		});
-		fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
 	});
 
 	socket.on('get-profile', (session, ip) => {
@@ -142,13 +143,12 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 						if (~playerIndex) io.to(users[playerIndex].socketId).emit('lobby-state', user.gameId, true);
 					});
 				} else {
-					lobbies.push(new Lobby({ username: user.username, photo: user.photo, rating: user.rating, gameId: user.gameId, online: Boolean(user.socketId) }, user.rating));
+					lobbies.push(new Lobby({ username: user.username, photo: user.photo, rating: user.rating, gameId: user.gameId, online: Boolean(user.socketId), party: 0 }, user.rating));
 					user.lobbyId = lobbies[lobbies.length - 1].id;
 					socket.emit('lobby', lobbies[lobbies.length - 1]);
 				}
 
 				writeUserInTable(db, 14, user);
-				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
 			});
 		});
 	});
@@ -271,6 +271,8 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 							const friendIndex = users.findIndex(item => item.gameId == friendId);
 							if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', target.gameId, true);
 						});
+
+						console.log(sender.friends)
 					
 						io.to(sender.socketId).emit('profile', {
 							username: sender.username,
@@ -324,7 +326,7 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 									});
 								});
 							}
-							lobbies.push(new Lobby({ username: sender.username, photo: sender.photo, rating: sender.rating, gameId: sender.gameId, online: Boolean(sender.socketId) }, sender.rating));
+							lobbies.push(new Lobby({ username: sender.username, photo: sender.photo, rating: sender.rating, gameId: sender.gameId, online: Boolean(sender.socketId), party: 0 }, sender.rating));
 							sender.lobbyId = lobbies[lobbies.length - 1].id;
 							io.to(sender.socketId).emit('lobby', lobbies[lobbies.length - 1]);
 						}
@@ -340,7 +342,7 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 									});
 								});
 							}
-							lobbies.push(new Lobby({ username: target.username, photo: target.photo, rating: target.rating, gameId: target.gameId, online: Boolean(target.socketId) }, target.rating));
+							lobbies.push(new Lobby({ username: target.username, photo: target.photo, rating: target.rating, gameId: target.gameId, online: Boolean(target.socketId), party: 0 }, target.rating));
 							target.lobbyId = lobbies[lobbies.length - 1].id;
 							io.to(target.socketId).emit('lobby', lobbies[lobbies.length - 1]);
 							io.to(sender.socketId).emit('lobby', lobbies[lobbyIndex]);
@@ -369,9 +371,12 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 			selectUserInTable(db, `SELECT * FROM users WHERE socketId='${socket.id}' AND ban=0`).then(target => {
 				const inviteIndex = sender.invites.findIndex(item => item == inviteId);
 				if (~inviteIndex) {
+					let lobbyIndex = lobbies.findIndex(item => item.id == sender.lobbyId);
+					if (~lobbyIndex && ~lobbies[lobbyIndex].players.findIndex(item => item.gameId == target.gameId)) return;
+
+
 					io.to(target.socketId).emit('invite-next');
 					sender.invites.splice(inviteIndex, 1);
-					writeUserInTable(db, 21, sender, target);
 				
 					const oldLobbyIndex = lobbies.findIndex(item => item.id == target.lobbyId);
 					if (~oldLobbyIndex) {
@@ -387,20 +392,25 @@ export const initializeLobby = (io, socket, users, lobbies) => {
 						}
 					}
 				
-					const lobbyIndex = lobbies.findIndex(item => item.id == sender.lobbyId);
+					lobbyIndex = lobbies.findIndex(item => item.id == sender.lobbyId);
 					if (~lobbyIndex) {
 						target.lobbyId = lobbies[lobbyIndex].id;
 						const targetObject = { username: target.username, photo: target.photo, rating: target.rating, gameId: target.gameId, online: Boolean(target.socketId) };
 						io.to(targetObject.socketId).emit('not-ready');
-						lobbies[lobbyIndex].addPlayer(targetObject);
+
+						const senderIndex = lobbies[lobbyIndex].players.findIndex(player => player.gameId == senderId);
+						if (~senderIndex) lobbies[lobbyIndex].addPlayer(targetObject, lobbies[lobbyIndex].players[senderIndex].party);
+
+						sender.lobbyId = lobbies[lobbyIndex].id;
+
 						lobbies[lobbyIndex].players.forEach(player => {
 							selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
 								io.to(user.socketId).emit('lobby', lobbies[lobbyIndex]);
 							});
 						});
-						fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
 					}
 				}
+				writeUserInTable(db, 21, sender, target);
 			});
 		});
 	});

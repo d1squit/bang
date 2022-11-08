@@ -58,7 +58,6 @@ app.use(cookieParser());
 const nonceList = {};
 
 app.get("/nonce", (request, response) => {
-	console.log(nonceList)
 	const { walletAddress } = request.query;
 	const nonce = String(Math.floor(Math.random() * 10000));
 	nonceList[walletAddress] = nonce;
@@ -148,7 +147,6 @@ const createRoom = (players, botFlag = false) => {
 		Promise.all(promises).then(users => {
 			users.forEach(user => {
 				let socket = Array.from(io.sockets.sockets).find(item => item[0] == user.socketId);
-				console.log(1, socket)
 				if (socket) socket = socket[1]; else return;
 				
 				if (user.socketId != 'bot') socket.join(room.id);
@@ -196,7 +194,6 @@ selectUserInTable(db, 'SELECT * FROM users', false).then(users => {
 
 process.on("SIGINT", () => {
 	db.run(`DELETE FROM users WHERE username=''`);
-	fs.writeFile('./search.json', JSON.stringify([], null, '\t'), () => {});
 	selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
 		users.forEach(user => {
 			user.socketId = null;
@@ -246,7 +243,6 @@ io.on('connection', (socket) => {
 
 			writeUserInTable(db, 2, user);
 		});
-		fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 	}
 	
 	if (socket.handshake.query.extra == 'get-rating') {
@@ -256,7 +252,6 @@ io.on('connection', (socket) => {
 	}
 
 	socket.on('session', (wallet, flag) => {
-		console.log(wallet)
 		selectUserInTable(db, `SELECT * FROM users WHERE wallet='${wallet}'`, true, () => {
 			if (ethereumAddress.isAddress(wallet)) {
 				const session = crypto.randomBytes(16).toString("hex");
@@ -292,11 +287,22 @@ io.on('connection', (socket) => {
 	socket.on('set-photo', (photo, session) => {
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(user => {
 			if (photo.includes('png')) {
-				user.photo = photo;
-				socket.emit('photo', photo);
+				fs.rm(`./client/assets/photos/${user.photo}.png`, () => {});
+
+				const base64Data = photo.replace(/^data:image\/png;base64,/, '');
+				const url = crypto.randomBytes(24).toString("hex");
+				fs.writeFile(`./client/assets/photos/${url}.png`, base64Data, 'base64', err => console.log(err));
+				user.photo = url;
+				socket.emit('photo', url);
 
 				const lobbyIndex = lobbies.findIndex(item => item.id == user.lobbyId);
-				if (~lobbyIndex) socket.emit('lobby', lobbies[lobbyIndex]);
+				if (~lobbyIndex) {
+					const playerIndex = lobbies[lobbyIndex].players.findIndex(item => item.gameId == user.gameId);
+					if (~playerIndex) {
+						lobbies[lobbyIndex].players[playerIndex].photo = url;
+						socket.emit('lobby', lobbies[lobbyIndex]);
+					}
+				}
 				writeUserInTable(db, 1, user);
 			}
 		});
@@ -324,8 +330,6 @@ io.on('connection', (socket) => {
 				}
 
 				socket.emit('search-start');
-				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
-				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 			} else socket.emit('ready-decline');
 		});
 	});
@@ -338,8 +342,6 @@ io.on('connection', (socket) => {
 				if (~playerIndex) lobbies[lobbyIndex].players[playerIndex].search = false;
 
 				socket.emit('search-end');
-				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
-				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 			}
 		});
 	});
@@ -351,29 +353,42 @@ io.on('connection', (socket) => {
 				const playerIndex = lobbies[lobbyIndex].players.findIndex(player => player.gameId == id);
 				if (~playerIndex) lobbies[lobbyIndex].players[playerIndex].ready = true;
 
-				if (lobbies[lobbyIndex].players.every(item => item.search)) {
+				if (lobbies[lobbyIndex].players.every(item => item.search) && lobbies[lobbyIndex].players.every(item => item.ready) && !~searchLobbies.findIndex(item => item.id == lobbies[lobbyIndex].id)) {
 					searchLobbies.push(Object.assign({}, lobbies[lobbyIndex]));
+					lobbies.splice(lobbyIndex, 1);
 				}
-
-				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
-				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 			} else socket.emit('ready-decline');
 		});
 	});
 
 	socket.on('not-ready', (id, session) => {
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`).then(user => {
-			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
+			const lobbyIndex = searchLobbies.findIndex(item => item.id == user.lobbyId);
 			if (~lobbyIndex) {
-				const playerIndex = lobbies[lobbyIndex].players.findIndex(player => player.gameId == id);
-				if (~playerIndex) lobbies[lobbyIndex].players[playerIndex].ready = false;
-
-				const searchLobbyIndex = searchLobbies.findIndex(item => item.id == lobbies[lobbyIndex].id);
-				if (~searchLobbyIndex) searchLobbies.splice(searchLobbyIndex, 1);
-
-				socket.emit('not-ready');
-				fs.writeFile('./lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
-				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
+				const playerIndex = searchLobbies[lobbyIndex].players.findIndex(item => item.gameId == user.gameId);
+				if (~playerIndex) {
+					lobbies.push(new Lobby(null, user.rating));
+					lobbies[lobbies.length - 1].id = searchLobbies[lobbyIndex].id;
+					const party = searchLobbies[lobbyIndex].players[playerIndex].party;
+					for (let index = 0; index < searchLobbies[lobbyIndex].players.length; index++) {
+						if (searchLobbies[lobbyIndex].players[index].party == party) {
+							lobbies[lobbies.length - 1].addPlayer({
+								username: searchLobbies[lobbyIndex].players[index].username,
+								photo: searchLobbies[lobbyIndex].players[index].photo,
+								rating: searchLobbies[lobbyIndex].players[index].rating,
+								gameId: searchLobbies[lobbyIndex].players[index].gameId,
+								online: Boolean(searchLobbies[lobbyIndex].players[index].socketId)
+							}, party);
+							searchLobbies[lobbyIndex].players.splice(index--, 1);
+						}
+					}
+					searchLobbies[lobbyIndex].players.splice(playerIndex, 1);
+					lobbies[lobbies.length - 1].players.forEach(player => {
+						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
+							io.to(user.socketId).emit('not-ready');
+						});
+					});
+				}
 			}
 		});
 	});
@@ -393,7 +408,6 @@ io.on('connection', (socket) => {
 				}
 			}
 		});
-		fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 	});
 
 	socket.on('learn-game', (user) => {
@@ -406,16 +420,22 @@ io.on('connection', (socket) => {
 });
 
 setInterval(() => {
+	fs.writeFile('lobbies.json', JSON.stringify(lobbies, null, '\t'), () => {});
+	fs.writeFile('search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
+
+	for (let lobbyIndex = 0; lobbyIndex < lobbies.length; lobbyIndex++) {
+		if (lobbies[lobbyIndex].players.lenght == 0)  { lobbies.splice(lobbyIndex, 1); lobbyIndex--; }
+	}
+
 	for (let lobbyIndex = 0; lobbyIndex < searchLobbies.length; lobbyIndex++) {
 		try {
 		if (searchLobbies[lobbyIndex].players.length == 0) { searchLobbies.splice(lobbyIndex, 1); lobbyIndex--; }
-		else if (searchLobbies[lobbyIndex].players.length == 3) {
+		else if (searchLobbies[lobbyIndex].players.length == 6) {
 			if (searchLobbies[lobbyIndex].state != 'accept') {
 				searchLobbies[lobbyIndex].state = 'accept';
 
 				searchLobbies[lobbyIndex].players.forEach(player => {
 					selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
-						console.log(user.socketId)
 						io.to(user.socketId).emit('accept-game', searchLobbies[lobbyIndex]);
 					});
 				});
@@ -427,8 +447,6 @@ setInterval(() => {
 						while (~arr.slice(i + 1).findIndex(cb)) { i += arr.slice(i + 1).findIndex(cb) + 1; indices.push(i); }
 						return indices;
 					})(searchLobbies[lobbyIndex].players, item => !item.accepted);
-
-					console.log(indices)
 
 					for (let i = 0; i < indices.length; i++) {
 						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${searchLobbies[lobbyIndex].players[indices[i] - i].gameId}'`).then(user => {
@@ -456,26 +474,23 @@ setInterval(() => {
 						});
 					});
 					} catch (e) {console.log(searchLobbies, e)}
-				}, 10000);
-
-				fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
+				}, 20000);
 			} else {
 				if (searchLobbies[lobbyIndex].players.every(player => player.accepted) && !searchLobbies[lobbyIndex].players.every(player => player.loaded)) {
 					searchLobbies[lobbyIndex].players.forEach((player, index) => {
 						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
 							searchLobbies[lobbyIndex].players[index].inGame = true;
 							io.to(user.socketId).emit('start-game');
-							fs.writeFile('./search.json', JSON.stringify(searchLobbies, null, '\t'), () => {});
 						});
 					});
 				} else if (searchLobbies[lobbyIndex].players.every(player => player.loaded)) {
 					selectUserInTable(db, `SELECT * FROM users WHERE gameId='${searchLobbies[lobbyIndex].players[0].gameId}'`).then(user => {
 						createRoom(searchLobbies[lobbyIndex].players).then(room => {
-							console.log(room)
 							initGame(io, room.sockets[0], room);
 							room.sockets.forEach(socket => startGame(io, socket, room));
 							rooms.push(room);
-							searchLobbies.splice(searchLobbies.findIndex(item => item.id == searchLobbies[lobbyIndex].id), 1);
+							const searchIndex = searchLobbies.findIndex(item => item.id == searchLobbies[lobbyIndex].id);
+							if (~searchIndex) searchLobbies.splice(searchIndex, 1);
 						});
 					});
 				}
@@ -489,9 +504,12 @@ setInterval(() => {
 					 (searchLobbies[lobbyIndex].average.min >= searchLobbies[index].average.min && searchLobbies[lobbyIndex].average.max <= searchLobbies[index].average.max) ||
 					 (searchLobbies[lobbyIndex].average.min <= searchLobbies[index].average.min && searchLobbies[lobbyIndex].average.max >= searchLobbies[index].average.max)) && 0 < searchLobbies[index].players.length < 6) {
 					for (let playerIndex = 0; playerIndex < searchLobbies[index].players.length; playerIndex++) {
-						searchLobbies[lobbyIndex].addPlayer(searchLobbies[index].players[playerIndex], false);
+						searchLobbies[lobbyIndex].addPlayer(searchLobbies[index].players[playerIndex], searchLobbies[lobbyIndex].parties, false);
+						searchLobbies[lobbyIndex].players[searchLobbies[lobbyIndex].players.length - 1].lobbyId = searchLobbies[lobbyIndex].id;
 						searchLobbies[index].players.splice(playerIndex, 1); playerIndex--;
 					};
+					searchLobbies[lobbyIndex].parties++;
+					fs.writeFile('lobbies.json', JSON.stringify(lobbies), () => {});
 					searchLobbies[lobbyIndex].average = { min: Math.round((searchLobbies[lobbyIndex].average.min + searchLobbies[index].average.min) / 2), max: Math.round((searchLobbies[lobbyIndex].average.max + searchLobbies[index].average.max) / 2) };
 				}
 			};
