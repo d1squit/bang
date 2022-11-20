@@ -296,3 +296,8 @@ table {
 .short-profile__rating img {
 	filter: invert(85%) sepia(19%) saturate(183%) hue-rotate(340deg) brightness(107%) contrast(105%);
 }
+
+.header__social.lang {
+	width: 50px;
+	height: 50px;
+}

@@ -2,7 +2,7 @@
 	border-radius: 5px;
 	display: flex;
 	width: 376px;
-	height: auto;
+	height: 152px;
 
 	grid-column-end: span 4;
 	grid-row-end: span 3;
@@ -270,13 +270,13 @@
 #board[player-count="5"] .player:nth-child(3) {
 	grid-column-start: 7;
 	grid-row-start: 13;
-	margin: 0px -12px 0px -12px;
+	margin: 0px -12px 0px 12px;
 }
 
 #board[player-count="5"] .player:nth-child(4) {
 	grid-column-start: 3;
 	grid-row-start: 13;
-	margin: 0px -12px 0px -12px;
+	margin: 0px 12px 0px -12px;
 }
 
 #board[player-count="5"] .player:nth-child(5) {

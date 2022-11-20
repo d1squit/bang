@@ -87,41 +87,43 @@ document.querySelector('.history__button').addEventListener('click', () => socke
 // const cards_ru = ['Скофилд', 'Ярость', 'Ремингтон', 'Карабин', 'Винчестер', 'Бэнг', 'Промах', 'Дилижанс', 'Уэллс-Фарго', 'Пиво', 'Гатлинг',
 // 				  'Паника!', 'Плутовка Кэт', 'Салун', 'Дуэль', 'Магазин', 'Индейцы', 'Тюрьма', 'Динамит', 'Бочка', 'Аппалуза', 'Мустанг'];
 
-socket.on('history', history => {
-	console.log(history);
-
-	document.querySelector('.history').innerHTML = '';
+socket.on('history', (history, info) => {
+	document.querySelector('.history').innerHTML = `<div class="history__title" lang="game.history">${lang[localStorage.getItem('lang')].game['history']}</div>`;
 	
 	history.slice().reverse().forEach((block, index) => {
 		if (block.length == 0) return;
 		document.querySelector('.history').innerHTML += historyBlockHtml;
 		const length = document.querySelectorAll('.history-block-title').length;
-		document.querySelectorAll('.history-block-title')[length - 1].textContent = 'Ход ' + (history.length - index);
+		document.querySelectorAll('.history-block-title')[length - 1].textContent = `${lang[localStorage('lang')].game['move']} ` + (history.length - index);
 
-		block.forEach((move, index) => {
+		block.slice().reverse().forEach((move, index) => {
 			document.querySelector('.history-block:last-child').innerHTML += historyMoveHtml;
 			if (move.sender == myPlayer.player_id) {
-				document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `<span>Вы</span>`;
+				document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `<span>${lang[localStorage('lang')].game['you']}</span>`;
 
-				if (move.card.card_id == 7) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` берете 2 карты из колоды`;
-				else if (move.card.card_id == 8) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` берете 3 карты из колоды`;
-				else document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `играете ${move.card.title} (${[1,2,3,4,5,6,7,8,9,10,'J','Q','K','A'][move.card.rank]}${['♦', '♥', '♣', '♠'][move.card.suit]})`;
+				if (move.card.card_id == 7) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage('lang')].game['you-get-cards-from-deck-2']}`;
+				else if (move.card.card_id == 8) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage('lang')].game['you-get-cards-from-deck-3']}`;
+				else document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage('lang')].game['play']} ${move.card.title} (${[1,2,3,4,5,6,7,8,9,10,'J','Q','K','A'][move.card.rank]}${['♦', '♥', '♣', '♠'][move.card.suit]})`;
 
 				if (move.card.card_id == 5 || move.card.card_id == 11 || move.card.card_id == 12 || move.card.card_id == 14 || move.card.card_id == 17)
-					document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `&nbspи выбираете игрока ${boardPlayers[move.target].user.name} в качестве цели`;
+					document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage('lang')].game['and-you-choose']} ${boardPlayers[move.target].user.name} ${lang[localStorage('lang')].game['as-target']}`;
 			} else {
 				document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `<span>${boardPlayers[move.sender].user.name}</span>`;
 
-				if (move.card.card_id == 7) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` берет 2 карты из колоды`;
-				else if (move.card.card_id == 8) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` берет 3 карты из колоды`;
-				else document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `играет ${move.card.title} (${[1,2,3,4,5,6,7,8,9,10,'J','Q','K','A'][move.card.rank]}${['♦', '♥', '♣', '♠'][move.card.suit]})`;
+				if (move.card.card_id == 7) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage('lang')].game['get-cards-from-deck-2']}`;
+				else if (move.card.card_id == 8) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage('lang')].game['get-cards-from-deck-3']}`;
+				else document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage('lang')].game['plays']} ${move.card.title} (${[1,2,3,4,5,6,7,8,9,10,'J','Q','K','A'][move.card.rank]}${['♦', '♥', '♣', '♠'][move.card.suit]})`;
 
 				if (move.card.card_id == 5 || move.card.card_id == 11 || move.card.card_id == 12 || move.card.card_id == 14 || move.card.card_id == 17)
-					document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `&nbspи выбирает игрока <span>${boardPlayers[move.target].user.name}</span> в качестве цели`;
+					document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage('lang')].game['and-choose']} <span>${boardPlayers[move.target].user.name}</span> ${lang[localStorage('lang')].game['as-target']}`;
 			}
 		});
 	});
 
+	if (info) {
+		document.querySelector('.cards-last-move').innerHTML = document.querySelectorAll('.history-move')[0].innerHTML;
+		return;
+	}
 	setTimeout(() => {
 		if (historyActivate) document.querySelector('.history').style.bottom = '-100vh';
 		else document.querySelector('.history').style.bottom = '11vh';
@@ -344,7 +346,7 @@ socket.on('shop-card', (sender, shop_cards) => {
 socket.on('choose-end', () => document.querySelector('#card-chooser').style.display = 'none');
 
 socket.on('choose-from-three', (sender, cards) => {
-	document.querySelector('.card-chooser-title').innerHTML = `Выбор карты для набора (${boardPlayers[sender].user.name})`;
+	document.querySelector('.card-chooser-title').innerHTML = `${lang[localStorage.getItem('lang')].game['choose-cards']} (${boardPlayers[sender].user.name})`;
 	document.querySelector('#card-chooser').style.display = 'flex';
 	document.querySelector('.card-chooser-cards').innerHTML = '';
 
@@ -363,7 +365,7 @@ socket.on('choose-from-three', (sender, cards) => {
 
 socket.on('check-card', (sender, card, second_card) => {
 	if (second_card) {
-		document.querySelector('.card-chooser-title').innerHTML = `Выбор карты для проверки (${boardPlayers[sender].user.name})`;
+		document.querySelector('.card-chooser-title').innerHTML = `${lang[localStorage.getItem('lang')].game['check-cards']} (${boardPlayers[sender].user.name})`;
 		document.querySelector('#card-chooser').style.display = 'flex';
 		document.querySelector('.card-chooser-cards').innerHTML = '';
 
@@ -467,16 +469,7 @@ socket.on('show-card', card => {
 
 
 socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
-	let text = '';
-	console.log(sender, player)
-
-	if (card.card_id == 5) {
-		console.log(player, sender)
-		if (player == myPlayer.player_id) text = `Игрок ${boardPlayers[sender].user.name} использовал 'Бэнг' на Вас`;
-		else text = `Игрок ${boardPlayers[sender].user.name} использовал 'Бэнг' на ${boardPlayers[player].user.name}`;
-	} else text = 'Вы можете сыграть карту';
-
-	document.querySelector('.cards-top').textContent = text;
+	socket.emit('history', true);
 
 	if (behaviour == 'transfer-modifier') {
 		let { absolute_card, card_rect } = createAbsoluteElement(document.querySelectorAll(`.player[player-id='${sender}'] .modifier`)[card_id]);
@@ -756,9 +749,6 @@ socket.on('decline-card', error => {
 
 
 socket.on('turn', turn => {
-	document.querySelector('.wait-header').innerHTML = '';
-	document.querySelector('.wait-seconds').innerHTML = '';
-
 	document.querySelectorAll('.player').forEach(player => {
 		if (player.classList.contains('turn')) player.classList.remove('turn');
 	});
@@ -780,9 +770,9 @@ socket.on('end-game', (end, results) => {
 		</div>`;
 	});
 
-	if (end == 0) document.querySelector('.result__title').textContent = 'ПОБЕДА ШЕРИФА';
-	else if (end == 2) document.querySelector('.result__title').textContent = 'ПОБЕДА МАНЬЯКА';
-	else if (end == 3) document.querySelector('.result__title').textContent = 'ПОБЕДА БАНДИТОВ';
+	if (end == 0) document.querySelector('.result__title').textContent = lang[localStorage.getItem('lang')].game['sheriff-win'];
+	else if (end == 2) document.querySelector('.result__title').textContent = lang[localStorage.getItem('lang')].game['maniac-win'];
+	else if (end == 3) document.querySelector('.result__title').textContent = lang[localStorage.getItem('lang')].game['bandit-win'];
 
 	document.querySelector('.result__button').addEventListener('click', () => window.location.href = './lobby');
 });
@@ -799,7 +789,6 @@ socket.on('kick', player => {
 
 socket.on('wait', (player_id, time, new_turn) => {
 	if (new_turn) {
-		document.querySelector('.time-header').innerHTML = 'Ход ' + boardPlayers[player_id].user.name + ': ';
 		document.querySelector('.time-seconds').innerHTML = time;
 	} else {
 		if (player_id == myPlayer.player_id) {
@@ -807,7 +796,6 @@ socket.on('wait', (player_id, time, new_turn) => {
 				!~myPlayer.modifiers.findIndex(item => item.card_id == 19)) socket.emit('turn-end', myPlayer, session);
 		}
 
-		document.querySelector('.wait-header').innerHTML = 'Ответ ' + boardPlayers[player_id].user.name + ': ';
 		document.querySelector('.wait-seconds').innerHTML = time;
 	}
 
@@ -905,6 +893,7 @@ socket.on('table', (table, gameId) => {
 });
 
 socket.on('player', player => {
+	player = JSON.parse(player);
 	myPlayer = player;
 
 	const arrow = document.querySelector('.table__arrow');

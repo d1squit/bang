@@ -2,6 +2,8 @@ const session = getCookie('session');
 let socket = io.connect('', { query: `session=${session}&extra=ready` });
 let id = null;
 
+setCookie('search-redirect', 'false');
+
 if (getCookie('search')) {
 	socket.on('game-id', gameId => { id = gameId; socket.emit('ready', gameId, session); });
 
@@ -39,7 +41,8 @@ socket.on('accept-game', lobby => {
 	}));
 });
 
-socket.on('ban-start', () => {
+socket.on('ban-start', (ban, id) => {
+	socket.emit('not-ready', id, session, true);
 	setCookie('search', false);
 	window.location.href = '../lobby';
 });
@@ -54,4 +57,8 @@ socket.on('start-game', () => {
 	location.href = '../game';
 });
 
-socket.on('search-refresh', () => window.location.reload());
+socket.on('search-refresh', () => {
+	if (!id) return;
+	setCookie('search-redirect', 'true');
+	socket.emit('not-ready', id, session);
+});

@@ -125,8 +125,35 @@ document.querySelector('.lobby__friends__search__input').addEventListener('input
 	}
 });
 
-document.querySelectorAll('.lobby__match__start__mode__tip')[1].addEventListener('click', () => document.querySelector('.lobby__match__start__mode__text').style.display = 'block');
-document.querySelectorAll('*:not(.lobby__match__start__mode__tip)').forEach(element => element.addEventListener('click', () => document.querySelector('.lobby__match__start__mode__text').style.display = 'none'));
+document.querySelector('.button-competitive').addEventListener('click', () => socket.emit('change-mode', session, true));
+document.querySelector('.button-private').addEventListener('click', () => socket.emit('change-mode', session, false));
+
+socket.on('change-mode-success', mode => {
+	if (mode) {
+		document.querySelector('.button-competitive').classList.remove('disabled');
+		document.querySelector('.button-private').classList.add('disabled');
+	} else {
+		document.querySelector('.button-private').classList.remove('disabled');
+		document.querySelector('.button-competitive').classList.add('disabled');
+	}
+});
+
+// socket.on('change-mode-decline', () => console.log(1));
+
+const competitiveTip = document.querySelectorAll('.lobby__match__start__mode__text')[0];
+const privateTip = document.querySelectorAll('.lobby__match__start__mode__text')[1];
+
+document.querySelectorAll('.lobby__match__start__mode__tip')[1].addEventListener('click', () => {
+	if (window.getComputedStyle(privateTip).visibility == 'hidden') privateTip.style.visibility = 'visible';
+	else privateTip.style.visibility = 'hidden';
+	competitiveTip.style.visibility = 'hidden';
+});
+
+document.querySelectorAll('.lobby__match__start__mode__tip')[0].addEventListener('click', () => {
+	if (window.getComputedStyle(competitiveTip).visibility == 'hidden') competitiveTip.style.visibility = 'visible';
+	else competitiveTip.style.visibility = 'hidden';
+	privateTip.style.visibility = 'hidden';
+});
 
 
 $.getJSON("https://api.ipify.org?format=json", (data) => {
@@ -142,37 +169,38 @@ socket.on('users', users => {
 
 socket.on('requests', requests => {
 	window.user.requests = requests;
-	document.querySelector('.lobby__friends__invites').textContent = 'Friend requests ' + (window.user.requests.length < 99 ? window.user.requests.length : '99+');
+	document.querySelector('.lobby__friends__invites__text').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests-default'];
+	document.querySelector('.lobby__friends__invites__count').textContent = (window.user.requests.length < 99 ? window.user.requests.length : '99+');
 	document.querySelector('.lobby__friends__invites').classList.remove('close');
 });
 
 
 document.querySelector('.lobby__friends__invites').addEventListener('click', () => {
-	if (document.querySelector('.lobby__friends__invites').textContent.includes(lang[localStorage.getItem('lang')].lobby['friend-requests-default'])) {
+	if (document.querySelector('.lobby__friends__invites__text').textContent.includes(lang[localStorage.getItem('lang')].lobby['friend-requests-default'])) {
 		displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6, window.user.requests, false, true);
-		lang[localStorage.getItem('lang')].lobby['friend-requests'] = 'Close';
-		document.querySelector('.lobby__friends__invites').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests-close'];
-		document.querySelector('.lobby__friends__invites').classList.add('close');
+		document.querySelector('.lobby__friends__invites__text').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests-close'];
+		document.querySelector('.lobby__friends__invites__count').textContent =  '';
+		document.querySelector('.lobby__friends__invites__text').classList.add('close');
 	} else {
 		displayFriends((window.user.navigation.friends.currentPage - 1) * 6, window.user.navigation.friends.currentPage * 6);
-		lang[localStorage.getItem('lang')].lobby['friend-requests'] = lang[localStorage.getItem('lang')].lobby['friend-requests-default'];
-		document.querySelector('.lobby__friends__invites').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests'] + ' ' + (window.user.requests.length < 99 ? window.user.requests.length : '99+');
-		document.querySelector('.lobby__friends__invites').classList.remove('close');
+		document.querySelector('.lobby__friends__invites__text').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests-default'];
+		document.querySelector('.lobby__friends__invites__count').textContent = (window.user.requests.length < 99 ? window.user.requests.length : '99+');
+		document.querySelector('.lobby__friends__invites__text').classList.remove('close');
 	}
 });
 
 document.querySelector('.lobby__search__button').addEventListener('click', () => {
 	if (ban) return;
-	if (document.querySelector('.lobby__search__button').textContent == 'Start Search') socket.emit('search-start', window.user.gameId, session);
+	if (document.querySelector('.lobby__search__button').textContent == lang[localStorage.getItem('lang')].lobby['start-search-default']) socket.emit('search-start', window.user.gameId, session);
 	else socket.emit('search-end', window.user.gameId, session);
 });
 
 socket.on('search-start', () => {
-	document.querySelector('.lobby__search__button').textContent = 'Waiting...';
+	document.querySelector('.lobby__search__button').textContent = lang[localStorage.getItem('lang')].lobby['start-search-waiting'];
 });
 
 socket.on('search-end', () => {
-	document.querySelector('.lobby__search__button').textContent = 'Start Search';
+	document.querySelector('.lobby__search__button').textContent = lang[localStorage.getItem('lang')].lobby['start-search-default'];
 });
 
 socket.on('ready', () => {
@@ -203,10 +231,10 @@ const displayFriends = (start, end, friends=null, mode=false, decline=false) => 
 		if (!mode) {
 			if (window.lobby && ~window.lobby.players.findIndex(item => item.gameId == friend.gameId) && document.querySelectorAll('.player__invite').length > 0) document.querySelectorAll('.player__invite')[index].style.display = 'none';
 			if (!friend.online) {
-				document.querySelectorAll('.lobby__friend')[index].classList.add('disabled');
 				if (!mode) document.querySelector(`.lobby__friend:nth-child(${index + 1}) .player__invite`).style.display = 'none';
 			}
 		}
+		if (!friend.online) document.querySelectorAll('.lobby__friend')[index].classList.add('disabled');
 	});
 
 	document.querySelectorAll('.player__decline').forEach((element, index) => element.addEventListener('click', () => socket.emit('request-decline', window.user.requests[index].inviteId, window.user.requests[index].gameId, session)));
@@ -227,8 +255,11 @@ const displayFriends = (start, end, friends=null, mode=false, decline=false) => 
 }
 
 socket.on('profile', user => {
-	console.log(user)
 	clearTimeout(load);
+
+	if (getCookie('search-redirect') == 'true') {
+		socket.emit('search-start', user.gameId, session);
+	}
 
 	const createLobby = (user) => {
 		window.user = user;
@@ -239,8 +270,9 @@ socket.on('profile', user => {
 
 		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('../assets/photos/${user.photo}')`);
 		document.querySelectorAll('.profile__image').forEach(element => element.style.backgroundImage = `url('../assets/photos/${user.photo}.png')`);
-		document.querySelector('.lobby__friends__invites').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests'] + ' ' + (user.requests.length < 99 ? user.requests.length : '99+');
-		document.querySelector('.lobby__friends__invites').classList.remove('close');
+		document.querySelector('.lobby__friends__invites__text').textContent = lang[localStorage.getItem('lang')].lobby['friend-requests-default'];
+		document.querySelector('.lobby__friends__invites__count').textContent = (window.user.requests.length < 99 ? window.user.requests.length : '99+');
+		document.querySelector('.lobby__friends__invites__text').classList.remove('close');
 
 		document.querySelector('.edit__username').value = user.username;
 
@@ -347,6 +379,9 @@ socket.on('lobby', lobby => {
 
 	document.querySelectorAll('.lobby__match .player').forEach(element => element.classList.add('inactive'));
 	lobby.players.forEach((player, index) => {
+		if (player.ban) document.querySelectorAll('.lobby__match .player')[index].classList.add('ban');
+		else document.querySelectorAll('.lobby__match .player')[index].classList.remove('ban');
+
 		document.querySelector('.lobby__match .player.inactive').classList.remove('inactive');
 		document.querySelectorAll('.lobby__player .player__photo')[index].src = `./assets/photos/${player.photo}.png`;
 		document.querySelectorAll('.lobby__player .player__name')[index].textContent = player.username;
@@ -354,6 +389,14 @@ socket.on('lobby', lobby => {
 		if (player.online) document.querySelectorAll('.lobby__match .lobby__player')[index].classList.remove('disabled');
 		else document.querySelectorAll('.lobby__match .lobby__player')[index].classList.add('disabled');
 	});
+
+	if (lobby.competitive) {
+		document.querySelector('.button-private').classList.add('disabled');
+		document.querySelector('.button-competitive').classList.remove('disabled');
+	} else {
+		document.querySelector('.button-private').classList.remove('disabled');
+		document.querySelector('.button-competitive').classList.add('disabled');
+	}
 
 	document.querySelectorAll('.lobby__player .player__kick').forEach(element => element.style.display = 'none');
 

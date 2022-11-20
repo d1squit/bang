@@ -46,7 +46,9 @@ const shortProfile = (user) => {
 
 const langSwitch = document.querySelector('.header__social.lang');
 
-langSwitch.addEventListener('click', () => {
-	if (localStorage.getItem('lang') == 'en') { localStorage.setItem('lang', 'ru'); langSwitch.textContent = 'ru'; translate('ru'); }
-	else if (localStorage.getItem('lang') == 'ru') { localStorage.setItem('lang', 'en'); langSwitch.textContent = 'en'; translate('en'); }
-});
+if (langSwitch) {
+	langSwitch.addEventListener('click', () => {
+		if (localStorage.getItem('lang') == 'en') { localStorage.setItem('lang', 'ru'); langSwitch.textContent = 'ru'; translate('ru'); }
+		else if (localStorage.getItem('lang') == 'ru') { localStorage.setItem('lang', 'en'); langSwitch.textContent = 'en'; translate('en'); }
+	});
+}

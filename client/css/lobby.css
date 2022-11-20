@@ -351,6 +351,11 @@ main {
 	display: flex;
 	justify-content: space-between;
 	gap: 24px;
+	height: 40px;
+}
+
+.lobby__match__start__modes {
+	position: relative;
 }
 
 .lobby__match__start__mode {
@@ -371,7 +376,7 @@ main {
 }
 
 .lobby__match__start__mode__text {
-	display: none;
+	visibility: hidden;
 }
 
 .lobby__match__start__mode__button.button-competitive {
@@ -407,6 +412,7 @@ main {
 }
 
 .player:not(.inactive) {
+	position: relative;
 	background-image: url('../assets/img/lobby/empty-player-field.png'), url('../assets/img/lobby/player-back.svg');
 	background-repeat: no-repeat, no-repeat;
 	background-size: 100% 100%, 84% 84%;
@@ -420,6 +426,22 @@ main {
 .player__photo {
 	width: 40px;
 	height: 40px;
+}
+
+.player__ban {
+	display: none;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	left: 0px;
+	top: 0px;
+	border-radius: 15px;
+    background-color: red;
+    opacity: 0.4;
+}
+
+.player.ban .player__ban {
+	display: block;
 }
 
 
@@ -577,6 +599,13 @@ main {
 	background-size: 100% 100%;
 }
 
+.lobby__friends__invites > div {
+	color: rgb(255, 244, 229);
+	font-size: 20px;
+	line-height: 23px;
+	letter-spacing: 1.25px;
+}
+
 .lobby__friends__list {
 	display: flex;
 	flex-direction: column;
@@ -628,11 +657,17 @@ main {
 	letter-spacing: 0.75px;
 	color: #493F39;
 	padding: 16px 22px;
-	position: relative;
-	top: -65px;
-	left: 572px;
+	position: absolute;
+	top: -75px;
 }
 
+.lobby__match__start__mode__text:nth-child(1) {
+	right: 142px;
+}
+
+.lobby__match__start__mode__text:nth-child(2) {
+	right: -90px;
+}
 
 .edit {
 	width: 500px;

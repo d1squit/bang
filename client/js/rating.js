@@ -1,6 +1,7 @@
-let socket = io.connect('', { query: `extra=get-rating` });
+let socket = io.connect('', { query: `` });
+socket.emit('get-tournament');
 
-socket.on('rating', response => { users = response; drawPage(users); });
+socket.on('rating', (response, tournament) => { users = response; drawPage(users, tournament); });
 
 const leftTable = document.querySelector('.left-bracket');
 const rightTable = document.querySelector('.right-bracket');
@@ -8,9 +9,8 @@ const rightTable = document.querySelector('.right-bracket');
 let users = [];
 let page = 0;
 let count = 10;
-let tournament = true;
 
-const drawPage = (users) => {
+const drawPage = (users, tournament) => {
 	if (!users) return;
 
 	if (tournament) {
@@ -25,7 +25,7 @@ const drawPage = (users) => {
 		leftTable.querySelectorAll('.number')[index].textContent = `#${page * count + index + 1}.`;
 		leftTable.querySelectorAll('.photo')[index].innerHTML = `<img src="./assets/photos/${user.photo}.png">`;
 		leftTable.querySelectorAll('.username')[index].textContent = user.username;
-		leftTable.querySelectorAll('.rating')[index].innerHTML = `<img src="./assets/img/rating/trophy-icon.svg" alt="" class="trophy">${tournament ? user.tournament : user.rating}`;
+		leftTable.querySelectorAll('.rating')[index].innerHTML = `<img src="./assets/img/rating/trophy-icon.svg" alt="" class="trophy">${user.rating}`;
 		leftTable.querySelectorAll('.prize')[index].innerHTML = `<div class="price">${300}</div><div class="symbol">$</div></div>`;
 	});
 
@@ -36,7 +36,7 @@ const drawPage = (users) => {
 		rightTable.querySelectorAll('.number')[index].textContent = `#${page * count + index + 1 + count}.`;
 		rightTable.querySelectorAll('.photo')[index].innerHTML = `<img src="./assets/photos/${user.photo}.png">`;
 		rightTable.querySelectorAll('.username')[index].textContent = user.username;
-		rightTable.querySelectorAll('.rating')[index].innerHTML = `<img src="./assets/img/rating/trophy-icon.svg" alt="" class="trophy">${tournament ? user.tournament : user.rating}`;
+		rightTable.querySelectorAll('.rating')[index].innerHTML = `<img src="./assets/img/rating/trophy-icon.svg" alt="" class="trophy">${user.rating}`;
 		rightTable.querySelectorAll('.prize')[index].innerHTML = `<div class="price">${300}</div><div class="symbol">$</div></div>`;
 	});
 }
@@ -44,5 +44,5 @@ const drawPage = (users) => {
 document.querySelector('.bracket__arrow_left').addEventListener('click', () => { if (page > 0) { page -= 2; drawPage(users); } });
 document.querySelector('.bracket__arrow_right').addEventListener('click', () => { if (page < 10) { page += 2; drawPage(users); } });
 
-document.querySelector('.header__select__common').addEventListener('click', () => { tournament = false; drawPage (users); });
-document.querySelector('.header__select__tournament').addEventListener('click', () => { tournament = true; drawPage (users); });
+document.querySelector('.header__select__common').addEventListener('click', () => socket.emit('get-rating'));
+document.querySelector('.header__select__tournament').addEventListener('click', () => socket.emit('get-tournament'));

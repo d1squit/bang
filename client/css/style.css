@@ -62,10 +62,11 @@ html, body {
 	row-gap: 10px;
 	position: relative;
 	width: 100%;
+	flex: 1 0 auto;
 }
 
 .board-wrapper {
-	height: 800px;
+	height: 638px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -73,6 +74,8 @@ html, body {
 	background-repeat: no-repeat;
 	background-position: center;
 	background-size: 40% 40%;
+	flex: 1 0 auto;
+	flex-direction: column;
 }
 
 #info {
@@ -89,34 +92,31 @@ html, body {
 	margin-top: 72px;
 }
 
-.game-controls .time, .game-controls .wait {
-	display: flex;
-	gap: 5px;
-}
-
 .game-controls {
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
-	padding: 5px;
-	width: 160px;
+	width: 268px;
 }
 
 .red-button {
-	margin-top: 5px;
+	background-image: url('../assets/img/button-back.png');
+	background-size: 100% 100%;
+	width: 268px;
+	height: 80px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	padding: 8px 10px;
-	background-color: red;
-	border-radius: 5px;
-	color: #FFF;
+	font-size: 30px;
+	line-height: 35px;
+	letter-spacing: 1.875px;
+	text-transform: uppercase;
+	color: #FFF4E5;
 	cursor: pointer;
 }
 
 .red-button.inactive {
-	background-color: rgb(110, 110, 110);
-	cursor: auto;
+	opacity: 0.4;
 }
 
 
@@ -266,6 +266,7 @@ html, body {
 .wrapper {
 	background-image: url('../../assets/img/game-background.png');
 	background-size: cover;
+	background-position: center;
 	min-width: 1475px;
 }
 
@@ -312,16 +313,16 @@ header h2 {
 	margin-bottom: 32px;
 }
 
-::-webkit-scrollbar {
+.player-modifiers::-webkit-scrollbar {
 	width: 8px;
 	height: 8px;
 }
 
-::-webkit-scrollbar-track {
+.player-modifiers::-webkit-scrollbar-track {
 	background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
+.player-modifiers::-webkit-scrollbar-thumb {
 	background-color: rgba(133, 94, 55, 0.8);
 	border-radius: 8px;
 	height: 5px;
@@ -330,16 +331,47 @@ header h2 {
 .cards-top {
 	background: rgba(45, 21, 9, 0.8);
 	border-radius: 10px;
+	display: flex;
+	padding: 0px 10px;
+}
+
+.cards-top div {
 	font-size: 22px;
 	line-height: 26px;
 	letter-spacing: 1.875px;
-	text-transform: uppercase;
 	color: #FFF4E5;
 	width: 100%;
 	height: 48px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	gap: 6px;
+}
+
+.cards-top div, .cards-top span {
+	font-family: 'Bookman Old Style';
+	font-size: 16px;
+	line-height: 24px;
+	letter-spacing: 1px;
+	color: #F1E5D6;
+}
+
+.cards-top span {
+	color: #EDE52E;
+}
+
+.time {
+	flex: 0 1;
+	display: flex;
+	gap: 15px !important;
+}
+
+.game-buttons {
+	padding-top: 20px;
+}
+
+.wait-seconds, .time-seconds {
+	width: 30px;
 }
 
 .footer {
@@ -378,7 +410,23 @@ footer h2 {
 	display: flex;
 	flex-direction: column;
 	gap: 24px;
-	overflow: scroll;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+.common-ctn::-webkit-scrollbar, .history::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+.common-ctn::-webkit-scrollbar-track, .history::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.common-ctn::-webkit-scrollbar-thumb, .history::-webkit-scrollbar-thumb {
+	background-color: rgba(133, 94, 55, 0.8);
+	border-radius: 8px;
+	height: 5px;
 }
 
 .history__title {

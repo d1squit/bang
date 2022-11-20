@@ -13,7 +13,10 @@ const translate = (language) => {
 	});
 }
 
-if (!localStorage.getItem('lang')) { localStorage.setItem('lang', 'en'); langSwitch.textContent = 'en' }
-else langSwitch.textContent = localStorage.getItem('lang');
+if (langSwitch) {
+	if (!localStorage.getItem('lang')) { localStorage.setItem('lang', 'en'); langSwitch.textContent = 'en' }
+	else langSwitch.textContent = localStorage.getItem('lang');
+} else { if (!localStorage.getItem('lang')) localStorage.setItem('lang', 'en'); }
+
 
 translate(localStorage.getItem('lang'));

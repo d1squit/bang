@@ -205,7 +205,7 @@ process.on("SIGINT", () => {
 });
 
 io.on('connection', (socket) => {
-	initializeLobby(io, socket, users, lobbies);
+	initializeLobby(io, socket, users, lobbies, searchLobbies);
 
 	if (socket.handshake.query.session) {
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${socket.handshake.query.session}'`).then(user => {
@@ -226,7 +226,7 @@ io.on('connection', (socket) => {
 					socket.emit('room-id', rooms[roomIndex].id);
 					socket.emit('board', players);
 					socket.emit('table', { card_count: rooms[roomIndex].shuffled.length, last_card: null });
-					socket.emit('player', rooms[roomIndex].players[players.findIndex(player => player.user.gameId == user.gameId)]);
+					socket.emit('player', JSON.stringify(rooms[roomIndex].players[players.findIndex(player => player.user.gameId == user.gameId)]));
 					startGame(io, socket, rooms[roomIndex]);
 					return;
 				});
@@ -245,11 +245,17 @@ io.on('connection', (socket) => {
 		});
 	}
 	
-	if (socket.handshake.query.extra == 'get-rating') {
+	socket.on('get-rating', () => {
 		selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
-			socket.emit(socket.emit('rating', users.sort((a, b) => b.tournament - a.tournament).map(user => { return { username: user.username, photo: user.photo, rating: user.rating, tournament: user.tournament } }).slice(0, 100)));
+			socket.emit('rating', users.sort((a, b) => b.rating - a.rating).map(user => { return { username: user.username, photo: user.photo, rating: user.rating } }).slice(0, 100), false);
 		});
-	}
+	});
+
+	socket.on('get-tournament', () => {
+		selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
+			socket.emit('rating', users.sort((a, b) => b.tournament - a.tournament).map(user => { return { username: user.username, photo: user.photo, rating: user.tournament } }).slice(0, 100), true);
+		});
+	});
 
 	socket.on('session', (wallet, flag) => {
 		selectUserInTable(db, `SELECT * FROM users WHERE wallet='${wallet}'`, true, () => {
@@ -349,6 +355,7 @@ io.on('connection', (socket) => {
 	socket.on('ready', (id, session) => {
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`, true, () => socket.emit('ready-decline')).then(user => {
 			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
+			console.log(lobbyIndex)
 			if (~lobbyIndex) {
 				const playerIndex = lobbies[lobbyIndex].players.findIndex(player => player.gameId == id);
 				if (~playerIndex) lobbies[lobbyIndex].players[playerIndex].ready = true;
@@ -361,14 +368,15 @@ io.on('connection', (socket) => {
 		});
 	});
 
-	socket.on('not-ready', (id, session) => {
-		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`).then(user => {
+	socket.on('not-ready', (id, session, fromBan=false) => {
+		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}'`).then(user => {
+			if (fromBan && user.ban == 0) return;
 			const lobbyIndex = searchLobbies.findIndex(item => item.id == user.lobbyId);
 			if (~lobbyIndex) {
 				const playerIndex = searchLobbies[lobbyIndex].players.findIndex(item => item.gameId == user.gameId);
 				if (~playerIndex) {
 					lobbies.push(new Lobby(null, user.rating));
-					lobbies[lobbies.length - 1].id = searchLobbies[lobbyIndex].id;
+					// lobbies[lobbies.length - 1].id = searchLobbies[lobbyIndex].id;
 					const party = searchLobbies[lobbyIndex].players[playerIndex].party;
 					for (let index = 0; index < searchLobbies[lobbyIndex].players.length; index++) {
 						if (searchLobbies[lobbyIndex].players[index].party == party) {
@@ -377,8 +385,13 @@ io.on('connection', (socket) => {
 								photo: searchLobbies[lobbyIndex].players[index].photo,
 								rating: searchLobbies[lobbyIndex].players[index].rating,
 								gameId: searchLobbies[lobbyIndex].players[index].gameId,
-								online: Boolean(searchLobbies[lobbyIndex].players[index].socketId)
+								online: Boolean(searchLobbies[lobbyIndex].players[index].socketId),
+								ban: searchLobbies[lobbyIndex].players[index].ban
 							}, party);
+							selectUserInTable(db, `SELECT * FROM users WHERE gameId='${lobbies[lobbies.length - 1].players[lobbies[lobbies.length - 1].players.length - 1].gameId}'`).then(user => {
+								user.lobbyId = lobbies[lobbies.length - 1].id;
+								writeUserInTable(db, 200, user);
+							});
 							searchLobbies[lobbyIndex].players.splice(index--, 1);
 						}
 					}
@@ -388,6 +401,15 @@ io.on('connection', (socket) => {
 							io.to(user.socketId).emit('not-ready');
 						});
 					});
+
+					if (fromBan) {
+						searchLobbies[lobbyIndex].players.forEach(player => {
+							selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
+								console.log(user.username)
+								io.to(user.socketId).emit('search-refresh');
+							});
+						});
+					}
 				}
 			}
 		});
@@ -430,7 +452,7 @@ setInterval(() => {
 	for (let lobbyIndex = 0; lobbyIndex < searchLobbies.length; lobbyIndex++) {
 		try {
 		if (searchLobbies[lobbyIndex].players.length == 0) { searchLobbies.splice(lobbyIndex, 1); lobbyIndex--; }
-		else if (searchLobbies[lobbyIndex].players.length == 6) {
+		else if (searchLobbies[lobbyIndex].players.length == 2) {
 			if (searchLobbies[lobbyIndex].state != 'accept') {
 				searchLobbies[lobbyIndex].state = 'accept';
 
@@ -450,31 +472,34 @@ setInterval(() => {
 
 					for (let i = 0; i < indices.length; i++) {
 						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${searchLobbies[lobbyIndex].players[indices[i] - i].gameId}'`).then(user => {
-							searchLobbies[lobbyIndex].players.splice(indices[i] - i, 1);
-
 							const banTime = bans[user.banLevel <= 10 ? user.banLevel : 10] * 60000
 							user.ban = Date.now() + banTime;
 							user.banLevel++;
-							io.to(user.socketId).emit('ban-start', user.ban);
+							io.to(user.socketId).emit('ban-start', user.ban, user.gameId);
+							
+							const lobbyIndex = searchLobbies.findIndex(item => item.id == user.lobbyId);
+							if (~lobbyIndex) {
+								const playerIndex = searchLobbies[lobbyIndex].players.findIndex(item => item.gameId == user.gameId);
+								if (~playerIndex) searchLobbies[lobbyIndex].players[playerIndex].ban = true;
+							}
 
 							setTimeout(() => {
 								io.to(user.socketId).emit('ban-end');
 								user.ban = 0;
 								writeUserInTable(db, 4, user);
+
+								const lobbyIndex = lobbies.findIndex(item => item.id == user.lobbyId);
+								if (~lobbyIndex) {
+									const playerIndex = lobbies[lobbyIndex].players.findIndex(item => item.gameId == user.gameId);
+									if (~playerIndex) lobbies[lobbyIndex].players[playerIndex].ban = false;
+								}
 							}, banTime);
 
 							writeUserInTable(db, 5, user);
 						});
 					};
-					
-
-					searchLobbies[lobbyIndex].players.forEach(player => {
-						selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
-							io.to(user.socketId).emit('search-refresh');
-						});
-					});
 					} catch (e) {console.log(searchLobbies, e)}
-				}, 20000);
+				}, 5000);
 			} else {
 				if (searchLobbies[lobbyIndex].players.every(player => player.accepted) && !searchLobbies[lobbyIndex].players.every(player => player.loaded)) {
 					searchLobbies[lobbyIndex].players.forEach((player, index) => {
@@ -505,11 +530,13 @@ setInterval(() => {
 					 (searchLobbies[lobbyIndex].average.min <= searchLobbies[index].average.min && searchLobbies[lobbyIndex].average.max >= searchLobbies[index].average.max)) && 0 < searchLobbies[index].players.length < 6) {
 					for (let playerIndex = 0; playerIndex < searchLobbies[index].players.length; playerIndex++) {
 						searchLobbies[lobbyIndex].addPlayer(searchLobbies[index].players[playerIndex], searchLobbies[lobbyIndex].parties, false);
-						searchLobbies[lobbyIndex].players[searchLobbies[lobbyIndex].players.length - 1].lobbyId = searchLobbies[lobbyIndex].id;
+						selectUserInTable(db, `SELECT * FROM users WHERE gameId = '${searchLobbies[lobbyIndex].players[searchLobbies[lobbyIndex].players.length - 1].gameId}'`).then(user => {
+							user.lobbyId = searchLobbies[lobbyIndex].id;
+							writeUserInTable(db, 100, user);
+						});
 						searchLobbies[index].players.splice(playerIndex, 1); playerIndex--;
 					};
 					searchLobbies[lobbyIndex].parties++;
-					fs.writeFile('lobbies.json', JSON.stringify(lobbies), () => {});
 					searchLobbies[lobbyIndex].average = { min: Math.round((searchLobbies[lobbyIndex].average.min + searchLobbies[index].average.min) / 2), max: Math.round((searchLobbies[lobbyIndex].average.max + searchLobbies[index].average.max) / 2) };
 				}
 			};
