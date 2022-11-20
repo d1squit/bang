@@ -120,6 +120,10 @@ app.get('/home', (request, response) => {
 	response.sendFile('./client/home.html', { root: __dirname });
 });
 
+app.get('/admin', (request, response) => {
+	response.sendFile('./client/admin.html', { root: __dirname });
+});
+
 // app.get('*', (request, response) => {
 // 	response.status(404).send(`<script>window.location.href = './lobby.html';</script>`);
 // });
@@ -355,7 +359,6 @@ io.on('connection', (socket) => {
 	socket.on('ready', (id, session) => {
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`, true, () => socket.emit('ready-decline')).then(user => {
 			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
-			console.log(lobbyIndex)
 			if (~lobbyIndex) {
 				const playerIndex = lobbies[lobbyIndex].players.findIndex(player => player.gameId == id);
 				if (~playerIndex) lobbies[lobbyIndex].players[playerIndex].ready = true;
@@ -405,7 +408,6 @@ io.on('connection', (socket) => {
 					if (fromBan) {
 						searchLobbies[lobbyIndex].players.forEach(player => {
 							selectUserInTable(db, `SELECT * FROM users WHERE gameId='${player.gameId}'`).then(user => {
-								console.log(user.username)
 								io.to(user.socketId).emit('search-refresh');
 							});
 						});
@@ -452,7 +454,7 @@ setInterval(() => {
 	for (let lobbyIndex = 0; lobbyIndex < searchLobbies.length; lobbyIndex++) {
 		try {
 		if (searchLobbies[lobbyIndex].players.length == 0) { searchLobbies.splice(lobbyIndex, 1); lobbyIndex--; }
-		else if (searchLobbies[lobbyIndex].players.length == 2) {
+		else if (searchLobbies[lobbyIndex].players.length == 3) {
 			if (searchLobbies[lobbyIndex].state != 'accept') {
 				searchLobbies[lobbyIndex].state = 'accept';
 
@@ -498,8 +500,8 @@ setInterval(() => {
 							writeUserInTable(db, 5, user);
 						});
 					};
-					} catch (e) {console.log(searchLobbies, e)}
-				}, 5000);
+					} catch (e) {}
+				}, 15000);
 			} else {
 				if (searchLobbies[lobbyIndex].players.every(player => player.accepted) && !searchLobbies[lobbyIndex].players.every(player => player.loaded)) {
 					searchLobbies[lobbyIndex].players.forEach((player, index) => {
@@ -541,7 +543,7 @@ setInterval(() => {
 				}
 			};
 		}
-	} catch (e) {console.log(lobbyIndex, e)}
+	} catch (e) {}
 	}
 }, 1000);
 

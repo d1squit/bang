@@ -202,7 +202,7 @@ export const initializeLobby = (io, socket, users, lobbies, searchLobbies) => {
 	socket.on('add-friend', (senderId, targetId, session) => {
 		selectUserInTable(db, `SELECT * FROM users WHERE gameId='${senderId}' AND session='${session}'`).then(sender => {
 			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${targetId}'`).then(target => {
-				if (~sender.friends.findIndex(item => item.gameId == targetId) || ~target.friends.findIndex(item => item.gameId == senderId)) return;
+				if (~sender.friends.findIndex(item => item == targetId) || ~target.friends.findIndex(item => item == senderId)) return;
 				target.requests.push(sender);
 				target.requests[target.requests.length - 1].inviteId = crypto.randomBytes(30).toString("hex");
 				io.to(target.socketId).emit('requests', target.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: item.socketId != 'null', inviteId: item.inviteId } }));
@@ -214,6 +214,7 @@ export const initializeLobby = (io, socket, users, lobbies, searchLobbies) => {
 	socket.on('request-decline', (requestId, gameId, session) => {
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(target => {
 			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${gameId}'`).then(sender => {
+				selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
 				const requestIndex = target.requests.findIndex(item => item.inviteId == requestId);
 				if (~requestIndex) {
 					target.requests.splice(requestIndex, 1);
@@ -259,6 +260,7 @@ export const initializeLobby = (io, socket, users, lobbies, searchLobbies) => {
 					io.to(target.socketId).emit('requests', target.requests.map(item => { return { name: item.username, photo: item.photo, rating: item.rating, gameId: item.gameId, online: item.socketId != 'null', inviteId: item.inviteId } }));
 					writeUserInTable(db, 18, sender, target);
 				}
+				});
 			});
 		});
 	});
@@ -266,7 +268,8 @@ export const initializeLobby = (io, socket, users, lobbies, searchLobbies) => {
 	socket.on('request-accept', (requestId, gameId, session) => {
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}'`).then(target => {
 			selectUserInTable(db, `SELECT * FROM users WHERE gameId='${gameId}'`).then(sender => {
-				if (!~target.friends.findIndex(item => item.gameId == gameId)) {
+				selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
+				if (!~target.friends.findIndex(item => item == gameId)) {
 					const requestIndex = target.requests.findIndex(item => item.inviteId == requestId);
 					if (~requestIndex) {
 						target.friends.push(sender.gameId);
@@ -293,8 +296,6 @@ export const initializeLobby = (io, socket, users, lobbies, searchLobbies) => {
 							if (~friendIndex) io.to(users[friendIndex].socketId).emit('friend-state', target.gameId, true);
 						});
 
-						console.log(sender.friends)
-					
 						io.to(sender.socketId).emit('profile', {
 							username: sender.username,
 							photo: sender.photo,
@@ -317,6 +318,7 @@ export const initializeLobby = (io, socket, users, lobbies, searchLobbies) => {
 						writeUserInTable(db, 19, sender, target);
 					}
 				}
+				});
 			});
 		});
 	});

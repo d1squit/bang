@@ -1,6 +1,6 @@
 import { Player } from './player.js';
 import { characters, shuffle, cards, roles } from './utils.js';
-import { BangCard, BarrelCard, MissCard, MustangCard, SaloonCard, ScofieldCard, ShopCard } from './card.js';
+import { BangCard, BarrelCard, GatlingCard, MissCard, MustangCard, SaloonCard, ScofieldCard, ShopCard } from './card.js';
 
 import sql from 'sqlite3'
 const sqlite3 = sql.verbose();
@@ -410,11 +410,15 @@ export const initGame = (io, socket, room) => {
 			room.players.push(player);
 		});
 	} else {
-		room.shuffled[room.shuffled.length - 1] = new MustangCard(3, 6);
+		room.shuffled[room.shuffled.length - 1] = new GatlingCard(3, 6);
+		let chars = [];
 		// shuffle(roles).forEach((role, index) => {
-		[0, 3].forEach((role, index) => {
+		[0, 3, 3].forEach((role, index) => {
 		// roles.forEach((role, index) => {
-			const character_id = index;
+			let character_id = Math.floor(Math.random() * characters.length);
+			while (chars.find(item => item == character_id) !== undefined) character_id = Math.floor(Math.random() * characters.length);
+			chars.push(character_id);
+
 			room.turn = 0;
 			const player = new Player(character_id, { name: room.users[index].username, rating: room.users[index].rating, photo: room.users[index].photo, gameId: room.users[index].gameId, id: room.users[index].socketId }, index, characters[character_id].health, role, [], []);
 			
@@ -451,7 +455,8 @@ export const startGame = async (io, socket, room) => {
 	if (room.end) return;
 	socket.on('turn-end', (player, session) => {
 		if (room.end) return;
-		if (!~room.users.findIndex(item => item.session == session) && room.users.find(item => item.session == session).gameId == room.players[player.player_id].gameId) return;
+		if (!~room.users.findIndex(item => item.session == session)) return;
+		if (room.users.find(item => item.session == session).gameId == room.players[player.player_id].gameId) return;
 		if (room.shop.cards.length > 0 || room.indians.len > 0 || room.duel.interval != null) return;
 
 		if (player.player_id == room.turn && player.player_id == room.wait) changeTurn(io, room);

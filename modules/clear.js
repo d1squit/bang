@@ -27,7 +27,9 @@ db.serialize(() => {
 		\`inviteId\` TEXT(60) NOT NULL DEFAULT '',
 		\`banLevel\` INT NOT NULL DEFAULT 0,
 		\`ban\` INT NOT NULL DEFAULT 0
-	);`);
+	);`)
+
+	// db.run(`UPDATE users SET invites = '[]'`);
 
 	// for (let i = 0; i < 300; i++) {
 	// 	db.run(`INSERT INTO users (wallet, username, photo, rating, tournament, gameId, characters, ban) VALUES ('0xa12750a9f5260504e9bc21bdafa7c56d75097ba6', 'bot${i}', 'b0f50496833d799ea7b4a0397943ae18fb398275c283d651', ${i * 5 + 100}, ${i * 5 + 50}, '${crypto.randomBytes(16).toString("hex")}', '[]', 0)`);

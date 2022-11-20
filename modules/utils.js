@@ -33,22 +33,22 @@ function shuffle(array_input) {
 // ];
 
 const characters = [
-	{ "name": "Неуловимый Джо", "health": 10 },
+	{ "name": "Неуловимый Джо", "health": 3 },
 	// { "name": "Киллер Слэб", "health": 4},
-	{ "name": "Джанго", "health": 1 },
-	{ "name": "Хладнокровная Рози", "health": 1 },
+	{ "name": "Джанго", "health": 3 },
+	{ "name": "Хладнокровная Рози", "health": 3 },
 	// { "name": "Кит Карсон", "health": 4 },
 	// { "name": "Бедствие Жанет", "health": 4 },
 	// { "name": "Педро Рамирез", "health": 4 },
-	{ "name": "Сюзи Лафайет", "health": 1 },
+	{ "name": "Сюзи Лафайет", "health": 3 },
 	// { "name": "Блэк Джек", "health": 4 },
-	{ "name": "Том Кетчум", "health": 1 },
-	{ "name": "Большой Змей", "health": 1 },
-	{ "name": "Бутч Кессиди", "health": 1 },
-	{ "name": "Джесси Джеймс", "health": 1 },
+	{ "name": "Том Кетчум", "health": 3 },
+	{ "name": "Большой Змей", "health": 3 },
+	{ "name": "Бутч Кессиди", "health": 3 },
+	{ "name": "Джесси Джеймс", "health": 3 },
 	// { "name": "Джордоннас", "health": 4 },
-	{ "name": "Малыш Билли", "health": 1 },
-	{ "name": "Счатливчик Люк", "health": 1 }
+	{ "name": "Малыш Билли", "health": 3 },
+	{ "name": "Счатливчик Люк", "health": 3 }
 ];
 
 const bans = [2, 5, 5, 5, 15, 15, 15, 30, 30, 30, 60];

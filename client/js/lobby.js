@@ -138,8 +138,8 @@ socket.on('change-mode-success', mode => {
 	}
 });
 
-// socket.on('change-mode-decline', () => console.log(1));
-
+// socket.on('change-mode-decline', () => (1));
+console.log
 const competitiveTip = document.querySelectorAll('.lobby__match__start__mode__text')[0];
 const privateTip = document.querySelectorAll('.lobby__match__start__mode__text')[1];
 
@@ -255,6 +255,7 @@ const displayFriends = (start, end, friends=null, mode=false, decline=false) => 
 }
 
 socket.on('profile', user => {
+	console.log(user.friends)
 	clearTimeout(load);
 
 	if (getCookie('search-redirect') == 'true') {

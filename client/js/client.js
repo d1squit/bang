@@ -94,28 +94,28 @@ socket.on('history', (history, info) => {
 		if (block.length == 0) return;
 		document.querySelector('.history').innerHTML += historyBlockHtml;
 		const length = document.querySelectorAll('.history-block-title').length;
-		document.querySelectorAll('.history-block-title')[length - 1].textContent = `${lang[localStorage('lang')].game['move']} ` + (history.length - index);
+		document.querySelectorAll('.history-block-title')[length - 1].textContent = `${lang[localStorage.getItem('lang')].game['move']} ` + (history.length - index);
 
 		block.slice().reverse().forEach((move, index) => {
 			document.querySelector('.history-block:last-child').innerHTML += historyMoveHtml;
 			if (move.sender == myPlayer.player_id) {
-				document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `<span>${lang[localStorage('lang')].game['you']}</span>`;
+				document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `<span>${lang[localStorage.getItem('lang')].game['you']}</span>`;
 
-				if (move.card.card_id == 7) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage('lang')].game['you-get-cards-from-deck-2']}`;
-				else if (move.card.card_id == 8) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage('lang')].game['you-get-cards-from-deck-3']}`;
-				else document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage('lang')].game['play']} ${move.card.title} (${[1,2,3,4,5,6,7,8,9,10,'J','Q','K','A'][move.card.rank]}${['♦', '♥', '♣', '♠'][move.card.suit]})`;
+				if (move.card.card_id == 7) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage.getItem('lang')].game['you-get-cards-from-deck-2']}`;
+				else if (move.card.card_id == 8) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage.getItem('lang')].game['you-get-cards-from-deck-3']}`;
+				else document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage.getItem('lang')].game['play']} ${move.card.title} (${[1,2,3,4,5,6,7,8,9,10,'J','Q','K','A'][move.card.rank]}${['♦', '♥', '♣', '♠'][move.card.suit]})`;
 
 				if (move.card.card_id == 5 || move.card.card_id == 11 || move.card.card_id == 12 || move.card.card_id == 14 || move.card.card_id == 17)
-					document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage('lang')].game['and-you-choose']} ${boardPlayers[move.target].user.name} ${lang[localStorage('lang')].game['as-target']}`;
+					document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage.getItem('lang')].game['and-you-choose']} ${boardPlayers[move.target].user.name} ${lang[localStorage.getItem('lang')].game['as-target']}`;
 			} else {
 				document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `<span>${boardPlayers[move.sender].user.name}</span>`;
 
-				if (move.card.card_id == 7) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage('lang')].game['get-cards-from-deck-2']}`;
-				else if (move.card.card_id == 8) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage('lang')].game['get-cards-from-deck-3']}`;
-				else document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage('lang')].game['plays']} ${move.card.title} (${[1,2,3,4,5,6,7,8,9,10,'J','Q','K','A'][move.card.rank]}${['♦', '♥', '♣', '♠'][move.card.suit]})`;
+				if (move.card.card_id == 7) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage.getItem('lang')].game['get-cards-from-deck-2']}`;
+				else if (move.card.card_id == 8) document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += ` ${lang[localStorage.getItem('lang')].game['get-cards-from-deck-3']}`;
+				else document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage.getItem('lang')].game['plays']} ${move.card.title} (${[1,2,3,4,5,6,7,8,9,10,'J','Q','K','A'][move.card.rank]}${['♦', '♥', '♣', '♠'][move.card.suit]})`;
 
 				if (move.card.card_id == 5 || move.card.card_id == 11 || move.card.card_id == 12 || move.card.card_id == 14 || move.card.card_id == 17)
-					document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage('lang')].game['and-choose']} <span>${boardPlayers[move.target].user.name}</span> ${lang[localStorage('lang')].game['as-target']}`;
+					document.querySelector('.history-block:last-child .history-move:last-child').innerHTML += `${lang[localStorage.getItem('lang')].game['and-choose']} <span>${boardPlayers[move.target].user.name}</span> ${lang[localStorage.getItem('lang')].game['as-target']}`;
 			}
 		});
 	});
@@ -386,7 +386,7 @@ socket.on('check-card', (sender, card, second_card) => {
 	
 		const card_rect = document.querySelector(`.table__card-count`).getBoundingClientRect();
 		const table_card_rect = document.querySelector('.table__card-last').getBoundingClientRect();
-		absolute_card.style.position = 'absolute';
+		absolute_card.style.position = 'fixed';
 		absolute_card.style.left = card_rect.x - 5 + 'px';
 		absolute_card.style.top = card_rect.y + 9 + 'px';
 	
@@ -394,6 +394,7 @@ socket.on('check-card', (sender, card, second_card) => {
 			absolute_card.style.transform = `translate(${table_card_rect.x - card_rect.x + 5}px, ${table_card_rect.y - card_rect.y - 8}px)`;
 			setTimeout(() => {
 					let destroyCard = absolute_card.cloneNode(true);
+					destroyCard.style.position = 'absolute';
 					destroyCard.style.transform = '';
 					destroyCard.style.left = 'auto';
 					destroyCard.style.top = 'auto';
@@ -413,7 +414,7 @@ socket.on('destroy-modifier', (card, sender) => {
 
 	const card_rect = document.querySelector(`.player[player-id='${sender.player_id}'] .modifier[data-card='${card.card_id}']`).getBoundingClientRect();
 	const table_card_rect = document.querySelector('.table__card-last').getBoundingClientRect();
-	absolute_card.style.position = 'absolute';
+	absolute_card.style.position = 'fixed';
 	absolute_card.style.left = card_rect.x - 5 + 'px';
 	absolute_card.style.top = card_rect.y + 9 + 'px';
 
@@ -421,6 +422,7 @@ socket.on('destroy-modifier', (card, sender) => {
 		absolute_card.style.transform = `translate(${table_card_rect.x - card_rect.x + 5}px, ${table_card_rect.y - card_rect.y - 8}px)`;
 		setTimeout(() => {
 				let destroyCard = absolute_card.cloneNode(true);
+				destroyCard.style.position = 'absolute';
 				destroyCard.style.transform = '';
 				destroyCard.style.left = 'auto';
 				destroyCard.style.top = 'auto';
@@ -442,7 +444,7 @@ function createElementFromHTML (html, card, sender, target) {
 		const sender_rect = sender.getBoundingClientRect();
 		const target_rect = target.getBoundingClientRect();
 	
-		absolute_card.style.position = 'absolute';
+		absolute_card.style.position = 'fixed';
 		absolute_card.style.left = sender_rect.x - 5 + 'px';
 		absolute_card.style.top = sender_rect.y + 9 + 'px';
 		return { absolute_card: absolute_card, sender_rect: sender_rect, target_rect: target_rect};
@@ -452,7 +454,7 @@ function createElementFromHTML (html, card, sender, target) {
 function createAbsoluteElement (element) {
 	let absolute_card = element.cloneNode(true);
 	const card_rect = element.getBoundingClientRect();
-	absolute_card.style.position = 'absolute';
+	absolute_card.style.position = 'fixed';
 	absolute_card.style.left = card_rect.x - 5 + 'px';
 	absolute_card.style.top = card_rect.y + 9 + 'px';
 	return { absolute_card: absolute_card, card_rect: card_rect };
@@ -538,6 +540,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 				absolute_card.style.transform = `translate(${table_card_rect.x - card_rect.x + 5}px, ${table_card_rect.y - card_rect.y - 8}px)`;
 				setTimeout(() => {
 					let destroyCard = absolute_card.cloneNode(true);
+					destroyCard.style.position = 'absolute';
 					destroyCard.style.transform = '';
 					destroyCard.style.left = 'auto';
 					destroyCard.style.top = 'auto';
@@ -550,13 +553,14 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 		}
 
 		if (behaviour == 'remove') {
-			let { absolute_card, card_rect } = createAbsoluteElement(document.querySelectorAll(`.card:not(.role)`)[card_id]);
+			let { absolute_card, card_rect } = createAbsoluteElement(document.querySelectorAll(`.common-ctn .card:not(.role)`)[card_id]);
 			const table_card_rect = document.querySelector('.table__card-last').getBoundingClientRect();
 
 			setTimeout(() => {
 				absolute_card.style.transform = `translate(${table_card_rect.x - card_rect.x + 5}px, ${table_card_rect.y - card_rect.y - 8}px)`;
 				setTimeout(() => {
 					let destroyCard = absolute_card.cloneNode(true);
+					destroyCard.style.position = 'absolute';
 					destroyCard.style.transform = '';
 					destroyCard.style.left = 'auto';
 					destroyCard.style.top = 'auto';
@@ -576,6 +580,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 				absolute_card.style.transform = `translate(${table_card_rect.x - card_rect.x + 5}px, ${table_card_rect.y - card_rect.y - 8}px)`;
 				setTimeout(() => {
 					let destroyCard = absolute_card.cloneNode(true);
+					destroyCard.style.position = 'absolute';
 					destroyCard.style.transform = '';
 					destroyCard.style.left = 'auto';
 					destroyCard.style.top = 'auto';
@@ -636,6 +641,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 				absolute_card.style.transform = `translate(${table_card_rect.x - card_rect.x + 5}px, ${table_card_rect.y - card_rect.y - 8}px)`;
 				setTimeout(() => {
 					let destroyCard = absolute_card.cloneNode(true);
+					destroyCard.style.position = 'absolute';
 					destroyCard.style.transform = '';
 					destroyCard.style.left = 'auto';
 					destroyCard.style.top = 'auto';
@@ -656,6 +662,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 				absolute_card.style.transform = `translate(${target_rect.x - sender_rect.x + 5}px, ${target_rect.y - sender_rect.y - 8}px)`;
 				setTimeout(() => {
 					let destroyCard = absolute_card.cloneNode(true);
+					destroyCard.style.position = 'absolute';
 					destroyCard.style.transform = '';
 					destroyCard.style.left = 'auto';
 					destroyCard.style.top = 'auto';
@@ -674,6 +681,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 				absolute_card.style.transform = `translate(${target_rect.x - sender_rect.x + 5}px, ${target_rect.y - sender_rect.y - 8}px)`;
 				setTimeout(() => {
 					let destroyCard = absolute_card.cloneNode(true);
+					destroyCard.style.position = 'absolute';
 					destroyCard.style.transform = '';
 					destroyCard.style.left = 'auto';
 					destroyCard.style.top = 'auto';
@@ -726,6 +734,7 @@ socket.on('accept-card', (sender, card, card_id, player, behaviour) => {
 				animation.absolute_card.style.transform = `translate(${table_card_rect.x - animation.sender_rect.x + 5}px, ${table_card_rect.y - animation.sender_rect.y - 8}px)`;
 				setTimeout(() => {
 					let destroyCard = animation.absolute_card.cloneNode(true);
+					destroyCard.style.position = 'absolute';
 					destroyCard.style.transform = '';
 					destroyCard.style.left = 'auto';
 					destroyCard.style.top = 'auto';
@@ -784,7 +793,7 @@ socket.on('kick', player => {
 	boardPlayers[player.player_id].dead = true;
 	info.querySelector(`.player-info:nth-child(${player.player_id + 1})`).classList.add('dead');
 	try { document.querySelector(`.player[player-id='${player.player_id}']`).parentElement.removeChild(document.querySelector(`.player[player-id='${player.player_id}']`)); } catch (e) {console.log(e, `.player[player-id='${player.player_id}']`)};
-	board.setAttribute('player-count', board.getAttribute('player-count') - 1);
+	document.querySelector('#board').setAttribute('player-count', document.querySelector('#board').getAttribute('player-count') - 1);
 });
 
 socket.on('wait', (player_id, time, new_turn) => {
@@ -824,14 +833,14 @@ socket.on('turn-end', () => {
 socket.on('board', players => {
 	document.querySelector('main').style.display = 'flex';
 
-	board.innerHTML = '';
+	document.querySelector('#board').innerHTML = '';
 	info.innerHTML = '';
 
 	boardPlayers = players;
 	document.querySelector('#board').setAttribute('player-count', boardPlayers.length);
 
 	players.forEach(player => {
-		board.innerHTML += assignObjects(player_html, player);
+		document.querySelector('#board').innerHTML += assignObjects(player_html, player);
 		info.innerHTML += assignObjects(info_html, player);
 
 		player.modifiers.forEach((modifier, index) => {

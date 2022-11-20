@@ -7,7 +7,7 @@ const logOut = async (socket) => {
 document.querySelectorAll('.logo, .header__logo').forEach(element => {
 	element.style.pointerEvents = 'all';
 	element.style.cursor = 'pointer';
-	element.addEventListener('click', () => {console.log(1);window.location.href = '../home';});
+	element.addEventListener('click', () => window.location.href = '../home');
 });
 
 
