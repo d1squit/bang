@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="./css/admin.css">
+	<script src="/socket.io/socket.io.js"></script>
+	<title>Admin Panel</title>
+</head>
+<body>
+	<div class="login-panel">
+		<input type="password" class="password" placeholder="Admin password">
+		<button class="login">Login</button>
+	</div>
+	
+
+	<div class="panel">
+		<button class="reset-rating">Reset tournament rating</button>
+		<input type="text" class="tournament-prize" placeholder="Tournament prize">
+		<button class="switch-tournament">Start tournament</button>
+	</div>
+
+	<script src="./js/admin.js"></script>
+</body>
+</html>

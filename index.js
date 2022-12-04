@@ -129,6 +129,8 @@ app.get('/admin', (request, response) => {
 // });
 
 
+let admin = '';
+fs.readFile('./admin.json', (err, data) => admin = JSON.parse(data.toString()));
 
 let rooms = [];
 
@@ -248,6 +250,10 @@ io.on('connection', (socket) => {
 			writeUserInTable(db, 2, user);
 		});
 	}
+
+	socket.on('admin-login', password => {
+		// if (password === admin.password) socket.emit('admin-login-accept', admin);
+	});
 	
 	socket.on('get-rating', () => {
 		selectUserInTable(db, `SELECT * FROM users`, false).then(users => {
