@@ -52,8 +52,6 @@ if (!session) window.location.href = '/home';
 let socket = io.connect('', { query: `session=${session}` });
 
 const load = setTimeout(() => {
-	setCookie('reload', 'true');
-	window.location.reload();
 	if (getCookie('reload') == 'false') {
 		setCookie('reload', 'true');
 		window.location.reload();
