@@ -47,7 +47,6 @@ friendsArrowPrevious.addEventListener('click', () => {
 
 // ------------------------------------------- LOBBY ------------------------------------------- //
 
-
 const session = getCookie('session');
 if (!session) window.location.href = '/home';
 let socket = io.connect('', { query: `session=${session}` });
@@ -55,22 +54,22 @@ let socket = io.connect('', { query: `session=${session}` });
 const load = setTimeout(() => {
 	setCookie('reload', 'true');
 	window.location.reload();
-	// if (getCookie('reload') == 'false') {
-	// 	setCookie('reload', 'true');
-	// 	window.location.reload();
-	// } else {
-	// 	setCookie('session', 'null');
-	// 	document.cookie.split(";").forEach((c) => { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
-	// 	window.location.reload();
-	// }
+	if (getCookie('reload') == 'false') {
+		setCookie('reload', 'true');
+		window.location.reload();
+	} else {
+		setCookie('session', 'null');
+		document.cookie.split(';').forEach((c) => { document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/'); });
+		window.location.reload();
+	}
 }, 3000);
 
 var uploadField = document.querySelector('.edit__photo');
 
 uploadField.onchange = function() {
     if (this.files[0].size > 524288){
-       alert("File is too big!");
-       this.value = "";
+       alert('File is too big!');
+       this.value = '';
     };
 };
 
@@ -156,7 +155,7 @@ document.querySelectorAll('.lobby__match__start__mode__tip')[0].addEventListener
 });
 
 
-$.getJSON("https://api.ipify.org?format=json", (data) => {
+$.getJSON('https://api.ipify.org?format=json', (data) => {
 	if (session) socket.emit('get-profile', session, data.ip);
 	else window.location.href = '/home.html';
 });
@@ -222,8 +221,8 @@ const displayFriends = (start, end, friends=null, mode=false, decline=false) => 
 
 	document.querySelector('.lobby__friends__list').innerHTML = '';
 	friends.slice(start, end).forEach((friend, index) => {
-		if (decline) document.querySelector('.lobby__friends__list').innerHTML += `<div class="lobby__friend player"><img src="" alt="" class="player__photo"><div class="player__state"><div></div></div><div class="player__info"><h2 class="player__name"></h2><div class="player__rating"><img src="./assets/img/trophy-icon.svg" alt=""><h2></h2></div></div><div class="player__controls"><div class="player__invite"></div><div class="player__decline"></div></div></div>`;
-		else document.querySelector('.lobby__friends__list').innerHTML += `<div class="lobby__friend player"><img src="" alt="" class="player__photo"><div class="player__state"><div></div></div><div class="player__info"><h2 class="player__name"></h2><div class="player__rating"><img src="./assets/img/trophy-icon.svg" alt=""><h2></h2></div></div><div class="player__invite"></div></div>`;
+		if (decline) document.querySelector('.lobby__friends__list').innerHTML += `<div class='lobby__friend player'><img src='' alt='' class='player__photo'><div class='player__state'><div></div></div><div class='player__info'><h2 class='player__name'></h2><div class='player__rating'><img src='./assets/img/trophy-icon.svg' alt=''><h2></h2></div></div><div class='player__controls'><div class='player__invite'></div><div class='player__decline'></div></div></div>`;
+		else document.querySelector('.lobby__friends__list').innerHTML += `<div class='lobby__friend player'><img src='' alt='' class='player__photo'><div class='player__state'><div></div></div><div class='player__info'><h2 class='player__name'></h2><div class='player__rating'><img src='./assets/img/trophy-icon.svg' alt=''><h2></h2></div></div><div class='player__invite'></div></div>`;
 		document.querySelectorAll('.player__invite')[index].style.display = 'block';
 		document.querySelectorAll('.lobby__friend .player__name')[index].textContent = friend.name;
 		document.querySelectorAll('.lobby__friend .player__rating > h2')[index].textContent = friend.rating;

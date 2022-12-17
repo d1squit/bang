@@ -331,6 +331,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('search-start', (id, session) => {
+		if (~rooms.findIndex(room => ~room.players.findIndex(player => player.gameId == id))) return;
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`, true, () => socket.emit('ready-decline')).then(user => {
 			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
 			if (~lobbyIndex) {
@@ -351,6 +352,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('search-end', (id, session) => {
+		if (~rooms.findIndex(room => ~room.players.findIndex(player => player.gameId == id))) return;
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`).then(user => {
 			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
 			if (~lobbyIndex) {
@@ -363,6 +365,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('ready', (id, session) => {
+		if (~rooms.findIndex(room => ~room.players.findIndex(player => player.gameId == id))) return;
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}' AND ban=0`, true, () => socket.emit('ready-decline')).then(user => {
 			const lobbyIndex = lobbies.findIndex(item => ~item.players.findIndex(player => player.gameId == id));
 			if (~lobbyIndex) {
@@ -378,6 +381,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('not-ready', (id, session, fromBan=false) => {
+		if (~rooms.findIndex(room => ~room.players.findIndex(player => player.gameId == id))) return;
 		selectUserInTable(db, `SELECT * FROM users WHERE session='${session}' AND gameId='${id}'`).then(user => {
 			if (fromBan && user.ban == 0) return;
 			const lobbyIndex = searchLobbies.findIndex(item => item.id == user.lobbyId);
