@@ -7,6 +7,9 @@
     "start": "node index.js",
     "clear": "node modules/clear.js"
   },
+  "engines": {
+    "node": "14.x"
+  },
   "author": "",
   "license": "ISC",
   "repository": {
