@@ -413,7 +413,7 @@ export const initGame = (io, socket, room) => {
 		room.shuffled[room.shuffled.length - 1] = new GatlingCard(3, 6);
 		let chars = [];
 		// shuffle(roles).forEach((role, index) => {
-		[0, 3, 3].forEach((role, index) => {
+		[0, 3].forEach((role, index) => {
 		// roles.forEach((role, index) => {
 			let character_id = Math.floor(Math.random() * characters.length);
 			while (chars.find(item => item == character_id) !== undefined) character_id = Math.floor(Math.random() * characters.length);

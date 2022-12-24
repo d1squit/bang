@@ -464,7 +464,7 @@ setInterval(() => {
 	for (let lobbyIndex = 0; lobbyIndex < searchLobbies.length; lobbyIndex++) {
 		try {
 		if (searchLobbies[lobbyIndex].players.length == 0) { searchLobbies.splice(lobbyIndex, 1); lobbyIndex--; }
-		else if (searchLobbies[lobbyIndex].players.length == 3) {
+		else if (searchLobbies[lobbyIndex].players.length == 2) {
 			if (searchLobbies[lobbyIndex].state != 'accept') {
 				searchLobbies[lobbyIndex].state = 'accept';
 
